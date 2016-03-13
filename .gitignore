@@ -48,3 +48,6 @@ Temporary Items
 
 
 node_modules
+pachong.sublime-workspace
+*.csv
+*.xlsx
