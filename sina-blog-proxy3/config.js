@@ -10,7 +10,7 @@ exports.db = mysql.createConnection({
 });
 
 // 博客配置
-exports.singBlog = {
+exports.sinaBlog = {
     url: "http://blog.sina.com.cn/u/1776757314"
 };
 
@@ -19,4 +19,4 @@ exports.singBlog = {
 exports.port = process.env.port || 3000;
 
 // 定时更新
-exports.autoUpdate = '* */30 * * *';
+exports.autoUpdate = '* */2 * * *';

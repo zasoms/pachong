@@ -1,20 +1,22 @@
 {
-    "name": "sina-blog-proxy",
-    "main": "app.js",
-    "version": "0.0.1",
-    "private": true,
-    "description": "网络爬虫与数据库操作",
-    "engines": {
-        "node": ">= 0.10.0"
-    },
-    "dependencies": {
-        "debug": "*",
-        "cheerio": "*",
-        "request": "*",
-        "async": "*",
-        "mysql": "*",
-        "express": "*",
-        "ejs": "*",
-        "cron": "*"
-    }
+  "name": "sina-blog-proxy",
+  "main": "app.js",
+  "version": "0.0.1",
+  "private": true,
+  "description": "网络爬虫与数据库操作",
+  "engines": {
+    "node": ">= 0.10.0"
+  },
+  "dependencies": {
+    "debug": "*",
+    "cheerio": "*",
+    "request": "*",
+    "async": "*",
+    "mysql": "*",
+    "express": "*",
+    "ejs": "*"
+  },
+  "devDependencies": {
+    "cron": "^1.1.0"
+  }
 }

@@ -39,6 +39,7 @@ app.get("/article/:id", function(req, res, next){
 app.listen(config.port);
 console.log("服务器已启动");
 
+//定时更新任务
 var spawn = require("child_process").spawn;
 var cronJob = require("cron").CronJob;
 

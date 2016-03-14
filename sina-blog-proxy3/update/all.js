@@ -11,7 +11,7 @@ async.series([
     // 获取文章分类列表
     function(done) {
         console.log("获取文章分类列表");
-        read.classList(config.singBlog.url, function(err, list) {
+        read.classList(config.sinaBlog.url, function(err, list) {
             classList = list;
             done(err);
         });
