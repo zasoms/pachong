@@ -2,7 +2,8 @@ var async = require("async"),
     config = require("../config"),
     read = require("./read"),
     save = require("./save"),
-    csv = require("csv"),
+    json2csv = require("json2csv"),
+    fs = require("fs"),
     debug = require("debug")("blog:update:all");
 
 var classList,
@@ -106,16 +107,27 @@ async.series([
         async.eachSeries(productList, function(c, next) {
             c.url = "http://www.lativ.com/Detail/" + c.image_140.split("/")[3];
             read.productDetail(c.url, function(err, data) {
-            	console.log(data);
-                productList[c.detail] = data.detail;
+                productList[c.description] = data.description;
                 next(err);
             });
         }, done);
     },
     function(done) {
-        console.log("读取数据");
-        console.log(productList[0].detail);
-        done();
+        console.log("导出csv");
+        json2csv({
+            data: productList,
+        }, function(err, csv){
+            if( err ){
+                console.log(err);
+                done();
+            }else{
+                fs.writeFile("file.csv", csv, function(err){
+                    if(err) throw er;
+                    console.log("file saved");
+                    done();
+                });
+            }
+        });
     },
     function() {
         console.log("完成");

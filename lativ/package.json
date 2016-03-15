@@ -20,6 +20,7 @@
   "devDependencies": {
     "json2csv": "^3.2.0",
     "node-xlsx": "^0.6.0",
-    "superagent": "^1.8.0"
+    "superagent": "^1.8.0",
+    "underscore": "^1.8.3"
   }
 }

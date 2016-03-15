@@ -1,6 +1,7 @@
 var request = require("superagent"),
     cheerio = require("cheerio"),
     async = require("async"),
+    _ = require("underscore"),
     debug = require("debug")("blog:update:read");
 
 
@@ -11,6 +12,20 @@ var config = {
     "Connection": "keep-alive",
     "Host": "www.lativ.com",
     // "Referer": "http://www.lativ.com/WOMEN",
+    "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.116 Safari/537.36",
+    "X-Requested-With": "XMLHttpRequest"
+};
+
+
+var detailConfig = {
+    "Accept": "application/json, text/javascript, */*; q=0.01",
+    "Accept-Encoding": "gzip, deflate, sdch",
+    "Accept-Language": "zh-CN,zh;q=0.8",
+    "Cache-Control": "max-age=0",
+    "Connection": "keep-alive",
+    "Host": "www.lativ.com",
+    // "If-Modified-Since": "Tue, 15 Mar 2016 11:53:29 GMT",
+    // "Referer": "http://www.lativ.com/Detail/25546021",
     "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.116 Safari/537.36",
     "X-Requested-With": "XMLHttpRequest"
 };
@@ -81,7 +96,24 @@ exports.productList = function(url, category, callback){
 
                     var data = JSON.parse(res.text);
                     if( data && data.length ){
-                        products = products.concat(data);
+                        _.each(data, function(item, i){
+                            products.push({
+                                title: item.ProductName,
+                                stuff_status: 1,
+                                location: "上海",
+                                location_city: "上海",
+                                item_type: 1,
+                                price: +item.Price + 5,
+                                auction_increment: 0,
+                                valid_thru: 7,
+                                navigation_type: category,
+                                freight_payer: 1,
+                                postage_id: 5478758160,
+                                newprepay: 1,
+                                sell_promise: 1,
+                                image_140: item.image_140
+                            });
+                        });
                         setTimeout(function(){
                             pageIndex += 1;
                             getAjaxUrlList(category, pageIndex, cacheID);
@@ -108,12 +140,34 @@ exports.productDetail = function(url, callback){
             	if(err) return callback(err);
 
 			    var $ = cheerio.load( res.text ),
-			    	html = "";
+                    text = res.text.toString(),
+                    index = text.indexOf("$.product.Generate"),
+			    	html = "",
+                    id = "";
 			    
-			    html = $(".label").html() + $(".oldPic.show").html();
+			    description = $(".label").html() + $(".oldPic.show").html();
 
-			    callback(null, {
-			    	detail: html
-			    });
+                id = text.slice(index, index+40).toString().match(/\d+/)[0];
+
+                getDetail( id, description );
     		});
+
+    var getDetail = function(id, description){
+        detailConfig.Referer = url;
+        request.get("http://www.lativ.com/Product/ProductInfo/?styleNo="+ id)
+                .set(detailConfig)
+                .end(function(err, res){
+                    if(err) return callback(err);
+
+                    var data = JSON.parse(res.text).info;
+
+                    callback(null, {
+                        description: description,
+                        // "input_custom_cpv": "",
+                        // "": ""
+                    });
+                });
+    };
 };
+
+
