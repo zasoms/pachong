@@ -104,11 +104,15 @@ async.series([
     // 获取产品详情
     function(done) {
         console.log("获取产品详情");
+        var i = 0;
         async.eachSeries(productList, function(c, next) {
             c.url = "http://www.lativ.com/Detail/" + c.image_140.split("/")[3];
             read.productDetail(c.url, function(err, data) {
-                productList[c.description] = data.description;
-                next(err);
+                    if( data.description ){
+                        next(err);
+                        productList[i].description = data.description;
+                    }
+                    i++;
             });
         }, done);
     },

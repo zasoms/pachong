@@ -112,6 +112,7 @@ exports.productList = function(url, category, callback){
                                 newprepay: 1,
                                 sell_promise: 1,
                                 image_140: item.image_140
+                                // image_140: "http://s.lativ.com/"+item.image_140
                             });
                         });
                         setTimeout(function(){
@@ -144,7 +145,7 @@ exports.productDetail = function(url, callback){
                     index = text.indexOf("$.product.Generate"),
 			    	html = "",
                     id = "";
-			    
+
 			    description = $(".label").html() + $(".oldPic.show").html();
 
                 id = text.slice(index, index+40).toString().match(/\d+/)[0];
@@ -169,5 +170,3 @@ exports.productDetail = function(url, callback){
                 });
     };
 };
-
-

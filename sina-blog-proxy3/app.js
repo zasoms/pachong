@@ -53,8 +53,8 @@ var job = new cronJob(config.autoUpdate, function(){
     update.on("close", function(code){
         console.log("更新任务结束，代码=%d", code);
     });
-});
-job.start();
+}, null, true, "America/Los_Angeles");
+// job.start();
 
 
 /**
