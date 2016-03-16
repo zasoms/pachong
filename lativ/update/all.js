@@ -3,7 +3,9 @@ var async = require("async"),
     read = require("./read"),
     save = require("./save"),
     json2csv = require("json2csv"),
+    iconv = require("iconv-lite"),
     fs = require("fs"),
+    _ = require("underscore"),
     debug = require("debug")("blog:update:all");
 
 var classList,
@@ -110,7 +112,7 @@ async.series([
             read.productDetail(c.url, function(err, data) {
                     if( data.description ){
                         next(err);
-                        productList[i].description = data.description;
+                        _.extend(productList[i],  data);
                     }
                     i++;
             });
@@ -125,7 +127,8 @@ async.series([
                 console.log(err);
                 done();
             }else{
-                fs.writeFile("file.csv", csv, function(err){
+                var newCsv = iconv.encode(csv, 'GBK');
+                fs.writeFile("file.csv", newCsv, function(err){
                     if(err) throw er;
                     console.log("file saved");
                     done();

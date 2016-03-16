@@ -89,6 +89,7 @@ exports.productList = function(url, category, callback){
 
     var getAjaxUrlList = function(category, pageIndex, cacheID){
         var url = "http://www.lativ.com/Product/GetNewProductCategoryList?MainCategory="+ category +"&pageIndex="+ pageIndex +"&cacheID="+ cacheID;
+
         request.get(url)
                 .set(config)
                 .end(function(err, res){
@@ -140,20 +141,27 @@ exports.productDetail = function(url, callback){
     		.end(function(err, res){
             	if(err) return callback(err);
 
+                res.text.replace("\\r", "").replace("\\n", "");
 			    var $ = cheerio.load( res.text ),
                     text = res.text.toString(),
                     index = text.indexOf("$.product.Generate"),
 			    	html = "",
-                    id = "";
+                    id = "",
+                    description = "",
+                    price = $("#price").text();
+
+                $("img").each(function(i, item){
+                    $(item).attr("src", $(item).attr("data-original"));
+                });
 
 			    description = $(".label").html() + $(".oldPic.show").html();
 
                 id = text.slice(index, index+40).toString().match(/\d+/)[0];
 
-                getDetail( id, description );
+                getDetail( id, price, description );
     		});
 
-    var getDetail = function(id, description){
+    var getDetail = function(id, price, description){
         detailConfig.Referer = url;
         request.get("http://www.lativ.com/Product/ProductInfo/?styleNo="+ id)
                 .set(detailConfig)
@@ -162,11 +170,66 @@ exports.productDetail = function(url, callback){
 
                     var data = JSON.parse(res.text).info;
 
+                    var param = getData(price, data);
                     callback(null, {
                         description: description,
-                        // "input_custom_cpv": "",
-                        // "": ""
+                        skuProps: param.skuProps,
+                        num: param.num
                     });
                 });
     };
 };
+
+
+function getData(data){
+    var skuProps = "",
+        num = 0;
+
+    _.each(data, function(i, item){
+        _.each(item.ItemList, function(i, list){
+            var param = getParam(list);
+            skuProps += price+":"+ list.invt + "::1627207:" + list.color + ";20509:" + list.size + ";";
+            num += list.invt;
+        });
+    });
+    return  {
+        skuProps: skuProps,
+        num: num
+    };
+}
+
+function getParam(list){
+    var size = "";
+    switch(list.sizse){
+        case "S":
+            size = "155/76A";
+            break;
+        case "M":
+            size = "160/80A";
+            break;
+        case "L":
+            size = "165/84A";
+            break;
+        case "XL":
+            size = "170/88A";
+            break;
+        case "58":
+            size = "150/58A";
+            break;
+        case "61":
+            size = "155/62A";
+            break;
+        case "64":
+            size = "155/64A";
+            break;
+        case "67":
+            size = "160/66A";
+            break;
+        case "70":
+            size = "160/70A";
+            break;
+        case "73":
+            size = "165/74A";
+            break;
+    }
+}
