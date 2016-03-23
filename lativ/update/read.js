@@ -181,14 +181,14 @@ exports.productDetail = function(url, callback){
 };
 
 
-function getData(data){
+function getData(price, data){
     var skuProps = "",
         num = 0;
 
     _.each(data, function(i, item){
         _.each(item.ItemList, function(i, list){
             var param = getParam(list);
-            skuProps += price+":"+ list.invt + "::1627207:" + list.color + ";20509:" + list.size + ";";
+            skuProps += price+":"+ list.invt + "::1627207:" + param.color + ";20509:" + param.size + ";";
             num += list.invt;
         });
     });
