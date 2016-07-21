@@ -51,3 +51,4 @@ node_modules
 pachong.sublime-workspace
 *.csv
 *.xlsx
+*.tbi
