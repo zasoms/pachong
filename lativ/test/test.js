@@ -77,10 +77,10 @@ var getProductDetail = function(num) {
     var url = "http://www.lativ.com/Detail/" + num;
     request.get(url)
         .end(function(err, res) {
-            if (err) return callback(err);
+            if (err) return console.log(err);
 
             res.text.replace("\\r", "").replace("\\n", "");
-            var $ = cheerio.load(res.text),
+            var $ = cheerio.load(res.text, {decodeEntities: false}),
                 text = res.text.toString(),
                 index = text.indexOf("$.product.Generate"),
                 html = "",
@@ -93,6 +93,9 @@ var getProductDetail = function(num) {
                 $(item).attr("src", $(item).attr("data-original"));
             });
 
+            $("[data-original]").attr("data-original", "");
+            $("a").attr("href", "javascript:;");
+
             title = $(".title1").text().trim();
             title = title.slice(0, title.indexOf("（"));
             desc = $(".label").html() + $(".oldPic.show").html();
@@ -100,7 +103,7 @@ var getProductDetail = function(num) {
             obj.title = title;
             obj.subtitle = title;
             obj.price = $("#price").text();
-            obj.description = description(desc);
+            obj.description = description( desc );
 
             id = text.slice(index, index + 40).toString().match(/\d+/)[0];
 
@@ -122,16 +125,15 @@ var getProductDetail = function(num) {
 };
 
 var dataMatch = function(data) {
-    data.cid = "";
-    data.seller_cids = "1194597117,";
+    data.seller_cids = "1194597117";
 
     data.stuff_status = 1;
     data.location_state = "上海";
     data.location_city = "上海";
     data.item_type = 1;
-    data.auction_increment = "";
-    data.valid_thru = 0;
-    data.freight_payer = 0;
+    data.auction_increment = "0";
+    data.valid_thru = 7;
+    data.freight_payer = 2;
     data.post_fee = "2.8026e-45";
     data.ems_fee = "2.8026e-45";
     data.express_fee = 0;
@@ -142,27 +144,41 @@ var dataMatch = function(data) {
     data.list_time = "";
     data.postage_id = 5478758160;
     data.has_discount = 0;
-    data.modified = "2016/7/20  22:04:35";
-    data.upload_fail_msg = "";
+    data.list_time = "2016/7/21  21:17:33";
+    data.modified = "2016/7/21  21:17:33";
+    data.upload_fail_msg = 200;
     data.picture_status = "1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;";
     data.auction_point = "0";
+
+    //宝贝类目
+    data.cid = cid(data);
 
     data.picture = "";  //TODO
     data.video = "";  //TODO
 
+    //宝贝分类
+    data.navigation_type = "";  //TODO
+
 
     data.is_lighting_consigment = "32";
     data.syncStatus = "1";
+    data.user_name = "623064100_00";
     data.features = "mysize_tp:-1;sizeGroupId:136553091;sizeGroupType:women_top";
     data.num_id = "0";
     data.is_xinpin = "248";
     data.auto_fill = "0";
     data.item_suze = "bulk:0.000000";
     data.global_stock_type = "-1";
-
+    data.add_qualification = 1;
+    data.newprepay = 1;
 
     result(data);
-    // fs.writeFile("./update.js", "var data = " + JSON.stringify(data));
+};
+
+// 宝贝类目
+var cid = function(data){
+    //TODO
+    return "";
 };
 
 // 宝贝属性
@@ -174,7 +190,7 @@ var cateProps = function(obj, datas) {
     datas.forEach(function(data) {
         obj.cateProps += color[data.color];
 
-        if (i == 0) {
+        if (i === 0) {
             i = 1;
             data.ItemList.forEach(function(item) {
                 str += size[item['體型尺寸']];
@@ -206,27 +222,89 @@ var skuProps = function(obj, datas) {
     obj.skuProps = str;
     obj.num = num;
 };
-var description = function(data) {
-    // console.log(data);
-    return data;
+var description = function(desc) {
+    var photos = [];
+    desc = desc.trim();
+    desc =  desc.replace(/\r|\n/gm, "")
+            .replace(/\"/gm, "'")
+            .replace(/data-original=\'\'/gm, "")
+            .replace(/http(s?):\/\/s[0-9].lativ.com\/(.*?).(jpg|png|gif)/gm, function(match, escape, interpolate, evaluate, offset){
+                photos.push(match);
+                var arr = interpolate.split("/");
+                return "./data/img/"+ arr[arr.length - 1] + "." + evaluate;
+            });
+    downloadImg(photos, 2, "./data/img/");
+    return desc;
 };
 
+
+var downloadImg = function(photos, num, root){
+    async.mapLimit(photos, num, function(photo, callback){
+        requestAndwrite(photo, root, callback);
+    }, function(err, result) {
+        if (err) {
+            console.log(err);
+        } else {
+            console.log(result);
+        }
+    });
+};
+
+var requestAndwrite = function(url, root, callback) {
+    request.get(url).end(function(err, res) {
+        if (err) {
+            console.log(err);
+            console.log("有一张图片请求失败啦...");
+        } else {
+            var fileName = path.basename(url);
+            fs.writeFile(root + fileName, res.body, function(err) {
+                if (err) {
+                    console.log(err);
+                    console.log("有一张图片写入失败啦...");
+                } else {
+                    callback(null, "successful !");
+                    /*callback貌似必须调用，第二个参数为下一个回调函数的result参数*/
+                }
+            });
+        }
+    });
+};
+
+
 var result = function(obj){
+    var en = ["title", "cid", "seller_cids", "stuff_status", "location_state", "location_city", "item_type", "price", "auction_increment", "num",
+                    "valid_thru", "freight_payer", "post_fee", "ems_fee", "express_fee", "has_invoice", "has_warranty", "approve_status", "has_showcase",
+                    "list_time", "description", "cateProps", "postage_id", "has_discount", "modified", "upload_fail_msg", "picture_status", "auction_point",
+                    "picture", "video", "skuProps", "inputPids", "inputValues", "outer_id", "propAlias", "auto_fill", "num_id", "local_cid", "navigation_type",
+                    "user_name", "syncStatus", "is_lighting_consigment", "is_xinpin", "foodparame", "features", "buyareatype", "global_stock_type", "global_stock_country",
+                    "sub_stock_type", "item_size", "item_weight", "sell_promise", "custom_design_flag", "wireless_desc", "barcode", "sku_barcode", "newprepay", "subtitle",
+                    "cpv_memo", "input_custom_cpv", "qualification", "add_qualification", "o2o_bind_service"]; 
+
+    var zh = ["宝贝名称", "宝贝类目", "店铺类目", "新旧程度",  "省", "城市", "出售方式", "宝贝价格", "加价幅度", "宝贝数量","有效期", "运费承担",
+                "平邮", "EMS", "快递","发票", "保修", "放入仓库", "橱窗推荐", "开始时间", "宝贝描述", "宝贝属性", "邮费模版ID", "会员打折", "修改时间",
+                "上传状态", "图片状态", "返点比例", "新图片", "视频", "销售属性组合", "用户输入ID串", "用户输入名-值对", "商家编码", "销售属性别名",
+                "代充类型", "数字ID", "本地ID", "宝贝分类", "用户名称", "宝贝状态", "闪电发货", "新品", "食品专项", "尺码库", "采购地", "库存类型",
+                "国家地区", "库存计数", "物流体积", "物流重量", "退换货承诺", "定制工具", "无线详情", "商品条形码", "sku 条形码", "7天退货", "宝贝卖点", 
+                "属性值备注", "自定义属性值", "商品资质", "增加商品资质", "关联线下服务"];
+
     json2csv({
-        data: obj,
+        data: [obj],
+        fields: en,
+        fieldNames: zh,
+        quotes: "",
+        // del: ","
     }, function(err, csv){
-        console.log(csv);
         if( err ){
             console.log(err);
         }else{
             var newCsv = iconv.encode(csv, 'GBK');
-            fs.writeFile("123444.csv", newCsv, function(err){
-                if(err) throw er;
+            fs.writeFile("data.csv", newCsv, function(err){
+                if(err) throw err;
                 console.log("file saved");
             });
         }
     });
-}
+};
 
 
 var color = {
