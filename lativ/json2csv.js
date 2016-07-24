@@ -151,11 +151,13 @@ function replaceQuotationMarks(stringifiedElement, quotes) {
  * @returns {String} csv string
  */
 function createColumnContent(params, str, subtitle) {
+    var eol = params.newLine || os.EOL || '\n';
+    str = "version 1.00" + eol + str + eol + subtitle;
+
     params.data.forEach(function(dataElement) {
         //if null or empty object do nothing
         if (dataElement && Object.getOwnPropertyNames(dataElement).length > 0) {
             var line = '';
-            var eol = params.newLine || os.EOL || '\n';
 
             params.fields.forEach(function(fieldElement) {
                 var val;
@@ -201,8 +203,7 @@ function createColumnContent(params, str, subtitle) {
             line = line.replace(/\\\\/g, '\\');
             //If header exists, add it, otherwise, print only content
             if (str !== '') {
-                str = "version 1.00" + eol + str;
-                str += eol + subtitle + eol + line + params.eol;
+                str += eol + line + params.eol;
             } else {
                 str = line + params.eol;
             }
