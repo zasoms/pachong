@@ -6,173 +6,83 @@ var request = require("superagent"),
     json2csv = require("json2csv"),
     iconv = require("iconv-lite");
 
-var detailConfig = {
-    "Accept": "application/json, text/javascript, */*; q=0.01",
-    "Accept-Encoding": "gzip, deflate, sdch",
-    "Accept-Language": "zh-CN,zh;q=0.8",
-    "Cache-Control": "max-age=0",
-    "Connection": "keep-alive",
-    "Host": "www.lativ.com",
-    // "If-Modified-Since": "Tue, 15 Mar 2016 11:53:29 GMT",
-    // "Referer": "http://www.lativ.com/Detail/28853011",
-    "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.116 Safari/537.36",
-    "X-Requested-With": "XMLHttpRequest"
-};
+
+var config = require("./lativConfig");
+
+var detailConfig = config.detailConfig;
+var COLOR = config.COLOR;
+var SIZE = config.SIZE;
+var SELLER_CIDS = config.SELLER_CIDS;
 
 function extend(source, target){
     for(var attr in target){
         source[attr] = target[attr];
     }
 }
-
-var COLOR = {
-    "乳白色": "1627207:28321;",
-    "白色": "1627207:28320;",
-    "米白色": "1627207:4266701;",
-
-    "浅麻灰": "1627207:28332;",
-    "深麻灰": "1627207:3232478;",
-    "灰色": "1627207:28334;",
-    "银色": "1627207:28330;",
-
-    "黑色": "1627207:28341;",
-
-    "桔红色": "1627207:4950473;",
-    "玫红": "1627207:3594022;",
-    "粉红": "1627207:3232480;",
-    "红色": "1627207:28326;",
-    "浅粉红": "1627207:4464174;",
-    "西瓜红": "1627207:3743025;",
-    "酒红色": "1627207:28327;",
-
-    "卡其": "1627207:28331;",
-    "姜黄色": "1627207:15409374;",
-    "明黄色": "1627207:20412615;",
-    "杏色": "1627207:30155;",
-    "柠檬黄": "1627207:132476;",
-    "橘色": "1627207:90554;",
-    "浅黄色": "1627207:60092;",
-    "荧光黄": "1627207:6134424;",
-    "金色": "1627207:28328;",
-    "香槟色": "1627207:130166;",
-    "黄色": "1627207:28324;",
-
-    "墨绿色": "1627207:3232483;",
-    "墨绿色": "1627207:80557;",
-    "浅绿色": "1627207:30156;",
-    "绿色": "1627207:28335;",
-    "翠绿色": "1627207:8588036;",
-    "荧光绿": "1627207:6535235;",
-    "青色": "1627207:3455405;",
-
-    "天蓝色": "1627207:3232484;",
-    "亮蓝": "1627207:5138330;",
-    "宝蓝": "1627207:3707775;",
-    "水蓝": "1627207:28337;",
-    "浅蓝": "1627207:28337;",
-    "深蓝": "1627207:28340;",
-    "湖蓝色": "1627207:5483105;",
-    "蓝色": "1627207:28338;",
-    "藏青": "1627207:28866;",
-
-    "浅紫色": "1627207:4104877;",
-    "深紫色": "1627207:3232479;",
-    "紫红色": "1627207:5167321;",
-    "紫罗兰": "1627207:80882;",
-    "紫色": "1627207:28329;",
-
-    "咖啡色": "1627207:129819;",
-    "巧克力色": "1627207:3232481;",
-    "栗色": "1627207:6071353;",
-    "浅棕色": "1627207:30158;",
-    "深卡其布色": "1627207:3232482;",
-    "深棕色": "1627207:6588790;",
-    "褐色": "1627207:132069;",
-    "驼色": "1627207:3224419;",
-
-    "花色": "1627207:130164;",
-
-    "透明": "1627207:107121;"
-};
-
-var SIZE = {
-    "145/80A": "20509:649458002;",
-    "150/80A": "20509:66579689;",
-    "155/80A": "20509:3959184;",
-    "155/84A": "20509:-1004;",
-    "160/84A": "20509:6215318;",
-    "160/88A": "20509:-1005;",
-    "165/84A": "20509:-1001;",
-    "165/88A": "20509:3267942;",
-    "165/92A": "20509:-1006;",
-    "170/92A": "20509:3267943;",
-    "170/96A": "20509:-1007;",
-    "175/96A": "20509:3267944;",
-    "175/100A": "20509:71744989;",
-    "180/108B": "20509:-1002;",
-    "185/112C": "20509:-1003;"
-};
-
-var SELLER_CIDS = {
-    WOMEN: {
-        "T恤": 1251438469,
-        "吊带衫/背心": 1251438470,
-        "短袖上衣": 1251438471,
-        "中袖/七分袖": 1251438472,
-        "POLO衫": 1251438473,
-        "针织衫": 1251438474,
-        "长袖上衣": 1251438475,
-        "雪纺/轻柔系列": 1251438476,
-        "长版上衣/连衣裙": 1251438477,
-        "休闲衬衫": 1251438478,
-        "商务衬衫": 1251438479,
-        "休闲/机能外套": 1251438480,
-        "风衣/铺棉/西装外套": 1251438481,
-        "牛仔裤": 1251438482,
-        "短裤/中裤/七分裤/宽腿裤": 1251438483,
-        "裙装": 1251438484,
-        "长裤": 1251438485,
-        "机能裤": 1251438486,
-        "无钢圈文胸": 1251438487,
-        "Bra_内置罩杯内衣": 1251438488,
-        "紧身裤": 1251438489,
-        "内裤/生理裤/平脚短裤/三角短裤": 1251438490,
-        "轻柔": 1251438491,
-        "凉感": 1251438492,
-        "围巾": 1251438493,
-        "腰带": 1251438494,
-        "袜子": 1251438495,
-        "鞋类": 1251438496
-    },
-    MEN: {
-        "T恤": 1251439047,
-        "背心": 1251439048,
-        "短袖上衣": 1251439049,
-        "POLO衫": 1251439050,
-        "针织衫": 1251439051,
-        "长袖上衣": 1251439052,
-        "休闲衬衫": 1251439053,
-        "商务衬衫": 1251439054,
-        "休闲/机能外套": 1251439055,
-        "风衣/铺棉/西装外套": 1251439056,
-        "牛仔裤": 1251439057,
-        "短裤/七分裤": 1251439058,
-        "长裤": 1251439059,
-        "内衣": 1251439060,
-        "内裤": 1251439061,
-        "起居服/套装": 1251439062,
-        "COOL_轻凉系列": 1251439063,
-        "腰带": 1251439064,
-        "袜子": 1251439065,
-        "鞋类": 1251439066
-    },
-    SPORTS: {
-        "女装": 1194597134,
-        "男装": 1194597135
+function mkdirsSync(dirpath, mode) {
+    if (!fs.existsSync(dirpath)) {
+        var pathtmp;
+        dirpath.split("/").forEach(function(dirname) {
+            if (pathtmp) {
+                pathtmp = path.join(pathtmp, dirname);
+            }
+            else {
+                pathtmp = dirname;
+            }
+            if (!fs.existsSync(pathtmp)) {
+                if (!fs.mkdirSync(pathtmp, mode)) {
+                    return false;
+                }
+            }
+        });
     }
+    return true;
+}
+function hex(){
+    var arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "a", "b", "c", "d", "e", "f"],
+        str = "",
+        value = "";
+
+    for(var i=0; i<32; i++){
+        str += arr[Math.floor(Math.random()*16)];
+    }
+    if( hex.cache[str] ){
+        arguments.callee();
+    }else{
+        hex.cache[str] = 1;
+    }
+    return str;
+}
+hex.cache = {};
+
+var input_custom_cpv = function(obj, type, value){
+    var data = type === 'color' ? COLOR : SIZE;
+
+    if( type == 'color' ){
+        if( !data[value] ){
+            data[value] = "1627207:-"+ input_custom_cpv.color + ";";
+            obj.input_custom_cpv += "1627207:-" + input_custom_cpv.color + ":"+ value +";";
+            input_custom_cpv.color++;
+        }
+    }
+    if( type == 'size' ){
+        if( !data[value] ){
+            data[value] = "20509:-"+ input_custom_cpv.size + ";";
+            obj.input_custom_cpv += "20509:-" + input_custom_cpv.size + ":"+ value +";";
+            input_custom_cpv.size++;
+        }
+    }
+    return data[value];
 };
+input_custom_cpv.color= 1001;
+input_custom_cpv.size= 1008;
+
 
 var products = [];
+
+var detailImgs = {};
+var productImgs = {};
+
 
 async.series([
     function(done){
@@ -256,7 +166,6 @@ async.series([
         };
 
         getProductDetail(
-  
             "23217044",
 
 
@@ -295,7 +204,7 @@ async.series([
             data.video = "";  //TODO
 
             //宝贝分类
-            data.navigation_type = 1;  
+            data.navigation_type = 1;
 
             data.is_lighting_consigment = "32";
             data.sub_stock_type = 2;
@@ -318,6 +227,35 @@ async.series([
 
         // 宝贝类目
         var cid = function(data){
+            // POLO-男  50020237
+            // T恤-男  50000436
+            // 背心-男  50011153
+            // 短裤-男  124702002
+            // 牛仔裤-男  50010167
+            // 休闲裤-男  3035
+            // 内裤-男  50008882
+            // 运动T恤-男  50013228
+            // 运动短裤-男  50023108
+            // 运动长裤-男  50023107
+
+
+            // 衬衫-女  50114001
+            // T恤-女 50000671
+            // 吊带-背心-女 50010394
+            // 短裤-女 124244007
+            // 短裙-女 1623
+            // 连衣裙-女 50010850
+            // 牛仔裤-女 162205
+            // 文胸-女 50008881
+            // 休闲裤-女 162201
+            // 雪纺-女 162116
+            // 针织-女 50000697
+            //
+            // 内裤-女 50008882
+            // 运动T恤-女 50013228
+            // 运动短裤-女 50023108
+            // 运动长裤-女 50023107
+
             return "50000671";
         };
 
@@ -355,10 +293,6 @@ async.series([
             }
         };
 
-        var input_custom_cpv = {
-            color: 1001,
-            size: 1008
-        };
 
         // 宝贝属性
         var cateProps = function(obj, datas) {
@@ -367,20 +301,10 @@ async.series([
                 i = 0;
 
             datas.forEach(function(data) {
-                if( !COLOR[data.color] ){
-                    COLOR[data.color] = "1627207:-"+ input_custom_cpv.color + ";";
-                    obj.input_custom_cpv += "1627207:-" + input_custom_cpv.color + ":"+ data.color +";";
-                    input_custom_cpv.color++;
-                }
-                obj.cateProps += COLOR[data.color];
+                obj.cateProps += input_custom_cpv(obj, "color", data.color);
 
                 data.ItemList.forEach(function(item) {
-                    if( !SIZE[item['體型尺寸']] ){
-                        SIZE[item['體型尺寸']] = "20509:-"+ input_custom_cpv.size + ";";
-                        obj.input_custom_cpv += "20509:-" + input_custom_cpv.size + ":"+ item['體型尺寸'] +";";
-                        input_custom_cpv.size++;
-                    }
-                    str += SIZE[item['體型尺寸']];
+                    str += input_custom_cpv(obj, "size", item['體型尺寸']);
                 });
             });
             obj.cateProps += str;
@@ -409,22 +333,6 @@ async.series([
             obj.num = num;
         };
 
-        var hex = function(){
-            var arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "a", "b", "c", "d", "e", "f"],
-                str = "",
-                value = "";
-
-            for(var i=0; i<32; i++){
-                str += arr[Math.floor(Math.random()*16)];
-            }
-            if( hex.cache[str] ){
-                arguments.callee();
-            }else{
-                hex.cache[str] = 1;
-            }
-            return str;
-        };
-        hex.cache = {};
 
         var picture = function(obj, datas){
             var imgs = {},
@@ -462,7 +370,7 @@ async.series([
                     .replace(/http(s?):\/\/s[0-9].lativ.com\/(.*?).(jpg|png|gif)/gm, function(match, escape, interpolate, evaluate, offset){
                         photos.push(match);
                         var arr = interpolate.split("/");
-                        return "FILE:\/\/\/E:/pachong/lativ/data/img/"+ arr[arr.length - 1] + "." + evaluate;
+                        return "FILE:\/\/\/E:/github/pachong/lativ/data/img/"+ arr[arr.length - 1] + "." + evaluate;
                     });
 
             reminder = "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i1/465916119/TB25486tpXXXXa.XpXXXXXXXXXX_!!465916119.png'><\/P>";
@@ -477,26 +385,6 @@ async.series([
 
             downloadImg(photos, 100, "./data/img/");
         };
-
-        function mkdirsSync(dirpath, mode) {
-            if (!fs.existsSync(dirpath)) {
-                var pathtmp;
-                dirpath.split("/").forEach(function(dirname) {
-                    if (pathtmp) {
-                        pathtmp = path.join(pathtmp, dirname);
-                    }
-                    else {
-                        pathtmp = dirname;
-                    }
-                    if (!fs.existsSync(pathtmp)) {
-                        if (!fs.mkdirSync(pathtmp, mode)) {
-                            return false;
-                        }
-                    }
-                });
-            }
-            return true;
-        }
 
         var downloadImg = function(photos, num, root){
             if( !(this instanceof downloadImg) ){
