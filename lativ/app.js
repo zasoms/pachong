@@ -55,7 +55,8 @@ function hex(){
 }
 hex.cache = {};
 
-var input_custom_cpv = function(obj, type, value){
+var sizePre = "";
+var input_custom_cpv = function(obj, type, value, size){
     var data = type === 'color' ? COLOR : SIZE;
 
     if( type == 'color' ){
@@ -67,15 +68,17 @@ var input_custom_cpv = function(obj, type, value){
     }
     if( type == 'size' ){
         if( !data[value] ){
-            data[value] = "20509:-"+ input_custom_cpv.size + ";";
-            obj.input_custom_cpv += "20509:-" + input_custom_cpv.size + ":"+ value +";";
+            data[value] = sizePre +":-"+ input_custom_cpv.size + ";";
+            obj.input_custom_cpv += sizePre +":-" + input_custom_cpv.size + ":"+ value + "("+ size +")" +";";
             input_custom_cpv.size++;
         }
     }
+
+
     return data[value];
 };
 input_custom_cpv.color= 1001;
-input_custom_cpv.size= 1008;
+input_custom_cpv.size= 1001;
 
 
 var products = [];
@@ -109,8 +112,12 @@ async.series([
                             price = $("#price").text();
 
                         $("img").each(function(i, item) {
-                            $(item).attr("src", $(item).attr("data-original"));
-                            $(item).css("style", "max-width: 750px");
+                            var $item = $(item);
+                            $item.attr("src", $item.attr("data-original"));
+                        });
+
+                        $(".product_s_img img").each(function(i, item){
+                            $(item).attr("style", "WIDTH: 750px;");
                         });
 
                         $("[data-original]").attr("data-original", "");
@@ -139,10 +146,12 @@ async.series([
                                 var activity = JSON.parse(JSON.parse(res.text).activity);
 
                                 if( activity.Discount ){
-                                    if( activity.Discount < 1 ){
-                                        obj.price = Math.ceil(obj.price * activity.Discount);
-                                    }else{
-                                        obj.price = parseInt(activity.Discount);
+                                    if( /1件/.test(activity.ActivityName) ){
+                                        if( activity.Discount < 1 ){
+                                            obj.price = Math.ceil(obj.price * activity.Discount);
+                                        }else{
+                                            obj.price = parseInt(activity.Discount);
+                                        }
                                     }
                                 }
 
@@ -166,10 +175,7 @@ async.series([
         };
 
         getProductDetail(
-            "23217044",
-
-
-            "26252012"
+            "25458013"
             );
 
         var dataMatch = function(data) {
@@ -242,8 +248,8 @@ async.series([
             // 运动短裤-男  50023108
             // 运动长裤-男  50023107
 
-
-            if( ~title.indexOf("男") ){
+            sizePre = "20509";
+            if( /男/g.test(title) ){
                 if( /POLO/i.test(title) ){
                     cid = "50020237";
                 }
@@ -265,6 +271,7 @@ async.series([
                     cid = "50010167";
                     data.cateProps += "20000:29534;42722636:248572013;122216515:29535;122276111:20525;";
                     //尺寸 20518
+                    sizePre = "20518";
                 }
                 if( /短裤|中裤|沙滩裤|五分裤|七分裤|松紧短裤/.test(title) ){
                     cid = "124702002";
@@ -273,6 +280,7 @@ async.series([
                     cid = "3035";
                     data.cateProps += "20000:29534;42722636:248572013;122216515:29535;122216586:29947;122276111:20525;";
                     //尺寸 20518
+                    sizePre = "20518";
                 }
                 if( /运动T恤/i.test(title) ){
                     cid = "50013228";
@@ -315,7 +323,7 @@ async.series([
             // 运动短裤-女 50023108
             // 运动长裤-女 50023107
 
-            if( ~title.indexOf("女") ){
+            if( /女/g.test(title) ){
                 if( /T恤|中袖|七分袖/i.test(title) ){
                     cid = "50000671";
                     data.cateProps += "20021:105255;13328588:492838734;";
@@ -366,10 +374,12 @@ async.series([
                     cid = "162205";
                     data.cateProps += "122216347:828914351;";
                     //尺寸 20518
+                    sizePre = "20518";
                 }
                 if( /长裤|休闲裤|紧身裤|九分裤|紧身裤/.test(title) ){
                     cid = "162201";
                     //尺寸 20518
+                    sizePre = "20518";
                 }
                 if( /运动T恤|运动吊带衫|运动(.*?)背心/.test(title) ){
                     cid = "50013228";
@@ -392,8 +402,7 @@ async.series([
                     data.inputValues = data.price + ",长裤";
                 }
             }
-
-            data.cid = cid;
+            return cid;
         };
 
         //宝贝分类
@@ -441,12 +450,13 @@ async.series([
                 obj.cateProps += input_custom_cpv(obj, "color", data.color);
 
                 data.ItemList.forEach(function(item) {
-                    str += input_custom_cpv(obj, "size", item['體型尺寸']);
+                    str += input_custom_cpv(obj, "size", item['體型尺寸'], item.size);
                 });
             });
             obj.cateProps += str;
 
         };
+        // 销售属性整合
         var skuProps = function(obj, datas) {
             var str = "",
                 numPrice = "",
