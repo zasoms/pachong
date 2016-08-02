@@ -39,7 +39,7 @@ function mkdirsSync(dirpath, mode) {
     return true;
 }
 function hex(){
-    var arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "a", "b", "c", "d", "e", "f"],
+    var arr = '0,1,2,3,4,5,6,7,8,9,a,b,c,d,e,f'.split(","),
         str = "",
         value = "";
 
@@ -55,9 +55,10 @@ function hex(){
 }
 hex.cache = {};
 
-var input_custom_cpv = function(obj, type, value){
+var input_custom_cpv = function(obj, type, value, size){
     var data = type === 'color' ? COLOR : SIZE;
-
+    // 属性值备注
+    obj.cpv_memo = "";
     if( type == 'color' ){
         if( !data[value] ){
             data[value] = "1627207:-"+ input_custom_cpv.color + ";";
@@ -68,14 +69,16 @@ var input_custom_cpv = function(obj, type, value){
     if( type == 'size' ){
         if( !data[value] ){
             data[value] = "20509:-"+ input_custom_cpv.size + ";";
-            obj.input_custom_cpv += "20509:-" + input_custom_cpv.size + ":"+ value +";";
+            obj.input_custom_cpv += "20509:-" + input_custom_cpv.size + ":"+ value + "("+ size +");";
             input_custom_cpv.size++;
+        }else{
+            obj.cpv_memo += data[value].slice(0, -1) + ":" + size +";";
         }
     }
     return data[value];
 };
 input_custom_cpv.color= 1001;
-input_custom_cpv.size= 1008;
+input_custom_cpv.size= 1001;
 
 
 var products = [];
@@ -108,9 +111,14 @@ async.series([
                             desc = "",
                             price = $("#price").text();
 
+                        
                         $("img").each(function(i, item) {
-                            $(item).attr("src", $(item).attr("data-original"));
-                            $(item).css("style", "max-width: 750px");
+                            var $item = $(item);
+                            $item.attr("src", $item.attr("data-original"));
+                        });
+
+                        $(".oldPic img").each(function(i, item){
+                            $(item).attr("style", "WIDTH: 750px;").prepend("<p>");
                         });
 
                         $("[data-original]").attr("data-original", "");
@@ -139,12 +147,15 @@ async.series([
                                 var activity = JSON.parse(JSON.parse(res.text).activity);
 
                                 if( activity.Discount ){
-                                    if( activity.Discount < 1 ){
-                                        obj.price = Math.ceil(obj.price * activity.Discount);
-                                    }else{
-                                        obj.price = parseInt(activity.Discount);
+                                    if( /1件/.test(activity.ActivityName) ){
+                                        if( activity.Discount < 1 ){
+                                            obj.price = Math.ceil(obj.price * activity.Discount);
+                                        }else{
+                                            obj.price = parseInt(activity.Discount);
+                                        }
                                     }
                                 }
+                                obj.price = Number(obj.price) + 5;
 
                                 dataMatch(obj);
 
@@ -166,10 +177,7 @@ async.series([
         };
 
         getProductDetail(
-            "23217044",
-
-
-            "26252012"
+            "25206013"
             );
 
         var dataMatch = function(data) {
@@ -199,7 +207,7 @@ async.series([
             data.auction_point = "0";
 
             //宝贝类目
-            data.cid = cid(data);
+            data.cid = "50000671";
 
             data.video = "";  //TODO
 
@@ -222,7 +230,7 @@ async.series([
             data.newprepay = 1;
 
             // 自定义属性
-            data.input_custom_cpv = "20509:-1004:155/84A;20509:-1005:160/88A;20509:-1001:165/84A;20509:-1006:165/92A;20509:-1007:170/96A;20509:-1002:180/108B;20509:-1003:185/112C;";
+            data.input_custom_cpv = "20509:-1004:155/84A(S);20509:-1005:160/88A(M);20509:-1001:165/84A(S);20509:-1006:165/92A(L);20509:-1007:170/96A(XL);20509:-1002:180/108B(XL);20509:-1003:185/112C;";
         };
 
         // 宝贝类目
@@ -245,7 +253,8 @@ async.series([
 
             if( ~title.indexOf("男") ){
                 if( /POLO/i.test(title) ){
-                    cid = "50020237";
+                    // cid = "50020237";
+                    cid = "50000436";
                 }
                 if( /T恤/i.test(title) ){
                     cid = "50000436";
@@ -393,7 +402,8 @@ async.series([
                 }
             }
 
-            data.cid = cid;
+            // 话说这些类别都不好，只能使用T恤了。
+            return "50000671";
         };
 
         //宝贝分类
@@ -404,14 +414,14 @@ async.series([
                 attr = "";
             if( isSports ){
                 type = "SPORTS";
-                if( ~title.indexOf("女") ){
+                if( /女|bra/i.test(title) ){
                     attr = "女装";
                 }else{
                     attr = "男装";
                 }
                 return SELLER_CIDS[type][attr];
             }else{
-                if( ~title.indexOf("女") ){
+                if( /女/i.test(title) ){
                     type = "WOMEN";
                 }else{
                     type = "MEN";
@@ -433,7 +443,7 @@ async.series([
 
         // 宝贝属性
         var cateProps = function(obj, datas) {
-            obj.cateProps = "";
+            obj.cateProps = "20021:105255;13328588:492838733;";
             var str = "",
                 i = 0;
 
@@ -441,7 +451,7 @@ async.series([
                 obj.cateProps += input_custom_cpv(obj, "color", data.color);
 
                 data.ItemList.forEach(function(item) {
-                    str += input_custom_cpv(obj, "size", item['體型尺寸']);
+                    str += input_custom_cpv(obj, "size", item['體型尺寸'], item.size);
                 });
             });
             obj.cateProps += str;
