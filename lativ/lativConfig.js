@@ -1,3 +1,14 @@
+var categoryConfig = {
+    "Accept": "application/json, text/javascript, */*; q=0.01",
+    "Accept-Encoding": "gzip, deflate, sdch",
+    "Accept-Language": "zh-CN,zh;q=0.8",
+    "Connection": "keep-alive",
+    "Host": "www.lativ.com",
+    // "Referer": "http://www.lativ.com/WOMEN",
+    "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.116 Safari/537.36",
+    "X-Requested-With": "XMLHttpRequest"
+};
+
 var detailConfig = {
     "Accept": "application/json, text/javascript, */*; q=0.01",
     "Accept-Encoding": "gzip, deflate, sdch",
@@ -86,18 +97,18 @@ var SIZE = {
     "145/80A": "20509:649458002;",
     "150/80A": "20509:66579689;",
     "155/80A": "20509:3959184;",
-    "155/84A": "20509:-1004;",
+    // "155/84A": "20509:-1004;",
     "160/84A": "20509:6215318;",
-    "160/88A": "20509:-1005;",
-    "165/84A": "20509:-1001;",
+    // "160/88A": "20509:-1005;",
+    // "165/84A": "20509:-1001;",
     "165/88A": "20509:3267942;",
-    "165/92A": "20509:-1006;",
+    // "165/92A": "20509:-1006;",
     "170/92A": "20509:3267943;",
-    "170/96A": "20509:-1007;",
+    // "170/96A": "20509:-1007;",
     "175/96A": "20509:3267944;",
     "175/100A": "20509:71744989;",
-    "180/108B": "20509:-1002;",
-    "185/112C": "20509:-1003;"
+    // "180/108B": "20509:-1002;",
+    // "185/112C": "20509:-1003;"
 };
 
 var SELLER_CIDS = {
@@ -160,6 +171,7 @@ var SELLER_CIDS = {
 };
 
 
+exports.categoryConfig = categoryConfig;
 exports.detailConfig = detailConfig;
 exports.COLOR = COLOR;
 exports.SIZE = SIZE;

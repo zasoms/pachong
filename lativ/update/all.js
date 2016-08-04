@@ -6,77 +6,12 @@ var async = require("async"),
     iconv = require("iconv-lite"),
     fs = require("fs"),
     _ = require("underscore"),
-    debug = require("debug")("blog:update:all");
+    debug = require("debug")("lativ:update:all");
 
 var classList,
-    productList = [];
-
-var fields = [
-    "title",            //宝贝名称
-    "cid",              //宝贝类目
-    "seller_cids",      //店铺类目
-    "stuff_status",     //新旧程度
-    "location_state",   //省
-    "location_city",    //城市
-    "item_type",      //出售方式
-    "price",            //宝贝价格
-    "auction_increment",//加价幅度
-    "num",              //宝贝数量
-    "valid_thru",       //有效期
-    "freight_payer",    //运费承担
-    "post_fee",         //平邮
-    "ems_fee",          //EMS
-    "express_fee",      //快递
-    "has_invoice",      //发票
-    "has_warranty",     //保修
-    "approve_status",   //放入仓库
-    "has_showcase",     //橱窗推荐
-    "list_time",        //开始时间
-    "description",      //宝贝描述
-    "cateProps",        //宝贝属性
-    "postage_id",       //邮费模版ID
-    "has_discount",     //会员打折
-    "modified",         //修改时间
-    "upload_fail_msg",  //上传状态
-    "picture_status",   //图片状态
-    "auction_point",    //返点比例
-    "picture",          //新图片
-    "video",            //视频
-    "skuProps",         //销售属性组合
-    "inputPids",        //用户输入ID串
-    "inputValues",      //用户输入名-值对
-    "outer_id",         //商家编码
-    "propAlias",        //销售属性别名
-    "auto_fill",        //代充类型
-    "num_id",           //数字ID
-    "local_cid",        //本地ID
-    "navigation_type",  //宝贝分类
-    "user_name",        //账户名称
-    "syncStatus",       //宝贝状态
-    "is_lighting_consigment",   //闪电发货
-    "is_xinpin",        //新品
-    "foodparame",       //食品专项
-    "sub_stock_type",   //库存计数
-    "item_size",        //物流体积
-    "item_weight",      //物流重量
-    "buyareatype",      //采购地
-    "global_stock_type",    //库存类型
-    "global_stock_country",//国家地区
-    "wireless_desc",        //无线详情
-    "barcode",          //商品条形码
-    "subtitle",         //宝贝卖点
-    "sku_barcode",	    //sku条形码
-    "cpv_memo",         //属性值备注
-    "input_custom_cpv", //自定义属性值
-    "features",         //尺码库
-    "buyareatype",      //采购地
-    "sell_promise",     //退换货承诺
-    "custom_design_flag",//定制工具
-    "newprepay",        //7天退货
-    "qualification",    //商品资质
-    "add_qualification",//增加商品资质
-    "o2o_bind_service"  //关联线下服务
-];
+    productList = [],
+    zhutu = {},
+    desc = [];
 
 async.series([
     //获取产品分类
@@ -85,19 +20,15 @@ async.series([
         read.classList(config.lativ.url, function(err, list) {
             classList = list;
             classList.pop(); //iLook里面有cacheID
+            classList.length = 1;
             done(err);
         });
     },
-    // // 保存文章分类
-    // function(done){
-    // 	console.log("保存文章分类");
-    // 	save.classList(classList, done);
-    // },
     // 获取产品信息
     function(done) {
         console.log("获取产品信息");
         async.eachSeries(classList, function(c, next) {
-            read.productList(c.href, c.rel, function(err, list) {
+            read.categorytList(c.href, c.rel, function(err, list) {
                 productList = productList.concat(list);
                 next(err);
             });
@@ -106,32 +37,67 @@ async.series([
     // 获取产品详情
     function(done) {
         console.log("获取产品详情");
-        var i = 0;
         async.eachSeries(productList, function(c, next) {
-            c.url = "http://www.lativ.com/Detail/" + c.image_140.split("/")[3];
-            read.productDetail(c.url, function(err, data) {
-                    if( data.description ){
-                        next(err);
-                        _.extend(productList[i],  data);
-                    }
-                    i++;
+            c.url = "http://www.lativ.com/Detail/" + c.urlId;
+            read.productDetail(c.url, function(err, data, zhutuPhoto, descPhoto) {
+                 console.log(descPhoto.length);
+                if( data ){
+                    productList.push(data);
+                    _.extend(zhutu,  zhutuPhoto);
+                    desc = desc.concat(descPhoto);
+                }
+                next(err);
             });
         }, done);
     },
+    // 主图片下载
+    function(done){
+         console.log("主图片下载");
+         read.downloadImg(zhutu, 10, "./data/", function(){
+            done();
+         });
+    },
+    // 描述图片下载
+    function(done){
+        console.log("描述图片下载");
+        read.downloadImg(desc, 10, "./data/img/", function(){
+            done();
+        });
+    },
     function(done) {
         console.log("导出csv");
+        var en = ["title", "cid", "seller_cids", "stuff_status", "location_state", "location_city", "item_type", "price", "auction_increment", "num",
+                        "valid_thru", "freight_payer", "post_fee", "ems_fee", "express_fee", "has_invoice", "has_warranty", "approve_status", "has_showcase",
+                        "list_time", "description", "cateProps", "postage_id", "has_discount", "modified", "upload_fail_msg", "picture_status", "auction_point",
+                        "picture", "video", "skuProps", "inputPids", "inputValues", "outer_id", "propAlias", "auto_fill", "num_id", "local_cid", "navigation_type",
+                        "user_name", "syncStatus", "is_lighting_consigment", "is_xinpin", "foodparame", "features", "buyareatype", "global_stock_type", "global_stock_country",
+                        "sub_stock_type", "item_size", "item_weight", "sell_promise", "custom_design_flag", "wireless_desc", "barcode", "sku_barcode", "newprepay", "subtitle",
+                        "cpv_memo", "input_custom_cpv", "qualification", "add_qualification", "o2o_bind_service"];
+
+        var zh = ["宝贝名称", "宝贝类目", "店铺类目", "新旧程度",  "省", "城市", "出售方式", "宝贝价格", "加价幅度", "宝贝数量","有效期", "运费承担",
+                    "平邮", "EMS", "快递","发票", "保修", "放入仓库", "橱窗推荐", "开始时间", "宝贝描述", "宝贝属性", "邮费模版ID", "会员打折", "修改时间",
+                    "上传状态", "图片状态", "返点比例", "新图片", "视频", "销售属性组合", "用户输入ID串", "用户输入名-值对", "商家编码", "销售属性别名",
+                    "代充类型", "数字ID", "本地ID", "宝贝分类", "用户名称", "宝贝状态", "闪电发货", "新品", "食品专项", "尺码库", "采购地", "库存类型",
+                    "国家地区", "库存计数", "物流体积", "物流重量", "退换货承诺", "定制工具", "无线详情", "商品条形码", "sku 条形码", "7天退货", "宝贝卖点",
+                    "属性值备注", "自定义属性值", "商品资质", "增加商品资质", "关联线下服务"];
+        productList.filter(function(item){
+            return item.title;
+        });
+
         json2csv({
             data: productList,
+            fields: en,
+            fieldNames: zh,
+            quotes: "",
+            // del: ","
         }, function(err, csv){
             if( err ){
                 console.log(err);
-                done();
             }else{
                 var newCsv = iconv.encode(csv, 'GBK');
-                fs.writeFile("file.csv", newCsv, function(err){
-                    if(err) throw er;
+                fs.writeFile("data.csv", newCsv, function(err){
+                    if(err) throw err;
                     console.log("file saved");
-                    done();
                 });
             }
         });
