@@ -10,39 +10,56 @@ var async = require("async"),
 
 var classList,
     productList = [],
+    productDetail = [],
     zhutu = {},
     desc = [];
 
 async.series([
-    //获取产品分类
-    function(done) {
-        console.log("获取产品分类");
-        read.classList(config.lativ.url, function(err, list) {
-            classList = list;
-            classList.pop(); //iLook里面有cacheID
-            classList.length = 1;
-            done(err);
+    // //获取产品分类
+    // function(done) {
+    //     console.log("获取产品分类");
+    //     read.classList(config.lativ.url, function(err, list) {
+    //         classList = list;
+    //         classList.pop(); //iLook里面有cacheID
+    //         classList.length = 1;
+    //         done(err);
+    //     });
+    // },
+    // // 获取产品信息
+    // function(done) {
+    //     console.log("获取产品信息");
+    //     async.eachSeries(classList, function(c, next) {
+    //         read.categorytList(c.href, c.rel, function(err, list) {
+    //             productList = productList.concat(list);
+    //             next(err);
+    //         });
+    //     }, done);
+    // },
+
+    // 自定义产品
+    // function(done){
+    //     productList = ["23275013"];
+    //     done();
+    // },
+
+    // 自定义产品
+    function(done){
+
+        read.getActivity("1P29", "WOMEN", 1, 3024, function(err, ids){
+            productList = ids;
+            done();
         });
     },
-    // 获取产品信息
-    function(done) {
-        console.log("获取产品信息");
-        async.eachSeries(classList, function(c, next) {
-            read.categorytList(c.href, c.rel, function(err, list) {
-                productList = productList.concat(list);
-                next(err);
-            });
-        }, done);
-    },
+
     // 获取产品详情
     function(done) {
         console.log("获取产品详情");
         async.eachSeries(productList, function(c, next) {
-            c.url = "http://www.lativ.com/Detail/" + c.urlId;
-            read.productDetail(c.url, function(err, data, zhutuPhoto, descPhoto) {
-                 console.log(descPhoto.length);
-                if( data ){
-                    productList.push(data);
+            // c.url = "http://www.lativ.com/Detail/" + c.urlId;
+            var url = "http://www.lativ.com/Detail/" + c;
+            read.productDetail(url, c, function(err, data, zhutuPhoto, descPhoto) {
+                if( data.title ){
+                    productDetail.push(data);
                     _.extend(zhutu,  zhutuPhoto);
                     desc = desc.concat(descPhoto);
                 }
@@ -80,12 +97,10 @@ async.series([
                     "代充类型", "数字ID", "本地ID", "宝贝分类", "用户名称", "宝贝状态", "闪电发货", "新品", "食品专项", "尺码库", "采购地", "库存类型",
                     "国家地区", "库存计数", "物流体积", "物流重量", "退换货承诺", "定制工具", "无线详情", "商品条形码", "sku 条形码", "7天退货", "宝贝卖点",
                     "属性值备注", "自定义属性值", "商品资质", "增加商品资质", "关联线下服务"];
-        productList.filter(function(item){
-            return item.title;
-        });
+        
 
         json2csv({
-            data: productList,
+            data: productDetail,
             fields: en,
             fieldNames: zh,
             quotes: "",

@@ -140,29 +140,6 @@ function hex(){
 }
 hex.cache = {};
 
-var input_custom_cpv = function(obj, type, value, size){
-    var data = type === 'color' ? COLOR : SIZE;
-    
-    if( type == 'color' ){
-        if( !data[value] ){
-            data[value] = "1627207:-"+ input_custom_cpv.color + ";";
-            obj.input_custom_cpv += "1627207:-" + input_custom_cpv.color + ":"+ value +";";
-            input_custom_cpv.color++;
-        }
-    }
-    if( type == 'size' ){
-        if( !data[value] ){
-            data[value] = "20509:-"+ input_custom_cpv.size + ";";
-            obj.input_custom_cpv += "20509:-" + input_custom_cpv.size + ":"+ value + "("+ size +");";
-            input_custom_cpv.size++;
-        }else{
-            obj.cpv_memo += data[value].slice(0, -1) + ":" + size +";";
-        }
-    }
-    return data[value];
-};
-input_custom_cpv.color= 1001;
-input_custom_cpv.size= 1001;
 
 var dataMatch = function(data) {
     data.seller_cids = seller_cids(data);
@@ -191,7 +168,8 @@ var dataMatch = function(data) {
     data.auction_point = "0";
 
     //宝贝类目
-    data.cid = "50000671";
+    // data.cid = "50000671";
+    data.cid = cid(data);
 
     data.video = "";  //TODO
 
@@ -215,6 +193,8 @@ var dataMatch = function(data) {
 
     // 自定义属性
     data.input_custom_cpv = "";
+    //宝贝属性
+    data.cateProps = "";
 };
 
 // 宝贝类目
@@ -315,7 +295,7 @@ var cid = function(data){
         }
         if( /吊带|背心/.test(title) ){
             cid = "50010394";
-            data.cateProps += "20000:29534;24477:20533;";
+            data.cateProps += "20000:29534;20021:105255;24477:20533;";
         }
         if( /文胸/.test(title) ){
             cid = "50008881";
@@ -324,7 +304,7 @@ var cid = function(data){
             // 尺寸 122508275
         }
         if( /内裤|三角短裤|平脚短裤|生理裤|安全裤/.test(title) ){
-            cid = "50008881";
+            cid = "50008882";
             data.cateProps += "20000:29534;24477:20533;122216608:3267959;";
             data.inputPids = "166332348";
             data.inputValues = "1条";
@@ -387,7 +367,7 @@ var cid = function(data){
     }
 
     // 话说这些类别都不好，只能使用T恤了。
-    return "50000671";
+    return cid;
 };
 //宝贝分类
 var seller_cids = function(data){
@@ -422,9 +402,42 @@ var seller_cids = function(data){
         return value;
     }
 };
+
+var input_custom_cpv = (function(obj, type, value, size){
+    var cNum = 1001,
+        sNum = 1001,
+        cache = {};
+    return function(obj, type, value, size){
+        var data = type === 'color' ? COLOR : SIZE;
+    
+        if( type == 'color' ){
+            if( !data[value] ){
+                data[value] = "1627207:-"+ cNum + ";";
+                obj.input_custom_cpv += "1627207:-" + cNum + ":"+ value +";";
+                cNum++;
+            }
+        }
+        if( type == 'size' ){
+            if( !value.trim() ){
+                value = size;
+            }
+            if( !data[value] ){
+                data[value] = "20509:-"+ sNum + ";";
+                obj.input_custom_cpv += "20509:-" + sNum + ":"+ value + "("+ size +");";
+                sNum++;
+            }else{
+                if( !cache[value] ){
+                    obj.cpv_memo += data[value].slice(0, -1) + ":" + size +";";
+                    cache[value] = 1;
+                }
+            }
+        }
+        return data[value];
+    };
+})();
 // 宝贝属性
 var cateProps = function(obj, datas) {
-    obj.cateProps = "20021:105255;13328588:492838733;";
+    obj.cateProps += "20021:105255;13328588:492838733;";
     // 属性值备注
     obj.cpv_memo = "";
     var str = "",
@@ -454,7 +467,11 @@ var skuProps = function(obj, datas) {
         data.ItemList.forEach(function(item) {
             num += item.invt;
             numPrice = price + ":" + item.invt + "::";
-            sizes = SIZE[item['體型尺寸']];
+            if( item['體型尺寸'].trim() ){
+                sizes = SIZE[item['體型尺寸']];
+            }else{
+                sizes = SIZE[item['size']];
+            }
             str += numPrice + colors + sizes;
         });
     });
@@ -538,7 +555,8 @@ var getReport = function(type, id, callback){
             }
 
             $("table").css({
-                borer: "1px solid #eee" 
+                borer: "1px solid #eee",
+                width: "100%" 
             }).attr({
                 cellspacing: 0,
                 border: 1,
@@ -546,41 +564,6 @@ var getReport = function(type, id, callback){
             });
 
             callback(null, $(".panes").html().replace(/\r|\n/gm, "").trim());
-        });
-};
-getReport("Size", 25944, function(err, res){
-    console.log(res);
-});
-// 获得该商品的数目、尺寸和颜色
-var getProduct = function(id, product, callback){
-    request.get("http://www.lativ.com/Product/ProductInfo/?styleNo=" + id)
-        .set(detailConfig)
-        .end(function(err, res) {
-            if (err) return console.log(err);
-
-            var data = JSON.parse(JSON.parse(res.text).info);
-            var activity = JSON.parse(JSON.parse(res.text).activity);
-
-            if( activity.Discount ){
-                if( /1件/.test(activity.ActivityName) ){
-                    if( activity.Discount < 1 ){
-                        product.price = Math.ceil(product.price * activity.Discount);
-                    }else{
-                        product.price = parseInt(activity.Discount);
-                    }
-                }
-            }
-            product.price = Number(product.price) + 5;
-
-            dataMatch(product);
-
-            cateProps(product, data);
-
-            skuProps(product, data);
-
-            picture(product, data);
-
-            callback(err, product, zhutuPhoto, descPhoto);
         });
 };
 
@@ -616,7 +599,6 @@ var downloadImg = function(photos, num, root, callback){
 };
 downloadImg.prototype.requestAndwrite = function(url, root, callback){
     var _arr = this._arr;
-    console.log(url);
     request.get(url).end(function(err, res) {
         if (err) {
             console.log("有一张图片请求失败啦...");
@@ -646,7 +628,7 @@ downloadImg.prototype.requestAndwrite = function(url, root, callback){
  * @param  {Function} callback [description]
  * @return {[type]}            [description]
  */
-exports.productDetail = function(url, callback){
+exports.productDetail = function(url, productid, callback){
     debug("读取产品详情: %s", url);
 
     var product = {};
@@ -683,7 +665,7 @@ exports.productDetail = function(url, callback){
             id = text.slice(index, index + 40).toString().match(/\d+/)[0];
 
             product.price = $("#price").text();
-            product.title = title + id;
+            product.title = title + productid;
             product.subtitle = title;
 
             description(product, id, desc);
@@ -692,7 +674,87 @@ exports.productDetail = function(url, callback){
             getProduct(id,  product, callback);
 		});
 };
+// 获得该商品的数目、尺寸和颜色
+var getProduct = function(id, product, callback){
+    request.get("http://www.lativ.com/Product/ProductInfo/?styleNo=" + id)
+        .set(detailConfig)
+        .end(function(err, res) {
+            if (err) return console.log(err);
+
+            var data = JSON.parse(JSON.parse(res.text).info);
+            var activity = JSON.parse(JSON.parse(res.text).activity);
+
+            if( activity.Discount ){
+                if( /1件/.test(activity.ActivityName) ){
+                    if( activity.Discount < 1 ){
+                        product.price = Math.ceil(product.price * activity.Discount);
+                    }else{
+                        product.price = parseInt(activity.Discount);
+                    }
+                }
+            }
+            product.price = Number(product.price) + 5;
+
+            dataMatch(product);
+
+            cateProps(product, data);
+
+            skuProps(product, data);
+
+            picture(product, data);
+
+            callback(err, product, zhutuPhoto, descPhoto);
+        });
+};
 exports.downloadImg = function(photos, num, root, callback){
     downloadImg(photos, num, root, callback);
 };
 
+// 获取活动中的产品
+exports.getActivity = function(activityNo, mainCategory, pageIndex, cacheID, callback){
+    var cache = {},
+        ids = [];
+
+    function getParam(activityNo, mainCategory, pageIndex, cacheID){
+        var url = "http://www.lativ.com/Product/GetOnSaleList?activityNo="+ activityNo +"&mainCategory="+ mainCategory +"&pageIndex="+ pageIndex +"&cacheID="+ cacheID;
+        request.get(url)
+            .set({
+                "_1_auth": "S9Bc5scO1d8dS16GOCJ0mpkcSegR3z",
+                "_1_ver": "0.3.0",
+                "Accept": "application/json, text/javascript, */*; q=0.01",
+                "Accept-Encoding": "gzip, deflate, sdch",
+                "Accept-Language": "zh-CN,zh;q=0.8",
+                "Cache-Control": "max-age=0",
+                "Connection": "keep-alive",
+                "Cookie": "mCart=1470413101221; ASP.NET_SessionId=3mdq1hf3cpb0c5dyibxac10m; lativ_=dc25406f-aaf3-43ac-b351-2aca75b34c4e; fav_item=%7B%22login%22%3Afalse%2C%22item%22%3A%22%22%7D; Hm_lvt_56ad3bce3340fedae44bef6312d6df70=1470228492,1470312869,1470405270,1470413101; Hm_lpvt_56ad3bce3340fedae44bef6312d6df70=1470413204",
+                "Host": "www.lativ.com",
+                "Referer": "http://www.lativ.com/OnSale/" + activityNo,
+                "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36",
+                "X-Requested-With": "XMLHttpRequest"
+            })
+            .end(function(err, res){
+                if(err) {
+                    callback(err);
+                    return;
+                }
+                var SaleInfo = JSON.parse(JSON.parse(res.text).SaleInfo);
+                if( SaleInfo.length ){
+                    SaleInfo.forEach(function(item){
+                        var arr = item["圖片"].split("/");
+                        if( !cache[arr[2]] ){
+                            ids.push(arr[3]);
+                            cache[arr[2]] = 1;
+                        }
+                    });
+
+                    getParam(activityNo, mainCategory, ++pageIndex, cacheID);
+                }else{
+                    callback(null, ids);
+                }
+
+            });
+    }
+
+    getParam(activityNo, mainCategory, pageIndex, cacheID, callback);
+    
+};
