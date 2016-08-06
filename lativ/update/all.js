@@ -42,9 +42,9 @@ async.series([
     //     done();
     // },
 
-    // 自定义产品
+    // 获取活动产品
     function(done){
-
+        console.log("获取活动产品");
         read.getActivity("1P29", "WOMEN", 1, 3024, function(err, ids){
             productList = ids;
             done();
@@ -54,8 +54,7 @@ async.series([
     // 获取产品详情
     function(done) {
         console.log("获取产品详情");
-        async.eachSeries(productList, function(c, next) {
-            // c.url = "http://www.lativ.com/Detail/" + c.urlId;
+        async.mapLimit(productList, 5, function(c , next){
             var url = "http://www.lativ.com/Detail/" + c;
             read.productDetail(url, c, function(err, data, zhutuPhoto, descPhoto) {
                 if( data.title ){
@@ -66,6 +65,18 @@ async.series([
                 next(err);
             });
         }, done);
+        // async.eachSeries(productList, function(c, next) {
+        //     // c.url = "http://www.lativ.com/Detail/" + c.urlId;
+        //     var url = "http://www.lativ.com/Detail/" + c;
+        //     read.productDetail(url, c, function(err, data, zhutuPhoto, descPhoto) {
+        //         if( data.title ){
+        //             productDetail.push(data);
+        //             _.extend(zhutu,  zhutuPhoto);
+        //             desc = desc.concat(descPhoto);
+        //         }
+        //         next(err);
+        //     });
+        // }, done);
     },
     // 主图片下载
     function(done){
