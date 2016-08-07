@@ -38,14 +38,14 @@ async.series([
 
     // 自定义产品
     // function(done){
-    //     productList = ["23275013"];
+    //     productList = ["26200071"];
     //     done();
     // },
 
     // 获取活动产品
     function(done){
         console.log("获取活动产品");
-        read.getActivity("1P29", "WOMEN", 1, 3024, function(err, ids){
+        read.getActivity("1P59", 3029, function(err, ids){
             productList = ids;
             done();
         });
@@ -56,7 +56,7 @@ async.series([
         console.log("获取产品详情");
         async.mapLimit(productList, 5, function(c , next){
             var url = "http://www.lativ.com/Detail/" + c;
-            read.productDetail(url, c, function(err, data, zhutuPhoto, descPhoto) {
+            read.productDetail(url, function(err, data, zhutuPhoto, descPhoto) {
                 if( data.title ){
                     productDetail.push(data);
                     _.extend(zhutu,  zhutuPhoto);
