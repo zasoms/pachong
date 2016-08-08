@@ -37,19 +37,47 @@ async.series([
     // },
 
     // 自定义产品
-    // function(done){
-    //     productList = ["26200071"];
-    //     done();
-    // },
+    function(done){
+        productList = [
+        "25372014",
+        "25371024",
+        "28848011",
+        "28387021",
+        "25377011",
+        "25375011",
+        "25374021",
+        "23275013",
+        "25224011",
+        "25226011",
+        "25457011",
+        "25489071",
+        "25491031",
+        "25378013",
+        "25499021",
+        "25896011",
+        "25516021"
+        ];
+        done();
+    },
 
     // 获取活动产品
-    function(done){
-        console.log("获取活动产品");
-        read.getActivity("1P59", 3029, function(err, ids){
-            productList = ids;
-            done();
-        });
-    },
+    // function(done){
+    //     console.log("获取活动产品");
+    //     read.getActivity("1P59", 3029, function(err, ids){
+    //         productList = ids;
+    //         done();
+    //     });
+    // },
+    // 
+    // function(done){
+    //     read.getCategoryProduct(function(err, ids){
+    //         if( ids ){
+    //             productList = ids;
+    //             console.log(productList.length);
+    //             done();
+    //         }
+    //     });
+    // },
 
     // 获取产品详情
     function(done) {

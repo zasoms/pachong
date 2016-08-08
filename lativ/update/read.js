@@ -218,16 +218,16 @@ productDetail.prototype = {
                 var data = JSON.parse(JSON.parse(res.text).info);
                 var activity = JSON.parse(JSON.parse(res.text).activity);
 
-                if( activity.Discount ){
-                    if( /1件/.test(activity.ActivityName) ){
-                        if( activity.Discount < 1 ){
-                            product.price = Math.ceil(product.price * activity.Discount);
-                        }else{
-                            product.price = parseInt(activity.Discount);
-                        }
-                    }
-                }
-                product.price = Number(product.price);
+                // if( activity.Discount ){
+                //     if( /1件/.test(activity.ActivityName) ){
+                //         if( activity.Discount < 1 ){
+                //             product.price = Math.ceil(product.price * activity.Discount);
+                //         }else{
+                //             product.price = parseInt(activity.Discount);
+                //         }
+                //     }
+                // }
+                // product.price = Number(product.price);
 
                 _this.dataMatch();
 
@@ -672,13 +672,11 @@ productDetail.prototype = {
                     $("img").attr("src", "https://img.alicdn.com/imgextra/i2/465916119/TB2X766tVXXXXbDXpXXXXXXXXXX_!!465916119.gif");
                 }
 
-                $("table").css({
-                    borer: "1px solid #eee",
-                    width: "100%" 
-                }).attr({
+                $("table").attr({
                     cellspacing: 0,
                     border: 1,
-                    align: "center"
+                    align: "center",
+                    width: "100%"
                 });
 
                 callback(null, $(".panes").html().replace(/\r|\n/gm, "").trim());
@@ -799,4 +797,59 @@ exports.getActivity = function(activityNo, cacheID, callback){
             });
     }
     getParam(activityNo, category[categoryIndex], pageIndex, cacheID, callback);
+};
+
+
+exports.getCategoryProduct = function(callback){
+    var main = ["WOMEN", "MEN"],
+        mainIndex = 0,
+        cache = {},
+        ids = [],
+        urls = [],
+        index = 0;
+    function getCategory(category){
+        request.get("http://www.lativ.com/" + category)
+            .end(function(err, res){
+                var $ = cheerio.load( res.text , {decodeEntities: false});
+                var $a = $(".category").slice(0, -1).find("a");
+                
+                $a.each(function(i, item){
+                    urls.push(item.attribs.href);
+                });
+                if( mainIndex < 2 ){
+                    getCategory( main[++mainIndex] );
+                }else{
+                    getPageProducts(urls[index]);
+                }
+            });
+    }
+    getCategory(main[mainIndex]);
+    
+    function getPageProducts(url){
+        request.get("http://www.lativ.com"+ url)
+            .end(function(err, res){
+                if(err){
+                    return callback(err);
+                }
+                var $ = cheerio.load( res.text);
+                var $imgs = $(".specialmain img");
+
+                
+                    $imgs.each(function(i, item){
+                        var info = item.attribs["data-original"].split("/"),
+                            productId = info[4],
+                            product = info[5];
+                        if( !cache[productId] ){
+                            cache[productId] = 1;
+                            ids.push( product );
+                        }
+                    });
+                if( index < urls.length - 1 ){       
+                    getPageProducts(urls[++index]);
+                }else{
+                    callback(null, ids);
+                }
+                
+            });
+    }
 };
