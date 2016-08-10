@@ -229,7 +229,7 @@ productDetail.prototype = {
                 // }
                 // product.price = Number(product.price);
 
-                _this.dataMatch();
+                _this.dataMatch(id);
 
                 //宝贝类目
                 _this.cid();
@@ -243,7 +243,7 @@ productDetail.prototype = {
             });
     },
     // 数据处理
-    dataMatch: function() {
+    dataMatch: function(productId) {
         var product = this.product;
         // 属性值备注
         product.cpv_memo = "";
@@ -263,7 +263,11 @@ productDetail.prototype = {
         product.approve_status = 1;
         product.has_showcase = 1;
         product.list_time = "";
-        product.postage_id = 5478758160;
+        //邮费模板
+        // product.postage_id = 5478758160;
+        // 59包邮
+        product.postage_id = 8151607820;
+
         product.has_discount = 0;
         product.list_time = "2016/7/21  21:17:33";
         product.modified = "2016/7/21  21:17:33";
@@ -272,6 +276,9 @@ productDetail.prototype = {
         product.auction_point = "0";
 
         product.video = "";  //TODO
+        
+        // 这是为了货店通的需要，所以加上
+        product.outer_id = "BN-" + productId.slice(0, 5);  
 
         //宝贝分类
         product.navigation_type = 1;
@@ -281,7 +288,11 @@ productDetail.prototype = {
         product.syncStatus = "1";
         product.user_name = "623064100_00";
         product.features = "mysize_tp:-1;sizeGroupId:136553091;sizeGroupType:women_top";
-        product.num_id = "0";
+        
+
+        // 数字ID
+        product.num_id = "536881998999";
+
         product.is_xinpin = "248";
         product.auto_fill = "0";
         product.item_suze = "bulk:0.000000";
@@ -309,6 +320,7 @@ productDetail.prototype = {
         desc = desc.trim();
         desc =  desc.replace(/\r|\n/gm, "")
                 .replace(/\"/gm, "'")
+                .replace(/,/gm, "，")
                 .replace(/data-original=\'\'/gm, "")
                 .replace(/http(s?):\/\/s[0-9].lativ.com\/(.*?).(jpg|png|gif)/gm, function(match, escape, interpolate, evaluate, offset){
                     photos.push(match);
@@ -578,7 +590,8 @@ productDetail.prototype = {
     cateProps: function(datas) {
         var _this = this,
             product = this.product;
-        product.cateProps += "20021:105255;13328588:492838733;";
+        product.cateProps += "";
+        // product.cateProps += "20021:105255;13328588:492838733;";
         var str = "",
             i = 0;
 

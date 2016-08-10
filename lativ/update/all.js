@@ -39,23 +39,24 @@ async.series([
     // 自定义产品
     function(done){
         productList = [
-        "25372014",
-        "25371024",
-        "28848011",
-        "28387021",
-        "25377011",
-        "25375011",
-        "25374021",
-        "23275013",
-        "25224011",
-        "25226011",
-        "25457011",
-        "25489071",
-        "25491031",
-        "25378013",
-        "25499021",
-        "25896011",
-        "25516021"
+        "26310011"
+        // "25372014"
+        // "25371024",
+        // "28848011",
+        // "28387021",
+        // "25377011",
+        // "25375011",
+        // "25374021",
+        // "23275013",
+        // "25224011",
+        // "25226011",
+        // "25457011",
+        // "25489071",
+        // "25491031",
+        // "25378013",
+        // "25499021",
+        // "25896011",
+        // "25516021"
         ];
         done();
     },
@@ -70,10 +71,10 @@ async.series([
     // },
     // 
     // function(done){
+    //     console.log("获取活动产品");
     //     read.getCategoryProduct(function(err, ids){
     //         if( ids ){
     //             productList = ids;
-    //             console.log(productList.length);
     //             done();
     //         }
     //     });
@@ -82,7 +83,7 @@ async.series([
     // 获取产品详情
     function(done) {
         console.log("获取产品详情");
-        async.mapLimit(productList, 5, function(c , next){
+        async.mapLimit(productList, 2, function(c , next){
             var url = "http://www.lativ.com/Detail/" + c;
             read.productDetail(url, function(err, data, zhutuPhoto, descPhoto) {
                 if( data.title ){
@@ -149,7 +150,7 @@ async.series([
                 console.log(err);
             }else{
                 var newCsv = iconv.encode(csv, 'GBK');
-                fs.writeFile("data.csv", newCsv, function(err){
+                fs.writeFile("data.csv", newCsv, "ascii", function(err){
                     if(err) throw err;
                     console.log("file saved");
                 });
