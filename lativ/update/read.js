@@ -255,7 +255,7 @@ productDetail.prototype = {
         product.auction_increment = "0";
         product.valid_thru = 7;
         product.freight_payer = 2;
-        product.post_fee = "2.8026e-45";
+        product.post_fee = "1.4139E-38";
         product.ems_fee = "2.8026e-45";
         product.express_fee = 0;
         product.has_invoice = 0;
@@ -269,8 +269,8 @@ productDetail.prototype = {
         product.postage_id = 8151607820;
 
         product.has_discount = 0;
-        product.list_time = "2016/7/21  21:17:33";
-        product.modified = "2016/7/21  21:17:33";
+        product.list_time = "";
+        product.modified = "";
         product.upload_fail_msg = 200;
         product.picture_status = "1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;";
         product.auction_point = "0";
@@ -281,7 +281,7 @@ productDetail.prototype = {
         product.outer_id = "BN-" + productId.slice(0, 5);  
 
         //宝贝分类
-        product.navigation_type = 1;
+        product.navigation_type = 2;
 
         product.is_lighting_consigment = "32";
         product.sub_stock_type = 2;
@@ -375,12 +375,6 @@ productDetail.prototype = {
                 cid = "50011123";
                 product.cateProps += "20000:29534;20663:20213;42722636:20213;122216345:29938;122216348:29444;122216507:3226292;122216515:29535;122216586:29947;";
             }
-            if( /三角短裤|平角短裤|棉质短裤|印花短裤/.test(title) ){
-                cid = "50008882";
-                product.cateProps += "20000:29534;24477:20532;";
-                product.inputPids = "166332348";
-                product.inputValues = "1条";
-            }
             if( /牛仔裤/.test(title) ){
                 cid = "50010167";
                 product.cateProps += "20000:29534;42722636:248572013;122216515:29535;122276111:20525;";
@@ -389,6 +383,12 @@ productDetail.prototype = {
             }
             if( /短裤|中裤|沙滩裤|五分裤|七分裤|松紧短裤/.test(title) ){
                 cid = "124702002";
+            }
+            if( /三角短裤|平角短裤|平脚短裤|棉质短裤|印花短裤/.test(title) ){
+                cid = "50008882";
+                product.cateProps += "20000:29534;24477:20532;";
+                product.inputPids = "166332348";
+                product.inputValues = "1条";
             }
             if( /长裤|松紧裤|休闲裤/.test(title) ){
                 cid = "3035";
@@ -413,7 +413,7 @@ productDetail.prototype = {
                 product.inputPids = "610347613021751";
                 product.inputValues = product.price + ",短裤";
             }
-            if( /运动长裤/i.test(title) ){
+            if( /运动(.*?)长裤|运动(.*?)紧身裤/i.test(title) ){
                 cid = "50023107";
                 product.cateProps += "20000:29534;122216608:20532;";
                 product.inputPids = "610347613021751";
@@ -438,7 +438,7 @@ productDetail.prototype = {
         // 运动长裤-女 50023107
 
         if( ~title.indexOf("女") ){
-            if( /T恤|中袖|七分袖|POLO/i.test(title) ){
+            if( /T恤|中袖|长衫|七分袖|POLO/i.test(title) ){
                 cid = "50000671";
                 product.cateProps += "20021:105255;13328588:492838734;";
             }
@@ -481,7 +481,7 @@ productDetail.prototype = {
                 product.inputPids = "20000";
                 product.inputValues = "lativ";
             }
-            if( /短裙|牛仔(.*?)裙|紧身裙|迷你裙|中裙|裙裤|喇叭裙|印花长裙/.test(title) ){
+            if( /短裙|牛仔(.*?)裙|紧身裙|窄裙|迷你裙|中裙|裤裙|裙裤|喇叭裙|印花长裙/.test(title) ){
                 cid = "1623";
                 product.cateProps += "122216347:828914351;";
             }
@@ -491,12 +491,12 @@ productDetail.prototype = {
                 //尺寸 20518
                 this.sizePre = "20518";
             }
-            if( /长裤|休闲裤|紧身裤|九分裤|紧身裤/.test(title) ){
+            if( /长裤|休闲裤|紧身裤|九分裤|紧身裤|踩脚裤|带裤紧身窄裙|百搭裤/.test(title) ){
                 cid = "162201";
                 //尺寸 20518
                 this.sizePre = "20518";
             }
-            if( /运动T恤|运动吊带衫|运动(.*?)背心/.test(title) ){
+            if( /运动(.*?)T恤|运动(.*?)吊带衫|运动(.*?)背心/.test(title) ){
                 cid = "50013228";
                 product.cateProps += "20000:29534;20663:29448;122216348:29445;122216608:20533;";
                 product.inputPids = "610347613021751";
@@ -517,6 +517,11 @@ productDetail.prototype = {
                 product.inputPids = "610347613021751";
                 product.inputValues = product.price + ",长裤";
             }
+        }
+
+        if(!cid){
+            cid = "50000671";
+            product.cateProps += "20021:105255;13328588:492838734;";
         }
 
         product.cid = cid;
@@ -814,7 +819,7 @@ exports.getActivity = function(activityNo, cacheID, callback){
 
 
 exports.getCategoryProduct = function(callback){
-    var main = ["WOMEN", "MEN"],
+    var main = ["WOMEN"],
         mainIndex = 0,
         cache = {},
         ids = [],
@@ -825,7 +830,7 @@ exports.getCategoryProduct = function(callback){
             .end(function(err, res){
                 var $ = cheerio.load( res.text , {decodeEntities: false});
                 var $a = $(".category").slice(0, -1).find("a");
-                
+                // console.log($(".category"));
                 $a.each(function(i, item){
                     urls.push(item.attribs.href);
                 });

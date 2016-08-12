@@ -8,14 +8,15 @@
     "node": ">= 0.10.0"
   },
   "dependencies": {
-    "debug": "*",
-    "cheerio": "*",
-    "request": "*",
     "async": "*",
-    "mysql": "*",
-    "express": "*",
+    "cheerio": "*",
+    "cron": "*",
+    "debug": "*",
     "ejs": "*",
-    "cron": "*"
+    "express": "*",
+    "fast-csv": "^2.1.0",
+    "mysql": "*",
+    "request": "*"
   },
   "devDependencies": {
     "iconv-lite": "^0.4.13",

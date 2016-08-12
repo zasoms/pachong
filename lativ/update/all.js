@@ -37,29 +37,29 @@ async.series([
     // },
 
     // 自定义产品
-    function(done){
-        productList = [
-        "26310011"
-        // "25372014"
-        // "25371024",
-        // "28848011",
-        // "28387021",
-        // "25377011",
-        // "25375011",
-        // "25374021",
-        // "23275013",
-        // "25224011",
-        // "25226011",
-        // "25457011",
-        // "25489071",
-        // "25491031",
-        // "25378013",
-        // "25499021",
-        // "25896011",
-        // "25516021"
-        ];
-        done();
-    },
+    // function(done){
+    //     productList = [
+    //     "26310011"
+    //     // "25372014"
+    //     // "25371024",
+    //     // "28848011",
+    //     // "28387021",
+    //     // "25377011",
+    //     // "25375011",
+    //     // "25374021",
+    //     // "23275013",
+    //     // "25224011",
+    //     // "25226011",
+    //     // "25457011",
+    //     // "25489071",
+    //     // "25491031",
+    //     // "25378013",
+    //     // "25499021",
+    //     // "25896011",
+    //     // "25516021"
+    //     ];
+    //     done();
+    // },
 
     // 获取活动产品
     // function(done){
@@ -70,15 +70,15 @@ async.series([
     //     });
     // },
     // 
-    // function(done){
-    //     console.log("获取活动产品");
-    //     read.getCategoryProduct(function(err, ids){
-    //         if( ids ){
-    //             productList = ids;
-    //             done();
-    //         }
-    //     });
-    // },
+    function(done){
+        console.log("获取产品");
+        read.getCategoryProduct(function(err, ids){
+            if( ids ){
+                productList = ids;
+                done();
+            }
+        });
+    },
 
     // 获取产品详情
     function(done) {
@@ -110,14 +110,14 @@ async.series([
     // 主图片下载
     function(done){
          console.log("主图片下载");
-         read.downloadImg(zhutu, 10, "./data/", function(){
+         read.downloadImg(zhutu, 5, "./data/", function(){
             done();
          });
     },
     // 描述图片下载
     function(done){
         console.log("描述图片下载");
-        read.downloadImg(desc, 10, "./data/img/", function(){
+        read.downloadImg(desc, 5, "./data/img/", function(){
             done();
         });
     },
@@ -144,13 +144,13 @@ async.series([
             fields: en,
             fieldNames: zh,
             quotes: "",
-            // del: ","
+            del: ","
         }, function(err, csv){
             if( err ){
                 console.log(err);
             }else{
                 var newCsv = iconv.encode(csv, 'GBK');
-                fs.writeFile("data.csv", newCsv, "ascii", function(err){
+                fs.writeFile("data.csv", newCsv, function(err){
                     if(err) throw err;
                     console.log("file saved");
                 });
