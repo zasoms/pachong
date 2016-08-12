@@ -202,15 +202,15 @@ productDetail.prototype = {
                 product.subtitle = title;
                 _this.disposeDescription(id, desc, function(){
                     detailConfig.Referer = url;
-                    _this.getProduct(id);
+                    _this.getProduct(url.split("Detail/")[1]);
                 });
             });
     },
     // 获得该商品的数目、尺寸和颜色
-    getProduct: function(id){
+    getProduct: function(productId){
         var product = this.product,
             _this = this;
-        request.get("http://www.lativ.com/Product/ProductInfo/?styleNo=" + id)
+        request.get("http://www.lativ.com/Product/ProductInfo/?styleNo=" + productId.slice(0, 5))
             .set(detailConfig)
             .end(function(err, res) {
                 if (err) return console.log(err);
@@ -229,7 +229,7 @@ productDetail.prototype = {
                 // }
                 // product.price = Number(product.price);
 
-                _this.dataMatch(id);
+                _this.dataMatch(productId);
 
                 //宝贝类目
                 _this.cid();
@@ -278,7 +278,7 @@ productDetail.prototype = {
         product.video = "";  //TODO
         
         // 这是为了货店通的需要，所以加上
-        product.outer_id = "BN-" + productId.slice(0, 5);  
+        product.outer_id = "BN-" + productId;  
 
         //宝贝分类
         product.navigation_type = 2;
@@ -383,12 +383,14 @@ productDetail.prototype = {
             }
             if( /短裤|中裤|沙滩裤|五分裤|七分裤|松紧短裤/.test(title) ){
                 cid = "124702002";
+                product.subtitle = "";
             }
             if( /三角短裤|平角短裤|平脚短裤|棉质短裤|印花短裤/.test(title) ){
                 cid = "50008882";
                 product.cateProps += "20000:29534;24477:20532;";
                 product.inputPids = "166332348";
                 product.inputValues = "1条";
+                product.subtitle = "";
             }
             if( /长裤|松紧裤|休闲裤/.test(title) ){
                 cid = "3035";
@@ -819,7 +821,7 @@ exports.getActivity = function(activityNo, cacheID, callback){
 
 
 exports.getCategoryProduct = function(callback){
-    var main = ["WOMEN"],
+    var main = ["WOMEN", "MEN"],
         mainIndex = 0,
         cache = {},
         ids = [],

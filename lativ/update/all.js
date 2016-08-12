@@ -108,19 +108,19 @@ async.series([
         // }, done);
     },
     // 主图片下载
-    function(done){
-         console.log("主图片下载");
-         read.downloadImg(zhutu, 5, "./data/", function(){
-            done();
-         });
-    },
-    // 描述图片下载
-    function(done){
-        console.log("描述图片下载");
-        read.downloadImg(desc, 5, "./data/img/", function(){
-            done();
-        });
-    },
+    // function(done){
+    //      console.log("主图片下载");
+    //      read.downloadImg(zhutu, 5, "./data/", function(){
+    //         done();
+    //      });
+    // },
+    // // 描述图片下载
+    // function(done){
+    //     console.log("描述图片下载");
+    //     read.downloadImg(desc, 5, "./data/img/", function(){
+    //         done();
+    //     });
+    // },
     function(done) {
         console.log("导出csv");
         var en = ["title", "cid", "seller_cids", "stuff_status", "location_state", "location_city", "item_type", "price", "auction_increment", "num",
