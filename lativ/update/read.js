@@ -15,6 +15,8 @@ var COLOR = config.COLOR;
 var SIZE = config.SIZE;
 var SELLER_CIDS = config.SELLER_CIDS;
 
+var DATA = require("./config").data;
+
 // 创建目录
 function mkdirsSync(dirpath, mode) {
     if (!fs.existsSync(dirpath)) {
@@ -164,7 +166,6 @@ productDetail.prototype = {
     init: function(url){
         var product = this.product,
             _this = this;
-        console.log(url);
         request.get(url)
             .end(function(err, res){
                 if(err) return console.log(err);
@@ -192,9 +193,10 @@ productDetail.prototype = {
                 $(".tag").remove();
 
                 title = $(".title1").text().trim();
-                title = "台湾lativ正品2016夏季热销新款" + title.slice(0, title.indexOf("（"));
+                title = "台湾lativ正品2016热销新款" + title.slice(0, title.indexOf("（"));
                 desc = $(".label").html() + $(".oldPic.show").html();
 
+                console.log(url);
                 id = text.slice(index, index + 40).toString().match(/\d+/)[0];
 
                 product.price = $("#price").text();
@@ -278,7 +280,7 @@ productDetail.prototype = {
         product.video = "";  //TODO
         
         // 这是为了货店通的需要，所以加上
-        product.outer_id = "BN-" + productId;  
+        product.outer_id = productId;  
 
         //宝贝分类
         product.navigation_type = 2;
@@ -291,7 +293,8 @@ productDetail.prototype = {
         
 
         // 数字ID
-        product.num_id = "536881998999";
+        
+        product.num_id = DATA[productId];
 
         product.is_xinpin = "248";
         product.auto_fill = "0";
@@ -460,6 +463,7 @@ productDetail.prototype = {
                 product.cateProps += "20000:29534;24477:20533;122216608:3267959;";
                 product.inputPids = "166332348";
                 product.inputValues = "1条";
+                product.subtitle = "";
             }
             if( /雪纺/.test(title) ){
                 cid = "162116";
@@ -482,6 +486,7 @@ productDetail.prototype = {
                 product.cateProps += "122216347:828914351;";
                 product.inputPids = "20000";
                 product.inputValues = "lativ";
+                product.subtitle = "";
             }
             if( /短裙|牛仔(.*?)裙|紧身裙|窄裙|迷你裙|中裙|裤裙|裙裤|喇叭裙|印花长裙/.test(title) ){
                 cid = "1623";
@@ -854,11 +859,10 @@ exports.getCategoryProduct = function(callback){
                 var $ = cheerio.load( res.text);
                 var $imgs = $(".specialmain img");
 
-                
                     $imgs.each(function(i, item){
                         var info = item.attribs["data-original"].split("/"),
                             productId = info[4],
-                            product = info[5];
+                            product = "" + info[5];
                         if( !cache[productId] ){
                             cache[productId] = 1;
                             ids.push( product );

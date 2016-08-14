@@ -1,94 +1,65 @@
-var request = require("superagent"),
-    cheerio = require("cheerio"),
-    async = require("async"),
-    fs = require("fs"),
-    path = require("path"),
-    _ = require("underscore");
+var path = require("path");
+var express = require("express");
+var read = require("./web/read");
+var config = require("./config");
 
-var postData = {
-	m: "login",
-	url: "/"
-};
-var cookie = "";
+var app = express();
 
-request.get("http://www.shuaishou.com/login.aspx")
-	.end(function(err, res){
-		var $ = cheerio.load(res.text);
+// 配置 express
+// app.configure(function() {
+    app.set("views", __dirname + "/views");
+    app.set("view engine", "ejs");
+    // app.use(app.router);
+    app.use('/public', express.static(path.join(__dirname, 'public')));
+// });
 
-		postData["__VIEWSTATE"] = $("#__VIEWSTATE").val();
+app.get("/", function(req, res, next) {
+    // articleListByClassId的第一个参数是文章分类的ID
+    // 第二个参数是返回结果的开始位置
+    // 第三个参数是返回结果的数量
+    // read.articleListByClassId(0, 0, 20, function(err, list) {
+        // if (err) return next(err);
 
-		postData[ $("[value='用户名...']").attr("name") ] = "zh2302277";
-		postData[ $("[type='password']").attr("name") ] = "zh19930721";
+        //渲染模板
+        // res.locals.articleList = list;
+        res.render('index');
+    // });
+});
 
-		login();
-	});
+// app.get("/article/:id", function(req, res, next){
+//     read.article(req.params.id, function(err, article){
+//         if(err) return next(err);
 
-function login(){
-	request.post("http://www.shuaishou.com/login.aspx")
-	.set({
-		_1_auth: "S9Bc5scO1d8dS16GOCJ0mpkcSegR3z",
-		_1_ver: "0.3.0",
-		Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-		"Accept-Encoding": "gzip, deflate",
-		"Accept-Language": "zh-CN,zh;q=0.8",
-		"Cache-Control": "max-age=0",
-		Connection: "keep-alive",
-		"Content-Length": 323,
-		"Content-Type": "application/x-www-form-urlencoded",
-		Host: "www.shuaishou.com",
-		Origin: "http://www.shuaishou.com",
-		Referer: "http://www.shuaishou.com/login.aspx",
-		"Upgrade-Insecure-Requests": 1,
-		"User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36",
-	})
-	.send(postData)
-	.end(function(err, res){
-		cookie = res.headers['set-cookie'][0].split(" path")[0];
-		getProduct();
-	});
-}
+//         //渲染模板
+//         res.locals.article = article;
+//         res.render('article');
+//     });
+// });
 
-function getProduct(){
-	request.post("http://kc.shuaishou.com/KCManagement/Handler/KCManagement.ashx")
-	.set({
-		_1_auth: "S9Bc5scO1d8dS16GOCJ0mpkcSegR3z",
-		_1_ver: "0.3.0",
-		Accept: "text/plain, */*; q=0.01",
-		"Accept-Encoding": "gzip, deflate",
-		"Accept-Language": "zh-CN,zh;q=0.8",
-		"Cache-Control": "max-age=0",
-		Connection: "keep-alive",
-		"Content-Length": 255,
-		"Content-Type": "application/x-www-form-urlencoded",
-		Cookie: cookie + " Hm_lvt_1ce25aec29f08e9e4c41870df26c3850=1470752016; Hm_lpvt_1ce25aec29f08e9e4c41870df26c3850=1470758234",
-		Host: "kc.shuaishou.com",
-		Origin: "http://kc.shuaishou.com",
-		Referer: "http://kc.shuaishou.com/KCManagement/KCManagement.aspx",
-		"User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36",
-		"X-Requested-With": "XMLHttpRequest"
-	})
-	.send({
-		action:"getKCItemList",
-		itemName:"",
-		itemCode:"",
-		sortId:0,
-		numPress:0,
-		numWeight:0,
-		order:0,
-		isMoreSerch:false,
-		exWarehouseTime:0,
-		unsalableItem:0,
-		shopId:0,
-		synchStatus:0,
-		listingStatus:0,
-		itemInventoryChange:0,
-		isTcItem:0,
-		shopIds:7162,
-		shopItemId:"",
-		currentPage:1,
-		pageSize:10
-	})
-	.end(function(err, res){
-		console.log(res.text);
-	});
-}
+app.listen(config.port);
+console.log("服务器已启动");
+
+//定时更新任务
+// var spawn = require("child_process").spawn;
+// var cronJob = require("cron").CronJob;
+
+// var job = new cronJob(config.autoUpdate, function(){
+//     console.log("开始执行定时更新任务");
+//     var update = spawn(process.execPath, [path.resolve(__dirname, "update/all.js")]);
+
+//     update.stdout.pipe(process.stdout);
+//     update.stderr.pipe(process.stderr);
+
+//     update.on("close", function(code){
+//         console.log("更新任务结束，代码=%d", code);
+//     });
+// }, null, true, "America/Los_Angeles");
+// job.start();
+
+
+/**
+ * 避免网路连接慢时，发生错误，抛出异常，导致nodejs进程直接退出。
+ */
+process.on("uncaughtException", function(err){
+    console.error("uncaughtException: %s" + err.stack);
+});
