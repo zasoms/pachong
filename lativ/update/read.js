@@ -405,7 +405,7 @@ productDetail.prototype = {
                 cid = "50013228";
                 product.cateProps += "20000:29534;20663:29447;122216348:29445;122216608:20532;";
                 product.inputPids = "610347613021751";
-                product.inputValues = product.price + ",T恤";
+                product.inputValues = product.price + ",other";
 
                 this.sizePre = "20509";
                 // 尺寸 20509
@@ -423,6 +423,10 @@ productDetail.prototype = {
                 product.cateProps += "20000:29534;122216608:20532;";
                 product.inputPids = "610347613021751";
                 product.inputValues = product.price + ",长裤";
+            }
+            if( /羽绒/.test(title) ){
+                cid = "50011167";
+                product.cateProps += "20000:29534;6861561:20213;42722636:20213;122216515:29535;122216562:3226292;";
             }
         }
 
@@ -443,9 +447,15 @@ productDetail.prototype = {
         // 运动长裤-女 50023107
 
         if( ~title.indexOf("女") ){
-            if( /T恤|中袖|长衫|七分袖|POLO/i.test(title) ){
+            if( /T恤|中袖|长衫|七分袖/i.test(title) ){
                 cid = "50000671";
                 product.cateProps += "20021:105255;13328588:492838734;";
+            }
+            if( /POLO/i.test(title) ){
+                cid = "50022889";
+                product.inputPids = 20000610347613000000;
+                product.cateProps += "122216608:20533;";
+                product.inputValues = "lativ,"+ product.price +",POLO衫";
             }
             if( /吊带|背心/.test(title) ){
                 cid = "50010394";
@@ -509,7 +519,7 @@ productDetail.prototype = {
                 product.inputPids = "610347613021751";
                 product.inputValues = product.price + ",T恤";
             }
-            if( /运动中长裤|短裤/.test(title) ){
+            if( /运动(.*?)长裤|运动(.*?)短裤/.test(title) ){
                 cid = "50023108";
                 product.cateProps += "20000:29534;122216608:20533;";
                 product.inputPids = "610347613021751";
@@ -523,6 +533,11 @@ productDetail.prototype = {
                 product.cateProps += "20000:29534;122216608:20533;";
                 product.inputPids = "610347613021751";
                 product.inputValues = product.price + ",长裤";
+            }
+
+            if( /羽绒大衣|羽绒(.*?)外套/.test(title) ){
+                cid = "50008899";
+                product.cateProps += "20000:29534;122216347:740138901;";
             }
         }
 
@@ -873,7 +888,6 @@ exports.getCategoryProduct = function(callback){
                 }else{
                     callback(null, ids);
                 }
-                
             });
     }
 };
