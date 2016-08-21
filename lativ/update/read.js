@@ -193,7 +193,7 @@ productDetail.prototype = {
                 $(".tag").remove();
 
                 title = $(".title1").text().trim();
-                title = "台湾lativ正品2016热销新款" + title.slice(0, title.indexOf("（"));
+                title = "台湾诚衣lativ2016热销" + title.slice(0, title.indexOf("（"));
                 desc = $(".label").html() + $(".oldPic.show").html();
 
                 console.log(url);
@@ -362,11 +362,11 @@ productDetail.prototype = {
         // 运动长裤-男  50023107
 
         if( ~title.indexOf("男") ){
-            // if( /POLO/i.test(title) ){
-            //     // cid = "50020237";
-            //     cid = "50000436";
-            // }
-            if( /T恤|POLO/i.test(title) ){
+            if( /POLO/i.test(title) ){
+                cid = "50010402";
+                product.cateProps += "20000:29534;42722636:20213;122216345:29457;122216507:3226292;122216515:29535;122216586:29947;";
+            }
+            if( /T恤/i.test(title) ){
                 cid = "50000436";
                 product.cateProps += "20551:22252803;20663:29447;42722636:248572013;122216345:29457;122216348:29445;122216507:3226292;122216515:29535;122216586:29947;";
             }
@@ -424,9 +424,37 @@ productDetail.prototype = {
                 product.inputPids = "610347613021751";
                 product.inputValues = product.price + ",长裤";
             }
+            if( /运动长衫/i.test(title) ){
+                cid = "50011717";
+                product.cateProps += "20000:29534;122216608:20532;";
+                product.inputPids = "610347613021751";
+                product.inputValues = product.price + ",运动卫衣/套头衫";
+            }
             if( /羽绒/.test(title) ){
                 cid = "50011167";
                 product.cateProps += "20000:29534;6861561:20213;42722636:20213;122216515:29535;122216562:3226292;";
+            }
+            if( /风衣/.test(title) ){
+                 cid = "50011159";
+                product.cateProps += "20000:29534;31611:26486055;42722636:20213;122216345:29938;122216515:29535;122216562:3226292;122216586:29947;";
+            }
+            if( /西服/.test(title) ){
+                 cid = "50010160";
+                product.cateProps += "20000:29534;31611:3267617;42722636:20213;122216507:3226292;122216515:29535;122216586:29947;122276377:3267910;";
+            }
+            if( /运动茄克|外套/.test(title) ){
+                cid = "50011739";
+                product.cateProps += "122216608:20532;1627207:28332;20509:28315;";
+                product.inputPids = "20000610347613000000";
+                product.inputValues = "lativ,"+ product.price +",运动茄克/外套";
+            }
+            if( /羽绒/.test(title) ){
+                cid = "50011167";
+                product.cateProps += "20000:29534;6861561:20213;42722636:20213;122216515:29535;122216562:3226292;";
+            }
+            if( /棉衣/.test(title) ){
+                cid = "50011165";
+                product.cateProps += "20000:29534;42722636:20213;122216515:29535;122216562:3226292;122216586:29947;";
             }
         }
 
@@ -446,17 +474,17 @@ productDetail.prototype = {
         // 运动短裤-女 50023108
         // 运动长裤-女 50023107
 
-        if( ~title.indexOf("女") ){
-            if( /T恤|中袖|长衫|七分袖/i.test(title) ){
+        if( /女|bra/i.test(title) ){
+            if( /T恤|中袖|长衫|七分袖|POLO/i.test(title) ){
                 cid = "50000671";
                 product.cateProps += "20021:105255;13328588:492838734;";
             }
-            if( /POLO/i.test(title) ){
-                cid = "50022889";
-                product.inputPids = 20000610347613000000;
-                product.cateProps += "122216608:20533;";
-                product.inputValues = "lativ,"+ product.price +",POLO衫";
-            }
+            // if( /POLO/i.test(title) ){
+            //     cid = "50022889";
+            //     product.inputPids = "20000610347613000000";
+            //     product.cateProps += "122216608:20533;";
+            //     product.inputValues = "lativ,"+ product.price +",POLO衫";
+            // }
             if( /吊带|背心/.test(title) ){
                 cid = "50010394";
                 product.cateProps += "20000:29534;20021:105255;24477:20533;";
@@ -486,6 +514,10 @@ productDetail.prototype = {
             if( /衬衫/.test(title) ){
                 cid = "162104";
                 product.cateProps += "20021:105255;13328588:492838731;";
+            }
+            if( /西装/.test(title) ){
+                cid = "50008897";
+                product.cateProps += "122216347:728146012;";
             }
             if( /连衣裙/.test(title) ){
                 cid = "50010850";
@@ -519,6 +551,12 @@ productDetail.prototype = {
                 product.inputPids = "610347613021751";
                 product.inputValues = product.price + ",T恤";
             }
+            if( /运动(.*?)衫/i.test(title) ){
+                cid = "50011717";
+                product.cateProps += "20000:29534;122216608:20533;";
+                product.inputPids = "610347613021751";
+                product.inputValues = product.price + ",运动卫衣/套头衫";
+            }
             if( /运动(.*?)长裤|运动(.*?)短裤/.test(title) ){
                 cid = "50023108";
                 product.cateProps += "20000:29534;122216608:20533;";
@@ -537,6 +575,24 @@ productDetail.prototype = {
 
             if( /羽绒大衣|羽绒(.*?)外套/.test(title) ){
                 cid = "50008899";
+                product.cateProps += "20000:29534;122216347:740138901;";
+            }
+            if( /风衣|连帽外套/.test(title) ){
+                cid = "50008901";
+                product.cateProps += "122216347:728146012;";
+            }
+            if( /运动茄克|外套/.test(title) ){
+                cid = "50011739";
+                product.cateProps += "122216608:20533;";
+                product.inputPids = "20000610347613000000";
+                product.inputValues = "lativ,"+ product.price +",运动茄克/外套";
+            }
+            if( /羽绒/.test(title) ){
+                cid = "50008899";
+                product.cateProps += "20000:29534;122216347:740138901;1627207:28332;20509:6215318;";
+            }
+            if( /棉衣/.test(title) ){
+                cid = "50008900";
                 product.cateProps += "20000:29534;122216347:740138901;";
             }
         }

@@ -43,7 +43,6 @@ function abc(){
 	        }
 	    }
 	}
-	// console.log(collection);
 	for(var k=0; k<plen; k++){
 	    var item3 = productList[k];
 	    if( !(~collection.indexOf( item3 )) ){

@@ -32,14 +32,16 @@ async.series([
     //         read.categorytList(c.href, c.rel, function(err, list) {
     //             productList = productList.concat(list);
     //             next(err);
-    //         });
+    //         });536973083073
     //     }, done);
     // },
 
     // 自定义产品
     function(done){
         productList = require("./online").data;
-        // productList = ["20358021"];
+        // productList = [
+        //     "26165011"
+        // ];
         // console.log(productList.length);
         done();
     },
