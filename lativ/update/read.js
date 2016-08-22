@@ -542,17 +542,17 @@ productDetail.prototype = {
                 //尺寸 20518
                 this.sizePre = "20518";
             }
+            if( /运动(.*?|[^POLO])衫/i.test(title) ){
+                cid = "50011717";
+                product.cateProps += "20000:29534;122216608:20533;";
+                product.inputPids = "610347613021751";
+                product.inputValues = product.price + ",运动卫衣/套头衫";
+            }
             if( /运动(.*?)T恤|运动(.*?)吊带衫|运动(.*?)背心/.test(title) ){
                 cid = "50013228";
                 product.cateProps += "20000:29534;20663:29448;122216348:29445;122216608:20533;";
                 product.inputPids = "610347613021751";
                 product.inputValues = product.price + ",T恤";
-            }
-            if( /运动(.*?[^POLO])衫/i.test(title) ){
-                cid = "50011717";
-                product.cateProps += "20000:29534;122216608:20533;";
-                product.inputPids = "610347613021751";
-                product.inputValues = product.price + ",运动卫衣/套头衫";
             }
             if( /运动(.*?)长裤|运动(.*?)短裤/.test(title) ){
                 cid = "50023108";
@@ -593,7 +593,10 @@ productDetail.prototype = {
                 product.cateProps += "20000:29534;122216347:740138901;";
             }
         }
-
+        if( !cid ){
+            cid = "50000671";
+            product.cateProps += "20021:105255;13328588:492838734;";
+        }
         product.cid = cid;
     },
     propAlias: function(value, size){
@@ -603,22 +606,38 @@ productDetail.prototype = {
 
         var data = this.SIZE,
             json = {
-                S: "20509:28314",
-                M: "20509:28315",
-                L: "20509:28316",
-                XL: "20509:28317",
-                XXL: "20509:28318",
+                "165/84A": "20509:28314", //S
+                "170/92A": "20509:28315", //M
+                "175/100A": "20509:28316", //L
+                "180/108B": "20509:28317", //XL
+                "185/112C": "20509:28318", //XXL
             },
             str = "";
+        if( /女|运动(.*?)T恤|运动(.*?)衫|运动(.*?)背心/.test(product.title) &&  product.cid == "50013228" ){
+            _.extend(json, {
+                "155/84A": "20509:28314", //S
+                "160/88A": "20509:28315", //M
+                "165/92A": "20509:28316", //L
+                "170/96A": "20509:28317", //XL
+                "175/100A": "20509:28318", //XXL
+            });
+        }else{
+            _.extend(json, {
+                "155/80A": "20509:28314", //S
+                "160/84A": "20509:28315", //M
+                "160/88A": "20509:28316", //L
+                "165/92A": "20509:28317", //XL
+                "170/96A": "20509:28318", //XXL
+            });
+        }
 
         if( !value.trim() ){
             value = size;
         }
         if( !data[value] ){
-            data[value] = json[size] + ";";
-            product.propAlias += json[size] + ":"+ value + "("+ size +");";
+            data[value] = json[value] + ";";
+            product.propAlias += json[value] + ":"+ value + "("+ size +");";
         }
-
         return data[value];
         // 20509:28313:XS(XS);
         // 20509:28314:155/80A(S);
@@ -703,7 +722,7 @@ productDetail.prototype = {
         var str = "",
             i = 0;
 
-        if( /50022889|50013228/.test(product.cid) ){
+        if( /50022889|50013228|162104|50011739/.test(product.cid) ){
             datas.forEach(function(data) {
                 product.cateProps += _this.input_custom_cpv("color", data.color);
 
@@ -711,7 +730,6 @@ productDetail.prototype = {
                     str += _this.propAlias(item['體型尺寸'], item.size);
                 });
             });
-            console.log(product.propAlias);
         }else{
             datas.forEach(function(data) {
                 product.cateProps += _this.input_custom_cpv("color", data.color);

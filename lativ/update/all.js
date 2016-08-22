@@ -40,7 +40,21 @@ async.series([
     function(done){
         // productList = require("./online").data;
         productList = [
-            "25232011"
+            "22253081",
+            "22255011",
+            "25232011",
+            "25497121",
+            "25568011",
+            "26203011",
+            "26209011",
+            "26214081",
+            "26388011",
+            "26389011",
+            "28316051",
+            "28560041",
+            "28563021",
+            "28565011",
+            "28605011"
         ];
         // console.log(productList.length);
         done();
@@ -51,11 +65,11 @@ async.series([
     //     console.log("获取活动产品");
     //     read.getActivity("1P58D", 3137, function(err, ids){
     //         productList = ids;
-    //         // fs.writeFile("data.js", "exports.data=" +JSON.stringify(ids));
+    //         fs.writeFile("data.js", "exports.data=" +JSON.stringify(ids));
     //         // done();
     //     });
     // },
-    // 
+    
     // function(done){
     //     console.log("获取产品");
     //     read.getCategoryProduct(function(err, ids){
@@ -89,7 +103,7 @@ async.series([
         //             productDetail.push(data);
         //             _.extend(zhutu,  zhutuPhoto);
         //             desc = desc.concat(descPhoto);
-        //         }
+        //         }运动(.*?)T恤|运动(.*?)吊带衫|运动(.*?)背心
         //         next(err);
         //     });
         // }, done);
@@ -130,7 +144,7 @@ async.series([
             fields: en,
             fieldNames: zh,
             quotes: "",
-            // del: "\t"
+            del: "\t"
         }, function(err, csv){
             if( err ){
                 console.log(err);
