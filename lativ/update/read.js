@@ -310,6 +310,9 @@ productDetail.prototype = {
         //宝贝属性
         product.cateProps = "";
 
+        product.propAlias = "";
+
+
 
         this.seller_cids();
     },
@@ -424,12 +427,6 @@ productDetail.prototype = {
                 product.inputPids = "610347613021751";
                 product.inputValues = product.price + ",长裤";
             }
-            if( /运动长衫/i.test(title) ){
-                cid = "50011717";
-                product.cateProps += "20000:29534;122216608:20532;";
-                product.inputPids = "610347613021751";
-                product.inputValues = product.price + ",运动卫衣/套头衫";
-            }
             if( /羽绒/.test(title) ){
                 cid = "50011167";
                 product.cateProps += "20000:29534;6861561:20213;42722636:20213;122216515:29535;122216562:3226292;";
@@ -475,16 +472,16 @@ productDetail.prototype = {
         // 运动长裤-女 50023107
 
         if( /女|bra/i.test(title) ){
-            if( /T恤|中袖|长衫|七分袖|POLO/i.test(title) ){
+            if( /T恤|中袖|长衫|七分袖/i.test(title) ){
                 cid = "50000671";
                 product.cateProps += "20021:105255;13328588:492838734;";
             }
-            // if( /POLO/i.test(title) ){
-            //     cid = "50022889";
-            //     product.inputPids = "20000610347613000000";
-            //     product.cateProps += "122216608:20533;";
-            //     product.inputValues = "lativ,"+ product.price +",POLO衫";
-            // }
+            if( /POLO/i.test(title) ){
+                cid = "50022889";
+                product.inputPids = "20000610347613000000";
+                product.cateProps += "122216608:20533;";
+                product.inputValues = "lativ,"+ product.price +",POLO衫";
+            }
             if( /吊带|背心/.test(title) ){
                 cid = "50010394";
                 product.cateProps += "20000:29534;20021:105255;24477:20533;";
@@ -551,7 +548,7 @@ productDetail.prototype = {
                 product.inputPids = "610347613021751";
                 product.inputValues = product.price + ",T恤";
             }
-            if( /运动(.*?)衫/i.test(title) ){
+            if( /运动(.*?[^POLO])衫/i.test(title) ){
                 cid = "50011717";
                 product.cateProps += "20000:29534;122216608:20533;";
                 product.inputPids = "610347613021751";
@@ -597,12 +594,40 @@ productDetail.prototype = {
             }
         }
 
-        if(!cid){
-            cid = "50000671";
-            product.cateProps += "20021:105255;13328588:492838734;";
+        product.cid = cid;
+    },
+    propAlias: function(value, size){
+        var cache = this.cache,
+            product = this.product,
+            sizePre = this.sizePre;
+
+        var data = this.SIZE,
+            json = {
+                S: "20509:28314",
+                M: "20509:28315",
+                L: "20509:28316",
+                XL: "20509:28317",
+                XXL: "20509:28318",
+            },
+            str = "";
+
+        if( !value.trim() ){
+            value = size;
+        }
+        if( !data[value] ){
+            data[value] = json[size] + ";";
+            product.propAlias += json[size] + ":"+ value + "("+ size +");";
         }
 
-        product.cid = cid;
+        return data[value];
+        // 20509:28313:XS(XS);
+        // 20509:28314:155/80A(S);
+        // 20509:28315:160/84A(M);
+        // 20509:28316:160/88A(L);
+        // 20509:28317:165/92A(XL);
+        // 20509:28318:170/96A(XXL);
+        // 20509:28319:XXXL(XXXL);
+        // 20509:29696:其它尺码(xxs);
     },
     //宝贝分类
     seller_cids: function(){
@@ -678,13 +703,24 @@ productDetail.prototype = {
         var str = "",
             i = 0;
 
-        datas.forEach(function(data) {
-            product.cateProps += _this.input_custom_cpv("color", data.color);
+        if( /50022889|50013228/.test(product.cid) ){
+            datas.forEach(function(data) {
+                product.cateProps += _this.input_custom_cpv("color", data.color);
 
-            data.ItemList.forEach(function(item) {
-                str += _this.input_custom_cpv("size", item['體型尺寸'], item.size);
+                data.ItemList.forEach(function(item) {
+                    str += _this.propAlias(item['體型尺寸'], item.size);
+                });
             });
-        });
+            console.log(product.propAlias);
+        }else{
+            datas.forEach(function(data) {
+                product.cateProps += _this.input_custom_cpv("color", data.color);
+
+                data.ItemList.forEach(function(item) {
+                    str += _this.input_custom_cpv("size", item['體型尺寸'], item.size);
+                });
+            });
+        }
         product.cateProps += str;
     },
     // 销售属性组合

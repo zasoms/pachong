@@ -38,10 +38,10 @@ async.series([
 
     // 自定义产品
     function(done){
-        productList = require("./online").data;
-        // productList = [
-        //     "26165011"
-        // ];
+        // productList = require("./online").data;
+        productList = [
+            "25232011"
+        ];
         // console.log(productList.length);
         done();
     },
@@ -130,7 +130,7 @@ async.series([
             fields: en,
             fieldNames: zh,
             quotes: "",
-            del: "\t"
+            // del: "\t"
         }, function(err, csv){
             if( err ){
                 console.log(err);
