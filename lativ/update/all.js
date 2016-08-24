@@ -38,24 +38,8 @@ async.series([
 
     // 自定义产品
     function(done){
-        // productList = require("./online").data;
-        productList = [
-            "22253081",
-            "22255011",
-            "25232011",
-            "25497121",
-            "25568011",
-            "26203011",
-            "26209011",
-            "26214081",
-            "26388011",
-            "26389011",
-            "28316051",
-            "28560041",
-            "28563021",
-            "28565011",
-            "28605011"
-        ];
+        productList = require("./online").data;
+        // productList = [];
         // console.log(productList.length);
         done();
     },
@@ -63,9 +47,9 @@ async.series([
     // 获取活动产品
     // function(done){
     //     console.log("获取活动产品");
-    //     read.getActivity("1P58D", 3137, function(err, ids){
+    //     read.getActivity("2P88D", 3188, function(err, ids){
     //         productList = ids;
-    //         fs.writeFile("data.js", "exports.data=" +JSON.stringify(ids));
+    //         fs.writeFile("active.js", "exports.data=" +JSON.stringify(ids));
     //         // done();
     //     });
     // },

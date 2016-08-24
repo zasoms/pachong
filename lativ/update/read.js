@@ -537,7 +537,7 @@ productDetail.prototype = {
                 //尺寸 20518
                 this.sizePre = "20518";
             }
-            if( /长裤|休闲裤|紧身裤|九分裤|紧身裤|踩脚裤|带裤紧身窄裙|百搭裤/.test(title) ){
+            if( /长裤|休闲裤|紧身裤|九分裤|紧身裤|踩脚裤|带裤紧身窄裙|百搭裤|松紧裤/.test(title) ){
                 cid = "162201";
                 //尺寸 20518
                 this.sizePre = "20518";
@@ -722,7 +722,7 @@ productDetail.prototype = {
         var str = "",
             i = 0;
 
-        if( /50022889|50013228|162104|50011739/.test(product.cid) ){
+        if( /50022889|50013228|162104|50011739|50011717/.test(product.cid) ){
             datas.forEach(function(data) {
                 product.cateProps += _this.input_custom_cpv("color", data.color);
 
