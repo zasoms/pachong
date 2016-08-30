@@ -180,7 +180,7 @@ productDetail.prototype = {
                     desc = "",
                     price = $("#price").text();
 
-                
+
                 $("img").each(function(i, item) {
                     var $item = $(item);
                     $item.attr("src", $item.attr("data-original"));
@@ -278,9 +278,9 @@ productDetail.prototype = {
         product.auction_point = "0";
 
         product.video = "";  //TODO
-        
+
         // 这是为了货店通的需要，所以加上
-        product.outer_id = productId;  
+        product.outer_id = productId;
 
         //宝贝分类
         product.navigation_type = 2;
@@ -290,10 +290,10 @@ productDetail.prototype = {
         product.syncStatus = "1";
         product.user_name = "623064100_00";
         product.features = "mysize_tp:-1;sizeGroupId:136553091;sizeGroupType:women_top";
-        
+
 
         // 数字ID
-        
+
         product.num_id = DATA[productId];
 
         product.is_xinpin = "248";
@@ -320,8 +320,8 @@ productDetail.prototype = {
     disposeDescription: function(id, desc, callback){
         var product = this.product,
             _this = this;
-        var photos = [], 
-            style = "", 
+        var photos = [],
+            style = "",
             reminder = "";
         desc = desc.trim();
         desc =  desc.replace(/\r|\n/gm, "")
@@ -335,14 +335,14 @@ productDetail.prototype = {
                 });
 
         reminder = "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i1/465916119/TB25486tpXXXXa.XpXXXXXXXXXX_!!465916119.png'><\/P>";
-        
+
         _this.getReport("Size", id, function(err, sizeStr){
             _this.getReport("Try", id, function(err, tryStr){
                 desc = reminder + sizeStr + tryStr + desc;
                 product.description = desc;
 
                 _this.descPhoto = _this.descPhoto.concat(photos);
-                
+
                 callback();
             });
         });
@@ -352,7 +352,7 @@ productDetail.prototype = {
         var product = this.product,
             title = product.title,
             cid = "";
-        
+
         // POLO-男  50020237
         // T恤-男  50000436
         // 背心-男  50011153
@@ -388,7 +388,10 @@ productDetail.prototype = {
                 this.sizePre = "20518";
             }
             if( /短裤|中裤|沙滩裤|五分裤|七分裤|松紧短裤/.test(title) ){
-                cid = "124702002";
+                cid = "50023108";
+                product.cateProps += "122216608:20532;";
+                product.inputPids = "20000610347613000000";
+                product.inputValues = "lativ,"+ product.price +",短裤";
                 product.subtitle = "";
             }
             if( /三角短裤|平角短裤|平脚短裤|棉质短裤|印花短裤/.test(title) ){
@@ -458,7 +461,7 @@ productDetail.prototype = {
         // 衬衫-女  162104
         // T恤-女 50000671
         // 吊带-背心-女 50010394
-        // 短裤-女 124244007
+        // 短裤-女 50023108
         // 短裙-女 1623
         // 连衣裙-女 50010850
         // 牛仔裤-女 162205
@@ -493,13 +496,6 @@ productDetail.prototype = {
                 // 尺寸 122508275
                 this.sizePre = "122508275";
             }
-            if( /内裤|三角短裤|平脚短裤|生理裤|安全裤/.test(title) ){
-                cid = "50008882";
-                product.cateProps += "20000:29534;24477:20533;122216608:3267959;";
-                product.inputPids = "166332348";
-                product.inputValues = "1条";
-                product.subtitle = "";
-            }
             if( /雪纺/.test(title) ){
                 cid = "162116";
                 product.cateProps += "122216347:828914351;";
@@ -521,24 +517,31 @@ productDetail.prototype = {
                 product.cateProps += "122216347:828914351;";
             }
             if( /短裤|中裤|七分裤|宽腿裤/.test(title) ){
-                cid = "124244007";
-                product.cateProps += "122216347:828914351;";
-                product.inputPids = "20000";
-                product.inputValues = "lativ";
+                cid = "50023108";
+                product.cateProps += "122216608:20533;";
+                product.inputPids = "20000610347613000000";
+                product.inputValues = "lativ,"+ product.price +",短裤";
+                product.subtitle = "";
+            }
+            if( /内裤|三角短裤|平脚短裤|生理裤|安全裤/.test(title) ){
+                cid = "50008882";
+                product.cateProps += "20000:29534;24477:20533;122216608:3267959;";
+                product.inputPids = "166332348";
+                product.inputValues = "1条";
                 product.subtitle = "";
             }
             if( /短裙|牛仔(.*?)裙|紧身裙|窄裙|迷你裙|中裙|裤裙|裙裤|喇叭裙|印花长裙/.test(title) ){
                 cid = "1623";
                 product.cateProps += "122216347:828914351;";
             }
-            if( /牛仔裤|牛仔(.*?)裤/.test(title) ){
-                cid = "162205";
-                product.cateProps += "122216347:828914351;";
+            if( /长裤|休闲裤|紧身裤|九分裤|紧身裤|踩脚裤|带裤紧身窄裙|百搭裤|松紧裤/.test(title) ){
+                cid = "162201";
                 //尺寸 20518
                 this.sizePre = "20518";
             }
-            if( /长裤|休闲裤|紧身裤|九分裤|紧身裤|踩脚裤|带裤紧身窄裙|百搭裤|松紧裤/.test(title) ){
-                cid = "162201";
+            if( /牛仔裤|牛仔(.*?)裤/.test(title) ){
+                cid = "162205";
+                product.cateProps += "122216347:828914351;";
                 //尺寸 20518
                 this.sizePre = "20518";
             }
@@ -688,7 +691,7 @@ productDetail.prototype = {
             sizePre = this.sizePre;
 
         var data = type === 'color' ? this.COLOR : this.SIZE;
-    
+
         if( type == 'color' ){
             if( !data[value] ){
                 data[value] = "1627207:-"+ this.cNum + ";";
@@ -974,7 +977,7 @@ exports.getCategoryProduct = function(callback){
             });
     }
     getCategory(main[mainIndex]);
-    
+
     function getPageProducts(url){
         request.get("http://www.lativ.com"+ url)
             .end(function(err, res){
@@ -993,7 +996,7 @@ exports.getCategoryProduct = function(callback){
                             ids.push( product );
                         }
                     });
-                if( index < urls.length - 1 ){       
+                if( index < urls.length - 1 ){
                     getPageProducts(urls[++index]);
                 }else{
                     callback(null, ids);
