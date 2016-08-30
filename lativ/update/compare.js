@@ -43,18 +43,18 @@ function abc(){
 	        }
 	    }
 	}
-	for(var k=0; k<plen; k++){
-	    var item3 = productList[k];
-	    if( !(~collection.indexOf( item3 )) ){
-	        difference.push( item3 );
-	    }
-	}
-	// for(var k=0; k<dlen; k++){
-	//     var item3 = down[k];
+	// for(var k=0; k<plen; k++){
+	//     var item3 = productList[k];
 	//     if( !(~collection.indexOf( item3 )) ){
 	//         difference.push( item3 );
 	//     }
 	// }
+	for(var k=0; k<dlen; k++){
+	    var item3 = down[k];
+	    if( !(~collection.indexOf( item3 )) ){
+	        difference.push( item3 );
+	    }
+	}
 
 	console.log(difference);
 }
