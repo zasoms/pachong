@@ -424,7 +424,7 @@ productDetail.prototype = {
                 product.inputPids = "610347613021751";
                 product.inputValues = product.price + ",短裤";
             }
-            if( /运动(.*?)长裤|运动(.*?)紧身裤/i.test(title) ){
+            if( /运动(.*?)长裤|运动(.*?)紧身裤|紧身裤/i.test(title) ){
                 cid = "50023107";
                 product.cateProps += "20000:29534;122216608:20532;";
                 product.inputPids = "610347613021751";
@@ -442,11 +442,11 @@ productDetail.prototype = {
                  cid = "50010160";
                 product.cateProps += "20000:29534;31611:3267617;42722636:20213;122216507:3226292;122216515:29535;122216586:29947;122276377:3267910;";
             }
-            if( /运动茄克|外套/.test(title) ){
+            if( /茄克|外套/.test(title) ){
                 cid = "50011739";
                 product.cateProps += "20000:29534;122216608:20532;";
                 product.inputPids = "610347613021751";
-                product.inputValues = product.price +",运动茄克/外套";
+                product.inputValues = product.price +",茄克/外套";
             }
             if( /羽绒/.test(title) ){
                 cid = "50011167";
@@ -516,14 +516,17 @@ productDetail.prototype = {
                 cid = "50010850";
                 product.cateProps += "122216347:828914351;";
             }
-            if( /短裤|中裤|七分裤|宽腿裤/.test(title) ){
+
+            if( /运动(.*?)短裤|短裤|中裤|七分裤|宽腿裤/.test(title) ){
                 cid = "50023108";
-                product.cateProps += "122216608:20533;";
-                product.inputPids = "20000610347613000000";
-                product.inputValues = "lativ,"+ product.price +",短裤";
-                product.subtitle = "";
+                product.cateProps += "20000:29534;122216608:20533;";
+                product.inputPids = "610347613021751";
+                product.inputValues = product.price + ",短裤";
+
+                // 尺寸 20509
+                this.sizePre = "20509";
             }
-            if( /内裤|三角短裤|平脚短裤|生理裤|安全裤/.test(title) ){
+            if( /内裤|三角短裤|平脚短裤|生理裤|安全裤|平口裤/.test(title) ){
                 cid = "50008882";
                 product.cateProps += "20000:29534;24477:20533;122216608:3267959;";
                 product.inputPids = "166332348";
@@ -557,16 +560,7 @@ productDetail.prototype = {
                 product.inputPids = "610347613021751";
                 product.inputValues = product.price + ",T恤";
             }
-            if( /运动(.*?)长裤|运动(.*?)短裤/.test(title) ){
-                cid = "50023108";
-                product.cateProps += "20000:29534;122216608:20533;";
-                product.inputPids = "610347613021751";
-                product.inputValues = product.price + ",短裤";
-
-                // 尺寸 20509
-                this.sizePre = "20509";
-            }
-            if( /运动长裤|运动(.*?)裤/.test(title) ){
+            if( /运动(.*?)长裤|运动(.*?)裤/.test(title) ){
                 cid = "50023107";
                 product.cateProps += "20000:29534;122216608:20533;";
                 product.inputPids = "610347613021751";
@@ -577,15 +571,19 @@ productDetail.prototype = {
                 cid = "50008899";
                 product.cateProps += "20000:29534;122216347:740138901;";
             }
-            if( /运动茄克|外套/.test(title) ){
+            if( /茄克|外套|连帽/.test(title) ){
                 cid = "50011739";
                 product.cateProps += "20000:29534;122216608:20533;";
                 product.inputPids = "610347613021751";
-                product.inputValues = product.price +",运动茄克/外套";
+                product.inputValues = product.price +",茄克/外套";
             }
             if( /风衣|连帽外套/.test(title) ){
                 cid = "50008901";
                 product.cateProps += "122216347:728146012;";
+            }
+            if( /大衣/.test(title) ){
+                cid = "50013194";
+                product.cateProps += "20021:20213;13328588:492838731;122216347:728146012;";
             }
             if( /羽绒/.test(title) ){
                 cid = "50008899";
@@ -601,55 +599,6 @@ productDetail.prototype = {
             product.cateProps += "20021:105255;13328588:492838734;";
         }
         product.cid = cid;
-    },
-    propAlias: function(value, size){
-        var cache = this.cache,
-            product = this.product,
-            sizePre = this.sizePre;
-
-        var data = this.SIZE,
-            json = {
-                "165/84A": "20509:28314", //S
-                "170/92A": "20509:28315", //M
-                "175/100A": "20509:28316", //L
-                "180/108B": "20509:28317", //XL
-                "185/112C": "20509:28318", //XXL
-            },
-            str = "";
-        if( /女|运动(.*?)T恤|运动(.*?)衫|运动(.*?)背心/.test(product.title) &&  product.cid == "50013228" ){
-            _.extend(json, {
-                "155/84A": "20509:28314", //S
-                "160/88A": "20509:28315", //M
-                "165/92A": "20509:28316", //L
-                "170/96A": "20509:28317", //XL
-                "175/100A": "20509:28318", //XXL
-            });
-        }else{
-            _.extend(json, {
-                "155/80A": "20509:28314", //S
-                "160/84A": "20509:28315", //M
-                "160/88A": "20509:28316", //L
-                "165/92A": "20509:28317", //XL
-                "170/96A": "20509:28318", //XXL
-            });
-        }
-
-        if( !value.trim() ){
-            value = size;
-        }
-        if( !data[value] ){
-            data[value] = json[value] + ";";
-            product.propAlias += json[value] + ":"+ value + "("+ size +");";
-        }
-        return data[value];
-        // 20509:28313:XS(XS);
-        // 20509:28314:155/80A(S);
-        // 20509:28315:160/84A(M);
-        // 20509:28316:160/88A(L);
-        // 20509:28317:165/92A(XL);
-        // 20509:28318:170/96A(XXL);
-        // 20509:28319:XXXL(XXXL);
-        // 20509:29696:其它尺码(xxs);
     },
     //宝贝分类
     seller_cids: function(){
@@ -716,6 +665,32 @@ productDetail.prototype = {
         }
         return data[value];
     },
+    propAlias: function(value, size){
+        var cache = this.cache,
+            product = this.product,
+            sizePre = this.sizePre;
+
+        var SIZE = this.SIZE,
+            item = "20509:";
+
+        if( !value.trim() ){
+            value = size;
+        }
+        if( !SIZE[value] ){
+            item += this.propPrex++;
+            SIZE[value] = item + ";";
+            product.propAlias += item + ":"+ value + "("+ size +");";
+        }
+        return SIZE[value];
+        // 20509:28313:XS(XS);
+        // 20509:28314:155/80A(S);
+        // 20509:28315:160/84A(M);
+        // 20509:28316:160/88A(L);
+        // 20509:28317:165/92A(XL);
+        // 20509:28318:170/96A(XXL);
+        // 20509:28319:XXXL(XXXL);
+        // 20509:29696:其它尺码(xxs);
+    },
     // 宝贝属性
     cateProps: function(datas) {
         var _this = this,
@@ -725,7 +700,8 @@ productDetail.prototype = {
         var str = "",
             i = 0;
 
-        if( /50022889|50013228|162104|50011739|50011717/.test(product.cid) ){
+        if( /50022889|50013228|162104|50011739|50011717|50023108/.test(product.cid) ){
+            this.propPrex = 28313;
             datas.forEach(function(data) {
                 product.cateProps += _this.input_custom_cpv("color", data.color);
 
