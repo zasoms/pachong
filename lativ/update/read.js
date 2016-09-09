@@ -193,7 +193,7 @@ productDetail.prototype = {
                 $(".tag").remove();
 
                 title = $(".title1").text().trim();
-                title = "台湾诚衣lativ2016热销" + title.slice(0, title.indexOf("（"));
+                title = "台湾诚衣正品lativ2016热销" + title.slice(0, title.indexOf("（"));
                 desc = $(".label").html() + $(".oldPic.show").html();
 
                 console.log(url);
@@ -878,7 +878,7 @@ exports.downloadImg = function(photos, num, root, callback){
 exports.getActivity = function(activityNo, cacheID, callback){
     var cache = {},
         ids = [],
-        category = ["WOMEN", "MEN"],
+        category = ["WOMEN", "MEN", "SPORTS"],
         categoryIndex = 0,
         pageIndex = 1;
     function getParam(activityNo, mainCategory, pageIndex, cacheID){
