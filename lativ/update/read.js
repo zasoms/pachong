@@ -332,37 +332,20 @@ productDetail.prototype = {
 
         _this.getReport("Size", id, function(err, sizeStr){
             _this.getReport("Try", id, function(err, tryStr){
-                desc = reminder + sizeStr + tryStr + desc;
+
+                var fragment = "<html><body>"+ sizeStr + tryStr + desc +"</body></html>";
+
+                var root = 'data/img/'+ id +'.jpg';
+
+                desc = reminder + "<img src='FILE:\/\/\/E:/github/pachong/lativ/" + root + "'>";
                 desc = desc.replace(/\"/gm, "'");
 
-                var webshot = require('../lib/webshot');
+                product.description = desc;
 
-                var options = {
-                    screenSize: {
-                        width: 750,
-                        height: 768
-                    },
-                    shotSize: {
-                        width: 750,
-                        height: "all"
-                    },
-                    siteType: 'html',
-                    defaultWhiteBackground: true,
-                    customCSS: "*:{margin: 0; padding: 0;}"
-                };
-
-                var fragment = "<html><body>"+ desc +"</body></html>";
-
-                var root = 'data/img/'+ id +'.png';
-
-                product.description = "<img src='FILE:\/\/\/E:/github/pachong/lativ/" + root + "'>";
-
-                webshot(fragment, root, options, function(err) {
-                    if (err) return console.log(err);
-                    console.log('OK');
+                _this.descPhoto.push({
+                    html: fragment,
+                    name: root
                 });
-
-                // _this.descPhoto.push();
 
                 callback();
             });
@@ -721,7 +704,7 @@ productDetail.prototype = {
         var str = "",
             i = 0;
 
-        if( /50022889|50013228|162104|50011739|50011717|50023108/.test(product.cid) ){
+        if( /50022889|50013228|162104|50011739|50011717|50023108|50023107/.test(product.cid) ){
             this.propPrex = 28313;
             datas.forEach(function(data) {
                 product.cateProps += _this.input_custom_cpv("color", data.color);

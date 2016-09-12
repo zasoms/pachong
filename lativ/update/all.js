@@ -68,13 +68,16 @@ async.series([
     // 获取产品详情
     function(done) {
         console.log("获取产品详情");
+        var i = 0;
         async.mapLimit(productList, 5, function(c, next) {
             var url = "http://www.lativ.com/Detail/" + c;
             read.productDetail(url, function(err, data, zhutuPhoto, descPhoto) {
-                if (data.title && data.num > 50) {
+                if (data.title) {
                     productDetail.push(data);
                     _.extend(zhutu, zhutuPhoto);
+                    desc = desc.concat(descPhoto);
                 }
+                console.log(++i);
                 next(err);
             });
         }, done);
@@ -87,12 +90,35 @@ async.series([
         });
     },
     // // 描述图片下载
-    // function(done) {
-    //     console.log("描述图片下载");
-    //     read.downloadImg(desc, 5, "./data/img/", function() {
-    //         done();
-    //     });
-    // },
+    function(done) {
+        console.log("描述图片下载");
+        var options = {
+            screenSize: {
+                width: 750,
+                height: 768
+            },
+            shotSize: {
+                width: 750,
+                height: "all"
+            },
+            siteType: 'html',
+            defaultWhiteBackground: true,
+            customCSS: "*:{margin: 0; padding: 0;}",
+            streamType: "jpg"
+        };
+        async.mapLimit(desc, 5, function(c, next){
+            var webshot = require('../lib/webshot');
+
+            webshot(c.fragment, c.root, options, function(err) {
+                if (err) return console.log(err);
+                console.log('OK');
+            });
+        }, done);
+
+        read.downloadImg(desc, 5, "./data/img/", function() {
+            done();
+        });
+    },
     function(done) {
         console.log("导出csv");
         var en = ["title", "cid", "seller_cids", "stuff_status", "location_state", "location_city", "item_type", "price", "auction_increment", "num",
