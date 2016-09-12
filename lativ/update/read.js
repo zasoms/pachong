@@ -320,28 +320,49 @@ productDetail.prototype = {
     disposeDescription: function(id, desc, callback){
         var product = this.product,
             _this = this;
-        var photos = [],
-            style = "",
+        var style = "",
             reminder = "";
         desc = desc.trim();
         desc =  desc.replace(/\r|\n/gm, "")
                 .replace(/\"/gm, "'")
                 .replace(/,/gm, "，")
-                .replace(/data-original=\'\'/gm, "")
-                .replace(/http(s?):\/\/s[0-9].lativ.com\/(.*?).(jpg|png|gif)/gm, function(match, escape, interpolate, evaluate, offset){
-                    photos.push(match);
-                    var arr = interpolate.split("/");
-                    return "FILE:\/\/\/E:/github/pachong/lativ/data/img/"+ arr[arr.length - 1] + "." + evaluate;
-                });
+                .replace(/data-original=\'\'/gm, "");
 
         reminder = "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i1/465916119/TB25486tpXXXXa.XpXXXXXXXXXX_!!465916119.png'><\/P>";
 
         _this.getReport("Size", id, function(err, sizeStr){
             _this.getReport("Try", id, function(err, tryStr){
                 desc = reminder + sizeStr + tryStr + desc;
-                product.description = desc;
+                desc = desc.replace(/\"/gm, "'");
 
-                _this.descPhoto = _this.descPhoto.concat(photos);
+                var webshot = require('../lib/webshot');
+
+                var options = {
+                    screenSize: {
+                        width: 750,
+                        height: 768
+                    },
+                    shotSize: {
+                        width: 750,
+                        height: "all"
+                    },
+                    siteType: 'html',
+                    defaultWhiteBackground: true,
+                    customCSS: "*:{margin: 0; padding: 0;}"
+                };
+
+                var fragment = "<html><body>"+ desc +"</body></html>";
+
+                var root = 'data/img/'+ id +'.png';
+
+                product.description = "<img src='FILE:\/\/\/E:/github/pachong/lativ/" + root + "'>";
+
+                webshot(fragment, root, options, function(err) {
+                    if (err) return console.log(err);
+                    console.log('OK');
+                });
+
+                // _this.descPhoto.push();
 
                 callback();
             });
@@ -805,7 +826,7 @@ productDetail.prototype = {
                     cellspacing: 0,
                     border: 1,
                     align: "center",
-                    width: "100%"
+                    width: "750"
                 });
 
                 callback(null, $(".panes").html().replace(/\r|\n/gm, "").trim());
