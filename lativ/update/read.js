@@ -389,7 +389,7 @@ productDetail.prototype = {
             }
             if( /短裤|中裤|沙滩裤|五分裤|七分裤|松紧短裤/.test(title) ){
                 cid = "50023108";
-                product.cateProps += "122216608:20532;";
+                product.cateProps += "20000:29534;122216608:20532;";
                 product.inputPids = "20000610347613000000";
                 product.inputValues = "lativ,"+ product.price +",短裤";
                 product.subtitle = "";
