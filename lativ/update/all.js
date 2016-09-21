@@ -32,7 +32,7 @@ async.series([
     //         read.categorytList(c.href, c.rel, function(err, list) {
     //             productList = productList.concat(list);
     //             next(err);
-    //         });536973083073
+    //         });
     //     }, done);
     // },
 
@@ -47,7 +47,7 @@ async.series([
     // 获取活动产品
     // function(done){
     //     console.log("获取活动产品");
-    //     read.getActivity("2P88D", 3188, function(err, ids){
+    //     read.getActivity("1P59", 3424, function(err, ids){
     //         productList = ids;
     //         fs.writeFile("active.js", "exports.data=" +JSON.stringify(ids));
     //         // done();
