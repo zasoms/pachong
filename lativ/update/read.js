@@ -38,12 +38,11 @@ function mkdirsSync(dirpath, mode) {
     return true;
 }
 // 随机创建32位16进制字符
-function hex(){
+function hex(productId){
     var arr = '0,1,2,3,4,5,6,7,8,9,a,b,c,d,e,f'.split(","),
-        str = "",
+        str = productId +"",
         value = "";
-
-    for(var i=0; i<32; i++){
+    for(var i=0; i<24; i++){
         str += arr[Math.floor(Math.random()*16)];
     }
     if( hex.cache[str] ){
@@ -180,6 +179,10 @@ productDetail.prototype = {
                     desc = "",
                     price = $("#price").text();
 
+                var showPic = [];
+                $(".product_s_img > a").each(function(){
+                    showPic.push(this.attribs.href);
+                });
 
                 $("img").each(function(i, item) {
                     var $item = $(item);
@@ -204,12 +207,12 @@ productDetail.prototype = {
                 product.subtitle = title;
                 _this.disposeDescription(id, desc, function(){
                     detailConfig.Referer = url;
-                    _this.getProduct(url.split("Detail/")[1]);
+                    _this.getProduct(url.split("Detail/")[1], showPic);
                 });
             });
     },
     // 获得该商品的数目、尺寸和颜色
-    getProduct: function(productId){
+    getProduct: function(productId, showPic){
         var product = this.product,
             _this = this;
         request.get("http://www.lativ.com/Product/ProductInfo/?styleNo=" + productId.slice(0, 5))
@@ -240,7 +243,7 @@ productDetail.prototype = {
 
                 _this.skuProps(data);
 
-                _this.picture(data);
+                _this.picture(data, showPic, productId);
                 _this.callback(err, _this.product, _this.zhutuPhoto, _this.descPhoto);
             });
     },
@@ -752,15 +755,20 @@ productDetail.prototype = {
         product.num = num;
     },
     // 图片处理
-    picture: function(datas){
+    picture: function(datas, showPic, productId){
         var photos = {},
+            pics = {},
             colors = [],
             zhutu = "",
             colorImg = "",
-            i = 0;
+            i = 0,
+            s = 0;
         var product = this.product,
             COLOR = this.COLOR;
 
+        for(var j=0, len = showPic.length; len > j; j++){
+            pics[showPic[j]] = hex(productId);
+        }
         datas.forEach(function(data, i) {
             colors.push(data.color);
             var id = "";
@@ -769,17 +777,17 @@ productDetail.prototype = {
                 id = "http://s2.lativ.com" + size.img280;
                 break;
             }
-            photos[id] = hex();
+            photos[id] = hex(productId);
         });
         for(var attr in photos){
             if( i < 5 ){
-                zhutu += photos[attr] + ":1:" + i + ":|;" ;
+                zhutu += (showPic[i] ?  pics[ showPic[i] ] : photos[attr]) + ":1:" + i + ":|;" ;
             }
             colorImg += photos[attr] + ":2:0:" + COLOR[colors[i]].slice(0, -1) + "|;" ;
             ++i;
         }
         product.picture = zhutu + colorImg;
-        _.extend(this.zhutuPhoto, photos);
+        _.extend(this.zhutuPhoto, photos, pics);
     },
     //获取商品的尺寸表/试穿表
     /**
