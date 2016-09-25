@@ -1,10 +1,9 @@
 var async = require("async"),
-    config = require("../config"),
     read = require("./read"),
-    save = require("./save"),
     json2csv = require("json2csv"),
     iconv = require("iconv-lite"),
     fs = require("fs"),
+    images = require("images"),
     _ = require("underscore"),
     debug = require("debug")("lativ:update:all");
 
@@ -15,31 +14,10 @@ var classList,
     desc = [];
 
 async.series([
-    // //获取产品分类
-    // function(done) {
-    //     console.log("获取产品分类");
-    //     read.classList(config.lativ.url, function(err, list) {
-    //         classList = list;
-    //         classList.pop(); //iLook里面有cacheID
-    //         classList.length = 1;
-    //         done(err);
-    //     });
-    // },
-    // // 获取产品信息
-    // function(done) {
-    //     console.log("获取产品信息");
-    //     async.eachSeries(classList, function(c, next) {
-    //         read.categorytList(c.href, c.rel, function(err, list) {
-    //             productList = productList.concat(list);
-    //             next(err);
-    //         });
-    //     }, done);
-    // },
-
     // 自定义产品
     function(done){
-        productList = require("./online").data;
-        // productList = [];
+        // productList = require("./online").data;
+        productList = ["28415011"];
         // console.log(productList.length);
         done();
     },
@@ -81,12 +59,12 @@ async.series([
         }, done);
     },
     // 主图片下载
-    function(done){
-         console.log("主图片下载");
-         read.downloadImg(zhutu, 5, "./data/", function(){
-            done();
-         });
-    },
+    // function(done){
+    //      console.log("主图片下载");
+    //      read.downloadImg(zhutu, 5, "./data/", function(){
+    //         done();
+    //      });
+    // },
     // 描述图片下载
     function(done){
         console.log("描述图片下载");
@@ -125,8 +103,29 @@ async.series([
                 fs.writeFile("data.csv", newCsv, function(err){
                     if(err) throw err;
                     console.log("file saved");
+                    done();
                 });
             }
+        });
+    },
+    function(done){
+        console.log("水印添加");
+        var rootPath = "data/img/";
+        fs.readdir(rootPath, function(err, files){
+            async.mapLimit(files, 1, function(file , next){
+                var path = rootPath + file;
+                if( /\.gif/.test(file) ){
+                    next();
+                }else{
+                    images(path)
+                        .draw( images("logo.png"), 10, 10 )
+                        .saveAsync( path, {
+                            quality: 80
+                        }, null, function(){
+                            next();
+                        });
+                }
+            }, done);
         });
     },
     function() {

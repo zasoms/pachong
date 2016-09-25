@@ -183,6 +183,7 @@ productDetail.prototype = {
                 $(".product_s_img > a").each(function(){
                     showPic.push(this.attribs.href);
                 });
+                $(".right_col").remove();
 
                 $("img").each(function(i, item) {
                     var $item = $(item);
@@ -762,6 +763,7 @@ productDetail.prototype = {
             zhutu = "",
             colorImg = "",
             i = 0,
+            k = 0,
             s = 0;
         var product = this.product,
             COLOR = this.COLOR;
@@ -779,12 +781,19 @@ productDetail.prototype = {
             }
             photos[id] = hex(productId);
         });
+        for(var pic in pics){
+            if( i < 5 ){
+                zhutu +=  pics[ showPic[i] ] + ":1:" + i + ":|;" ;
+            }
+            i++;
+        }
         for(var attr in photos){
             if( i < 5 ){
-                zhutu += (showPic[i] ?  pics[ showPic[i] ] : photos[attr]) + ":1:" + i + ":|;" ;
+                zhutu += photos[attr] + ":1:" + i + ":|;" ;
             }
-            colorImg += photos[attr] + ":2:0:" + COLOR[colors[i]].slice(0, -1) + "|;" ;
-            ++i;
+            colorImg += photos[attr] + ":2:0:" + COLOR[colors[k]].slice(0, -1) + "|;" ;
+            i++;
+            k++;
         }
         product.picture = zhutu + colorImg;
         _.extend(this.zhutuPhoto, photos, pics);
