@@ -59,12 +59,12 @@ async.series([
         }, done);
     },
     // 主图片下载
-    // function(done){
-    //      console.log("主图片下载");
-    //      read.downloadImg(zhutu, 5, "./data/", function(){
-    //         done();
-    //      });
-    // },
+    function(done){
+         console.log("主图片下载");
+         read.downloadImg(zhutu, 5, "./data/", function(){
+            done();
+         });
+    },
     // 描述图片下载
     function(done){
         console.log("描述图片下载");

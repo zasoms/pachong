@@ -5,8 +5,7 @@
   "private": true,
   "description": "网络爬虫与数据库操作",
   "scripts": {
-    "start": "node update/all",
-    "water": "node update/watermark"
+    "start": "node update/all"
   },
   "engines": {
     "node": ">= 0.10.0"
