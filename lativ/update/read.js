@@ -957,7 +957,7 @@ exports.getCategoryProduct = function(callback){
         request.get("http://www.lativ.com/" + category)
             .end(function(err, res){
                 var $ = cheerio.load( res.text , {decodeEntities: false});
-                var $a = $(".category").slice(0, -1).find("a");
+                var $a = $(".category").find("a");
                 // console.log($(".category"));
                 $a.each(function(i, item){
                     urls.push(item.attribs.href);
