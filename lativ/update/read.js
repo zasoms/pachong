@@ -6,6 +6,7 @@ var request = require("superagent"),
     _ = require("underscore"),
     debug = require("debug")("blog:update:read");
 
+var webshot = require('../lib/webshot');
 
 var config = require("../lativConfig");
 
@@ -176,8 +177,7 @@ productDetail.prototype = {
                     html = "",
                     id = "",
                     title = "",
-                    desc = "",
-                    price = $("#price").text();
+                    desc = "";
 
                 var showPic = [],
                     str = "";
@@ -204,13 +204,12 @@ productDetail.prototype = {
                 title = "台湾诚衣正品lativ2016热销" + title.slice(0, title.indexOf("（"));
                 desc = $(".label").html() + $(".oldPic.show").html();
 
-                console.log(url);
                 id = text.slice(index, index + 40).toString().match(/\d+/)[0];
 
-                product.price = $("#price").text();
+                product.price = +$("#price").text() + 10;
                 product.title = title;
                 product.subtitle = title;
-                _this.disposeDescription(id, desc, function(){
+                _this.disposeDescription(url, desc, function(){
                     detailConfig.Referer = url;
                     _this.getProduct(url.split("Detail/")[1], showPic);
                 });
@@ -325,12 +324,13 @@ productDetail.prototype = {
         this.seller_cids();
     },
     // 宝贝描述处理
-    disposeDescription: function(id, desc, callback){
+    disposeDescription: function(url, desc, callback){
         var product = this.product,
             _this = this;
         var photos = [],
             style = "",
-            reminder = "";
+            reminder = "",
+            id = url.split("/")[4];
         desc = desc.trim();
         desc =  desc.replace(/\r|\n/gm, "")
                 .replace(/\"/gm, "'")
@@ -344,13 +344,26 @@ productDetail.prototype = {
 
         reminder = "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i1/465916119/TB25486tpXXXXa.XpXXXXXXXXXX_!!465916119.png'><\/P>";
 
-        _this.getReport("Size", id, function(err, sizeStr){
-            _this.getReport("Try", id, function(err, tryStr){
-                desc = reminder + sizeStr + tryStr + desc;
+        _this.getReport(id, function(err, str){
+            var options = {
+                screenSize: {
+                    width: 750,
+                    height: "all"
+                },
+                shotSize: {
+                    width: 750,
+                    height: "all"
+                },
+                siteType: 'html',
+                defaultWhiteBackground: true,
+                customCSS: "*{margin: 0; padding: 0;} table{ width: 750px;font-family: monaco, verdana,arial,sans-serif; font-size:12px; color:#333333; border-width: 1px; border-color: #666666; border-collapse: collapse; margin-bottom: 10px;} table th{border-width: 1px; padding: 8px; border-style: solid; border-color: #666666; background-color: #dedede;} table td{border-width: 1px; padding: 8px; border-style: solid; border-color: #666666; background-color: #ffffff; text-align: center;}",
+                streamType: "jpg",
+            };
+            var sizePath = 'data/img/'+id+'_size.png';
+            webshot(str, sizePath, options, function(err) {
+                desc = reminder + "<img src='FILE:\/\/\/E:/github/pachong/lativ/"+ sizePath +"'>" + desc;
                 product.description = desc;
-
                 _this.descPhoto = _this.descPhoto.concat(photos);
-
                 callback();
             });
         });
@@ -810,27 +823,25 @@ productDetail.prototype = {
      * @param  {Function} callback [description]
      * @return {[type]}            [description]
      */
-    getReport: function(type, id, callback){
-        request.get("http://www.lativ.com/Product/"+ type +"Report?styleNo="+ id +"&hasModelInfo=True&hasFeatherContent=False")
+    getReport: function(id, callback){
+        console.log(id);
+        request.get("http://m.lativ.com/Detail/"+ id)
+            .set({
+                "Upgrade-Insecure-Requests": 1,
+                "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1"
+            })
             .end(function(err, res){
-                if(err) return callback(err);
+                if(err) return console.log(err);
+                    var $ = cheerio.load(res.text, {decodeEntities: false});
 
-                var $ = cheerio.load( res.text , {decodeEntities: false});
-                if( type == "Size" ){
-                    $("img").attr("src", "https://img.alicdn.com/imgextra/i3/465916119/TB2AzL5tVXXXXXcXpXXXXXXXXXX_!!465916119.gif");
-                }else if(type == "Try"){
-                    $("img").attr("src", "https://img.alicdn.com/imgextra/i2/465916119/TB2X766tVXXXXbDXpXXXXXXXXXX_!!465916119.gif");
-                }
+                    var str = $(".product-report .product-size").html();
+                    str += "<img src='https://img.alicdn.com/imgextra/i3/465916119/TB2AzL5tVXXXXXcXpXXXXXXXXXX_!!465916119.gif'>"+
+                            "<img src='https://img.alicdn.com/imgextra/i2/465916119/TB2X766tVXXXXbDXpXXXXXXXXXX_!!465916119.gif'>";
 
-                $("table").attr({
-                    cellspacing: 0,
-                    border: 1,
-                    align: "center",
-                    width: "100%"
-                });
 
-                callback(null, $(".panes").html().replace(/\r|\n/gm, "").trim());
+                    callback(null, str.replace(/\r|\n/gm, "").trim());
             });
+
     }
 };
 

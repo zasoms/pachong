@@ -18,8 +18,8 @@ var classList,
 async.series([
     // 自定义产品
     function(done) {
-        productList = require("./data").data;
-        // productList = ["28415011"];
+        // productList = require("./data").data;
+        productList = ["22363025"];
         // console.log(productList.length);
         done();
     },
@@ -149,7 +149,7 @@ async.series([
         });
     },
     function() {
-        fs.unlink("./lastData.js");
+        fs.writeFile("./lastData.js", "");
         console.log("完成");
         process.exit(0);
     }
