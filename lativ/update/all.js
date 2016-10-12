@@ -7,7 +7,7 @@ var async = require("async"),
     _ = require("underscore"),
     debug = require("debug")("lativ:update:all");
 
-var lastData = require("./lastData").data;
+var lastData = require("../lastData").data;
 
 var classList,
     productList = [],
@@ -18,7 +18,7 @@ var classList,
 async.series([
     // 自定义产品
     function(done) {
-        productList = require("./online").data;
+        productList = require("./data").data;
         // productList = ["28415011"];
         // console.log(productList.length);
         done();
@@ -48,12 +48,13 @@ async.series([
     // 获取产品详情
     function(done) {
         console.log("获取产品详情");
-        if( lastData.productDetail ){
-            done();
+        if( !lastData ){
+        }
+        if( lastData && lastData.productDetail ){
             productDetail = lastData.productDetail;
             zhutu = lastData.zhutu;
             desc = lastData.desc;
-
+            done();
         }else{
             async.mapLimit(productList, 5, function(c, next) {
                 var url = "http://www.lativ.com/Detail/" + c;
@@ -71,11 +72,11 @@ async.series([
     // 主图片下载
     function(done) {
         console.log("主图片下载");
-        if( !lastData.productDetail ){
-            fs.writeFile("lastData.js", "exports.data={" +
+        if( !lastData ){
+            fs.writeFile("./lastData.js", "exports.data={" +
                             "productDetail:"+JSON.stringify(productDetail) + "," +
-                            "zhutu:"+JSON.stringify(zhutu) + "," +
-                            "desc:"+JSON.stringify(desc) +
+                            "zhutu:"+ JSON.stringify(zhutu) + "," +
+                            "desc:"+ JSON.stringify(desc) +
                             "}");
         }
         read.downloadImg(zhutu, 5, "./data/", function() {
@@ -148,6 +149,7 @@ async.series([
         });
     },
     function() {
+        fs.unlink("./lastData.js");
         console.log("完成");
         process.exit(0);
     }

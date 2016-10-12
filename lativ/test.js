@@ -16,7 +16,7 @@ request.get("http://m.lativ.com/Detail/25544011")
         if(err) return console.log(err);
             var $ = cheerio.load(res.text, {decodeEntities: false});
 
-            console.log( $(".product-report").html() );
+            console.log( $(".product-report .product-size").html() );
     });
 
 //获取手机端的页面详情，这样请求就会少很多。

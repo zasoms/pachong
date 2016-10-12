@@ -179,11 +179,15 @@ productDetail.prototype = {
                     desc = "",
                     price = $("#price").text();
 
-                var showPic = [];
+                var showPic = [],
+                    str = "";
                 $(".product_s_img > a").each(function(){
                     showPic.push(this.attribs.href);
                 });
-                $(".right_col").remove();
+                for(var i=0; i< 2 && showPic[i]; i ++){
+                    str += "<img width='750px' src='"+ showPic[i] +"'>";
+                }
+                $(".right_col").html(str);
 
                 $("img").each(function(i, item) {
                     var $item = $(item);
@@ -781,19 +785,19 @@ productDetail.prototype = {
             }
             photos[id] = hex(productId);
         });
+        for(var attr in photos){
+            if( i < 2 ){
+                zhutu += photos[attr] + ":1:" + i + ":|;" ;
+                i++;
+            }
+            colorImg += photos[attr] + ":2:0:" + COLOR[colors[k]].slice(0, -1) + "|;" ;
+            k++;
+        }
         for(var pic in pics){
             if( i < 5 ){
                 zhutu +=  pics[ showPic[i] ] + ":1:" + i + ":|;" ;
             }
             i++;
-        }
-        for(var attr in photos){
-            if( i < 5 ){
-                zhutu += photos[attr] + ":1:" + i + ":|;" ;
-            }
-            colorImg += photos[attr] + ":2:0:" + COLOR[colors[k]].slice(0, -1) + "|;" ;
-            i++;
-            k++;
         }
         product.picture = zhutu + colorImg;
         _.extend(this.zhutuPhoto, photos, pics);
