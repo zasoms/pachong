@@ -204,7 +204,12 @@ productDetail.prototype = {
                 title = "台湾诚衣正品lativ2016热销" + title.slice(0, title.indexOf("（"));
                 desc = $(".label").html() + $(".oldPic.show").html();
 
-                id = text.slice(index, index + 40).toString().match(/\d+/)[0];
+                if( index == -1 ){
+                     _this.callback(null, {}, null, null);
+                     return;
+                }else{
+                    id = text.slice(index, index + 40).toString().match(/\d+/)[0];
+                }
 
                 product.price = +$("#price").text() + 10;
                 product.title = title;
@@ -301,7 +306,7 @@ productDetail.prototype = {
 
         // 数字ID
 
-        product.num_id = DATA[productId];
+        product.num_id = DATA[productId.slice(0, 5)];
 
         product.is_xinpin = "248";
         product.auto_fill = "0";
