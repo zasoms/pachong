@@ -53,5 +53,7 @@ pachong.sublime-workspace
 *.xlsx
 *.tbi
 lativ/data
+lativ2/data
 lativ/public/libs
 lativ/update/data
+lativ2/update/data
