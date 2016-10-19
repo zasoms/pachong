@@ -284,7 +284,7 @@ productDetail.prototype = {
         product.list_time = "";
         //邮费模板
         // product.postage_id = 5478758160;
-        // 59包邮
+        // 119包邮
         product.postage_id = 8151607820;
 
         product.has_discount = 0;
@@ -891,26 +891,35 @@ var downloadImg = function(photos, num, root, callback){
 };
 downloadImg.prototype.requestAndwrite = function(url, root, callback){
     var _arr = this._arr;
-    request.get(url).end(function(err, res) {
-        if (err) {
-            console.log("有一张图片请求失败啦...");
-        } else {
-            var fileName = "";
-            if( _arr && _arr[url] ){
-                fileName = _arr[url]+ ".tbi";
-            }else{
-                fileName = path.basename(url);
-            }
-            fs.writeFile(root + fileName, res.body, function(err) {
+
+    var fileName = "";
+    if( _arr && _arr[url] ){
+        fileName = _arr[url]+ ".tbi";
+    }else{
+        fileName = path.basename(url);
+    }
+    
+    fs.exists(root + fileName, function(isexists){
+        if( !isexists ){
+            request.get(url).end(function(err, res) {
                 if (err) {
-                    console.log("有一张图片写入失败啦...");
+                    console.log("有一张图片请求失败啦...");
                 } else {
-                    callback(null, "successful !");
-                    /*callback貌似必须调用，第二个参数为下一个回调函数的result参数*/
+                    fs.writeFile(root + fileName, res.body, function(err) {
+                        if (err) {
+                            console.log("有一张图片写入失败啦...");
+                        } else {
+                            callback(null, "successful !");
+                            // callback貌似必须调用，第二个参数为下一个回调函数的result参数
+                        }
+                    });
                 }
             });
+        }else{
+            callback(null, "successful !");
         }
     });
+    
 };
 exports.downloadImg = function(photos, num, root, callback){
     downloadImg(photos, num, root, callback);

@@ -48,8 +48,6 @@ async.series([
     // 获取产品详情
     function(done) {
         console.log("获取产品详情");
-        if( !lastData ){
-        }
         if( lastData && lastData.productDetail ){
             productDetail = lastData.productDetail;
             zhutu = lastData.zhutu;
