@@ -984,7 +984,7 @@ exports.getActivity = function(activityNo, cacheID, callback){
 
 
 exports.getCategoryProduct = function(callback){
-    var main = ["WOMEN", "MEN"],
+    var main = ["WOMEN", "MEN", "SPORTS"],
         mainIndex = 0,
         cache = {},
         ids = [],
@@ -995,7 +995,6 @@ exports.getCategoryProduct = function(callback){
             .end(function(err, res){
                 var $ = cheerio.load( res.text , {decodeEntities: false});
                 var $a = $(".category").find("a");
-                // console.log($(".category"));
                 $a.each(function(i, item){
                     urls.push(item.attribs.href);
                 });
@@ -1034,3 +1033,5 @@ exports.getCategoryProduct = function(callback){
             });
     }
 };
+
+
