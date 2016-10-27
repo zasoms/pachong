@@ -18,7 +18,7 @@ var classList,
 async.series([
     // 自定义产品
     function(done) {
-        productList = require("./online").data;
+        // productList = require("./online").data;
         // productList = ["22363025"];
         // console.log(productList.length);
         done();
