@@ -7,8 +7,6 @@ var async = require("async"),
     _ = require("underscore"),
     debug = require("debug")("lativ:update:all");
 
-var SELLER_CIDS = require("../lativConfig").SELLER_CIDS;
-
 var lastData = require("../lastData").data;
 
 var classList,
@@ -17,30 +15,11 @@ var classList,
     zhutu = {},
     desc = [];
 
-function findIndexData(outer_id, products){
-    for (var i = 0, product; i < products.length; i++) {
-        if( products[i].outer_id.slice(0, 5) == outer_id ){
-            return i;
-        }
-    }
-    return -1;
-}
-
-
 async.series([
     // 自定义产品
     function(done) {
-        // productList = require("./online").data;
-        productList = [
-            {
-                category: "T恤&POLO-WOMEN",
-                lists: ["28015041"]
-            },
-            {
-                category: "衬衫-WOMEN",
-                lists: ["28015041"]
-            }
-        ];
+        productList = require("./data").data;
+        // productList = ["22363025"];
         // console.log(productList.length);
         done();
     },
@@ -75,27 +54,16 @@ async.series([
             desc = lastData.desc;
             done();
         }else{
-            var cache = {};
-            async.mapLimit(productList, 1, function(product, nextStep) {
-                var categoryName = product.category;
-                async.mapLimit(product.lists, 5, function(c, next) {
-                    var url = "http://www.lativ.com/Detail/" + c;
-                    var prex = c.slice(0,5);
-                    if( cache[prex] ){
-                        productDetail[ findIndexData(prex, productDetail) ].seller_cids += "," + SELLER_CIDS[categoryName];
-                        next();
-                    }else{
-                        cache[prex] = 1;
-                        read.productDetail(url, categoryName, function(err, data, zhutuPhoto, descPhoto) {
-                            if (data.title) {
-                                productDetail.push(data);
-                                _.extend(zhutu, zhutuPhoto);
-                                desc = desc.concat(descPhoto);
-                            }
-                            next(err);
-                        });
-                    };
-                }, nextStep);
+            async.mapLimit(productList, 5, function(c, next) {
+                var url = "http://www.lativ.com/Detail/" + c;
+                read.productDetail(url, function(err, data, zhutuPhoto, descPhoto) {
+                    if (data.title) {
+                        productDetail.push(data);
+                        _.extend(zhutu, zhutuPhoto);
+                        desc = desc.concat(descPhoto);
+                    }
+                    next(err);
+                });
             }, done); 
         }
     },
@@ -168,7 +136,7 @@ async.series([
                     next();
                 }else{
                     images(path)
-                        .draw( images("logo.png"), 10, 10 )
+                        .draw( images("logo.png"), 200, 200 )
                         .saveAsync( path, {
                             quality: 80
                         }, null, function(){
