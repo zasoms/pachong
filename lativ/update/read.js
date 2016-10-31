@@ -135,11 +135,12 @@ exports.categorytList = function(url, category, callback){
     };
 };
 
-var productDetail = function(url, callback){
+var productDetail = function(url, categoryName, callback){
     this.product = {};
 
     this.COLOR = _.extend({}, COLOR);
     this.SIZE = {};
+    this.categoryName = categoryName;
 
     this.cNum = 1001;
     this.sNum = 1001;
@@ -633,37 +634,8 @@ productDetail.prototype = {
     },
     //宝贝分类
     seller_cids: function(){
-        var product = this.product,
-            title = product.title;
-        var isSports = ~title.indexOf("运动");
-        var type = "",
-            attr = "";
-        if( isSports ){
-            type = "SPORTS";
-            if( /女|bra/i.test(title) ){
-                attr = "女装";
-            }else{
-                attr = "男装";
-            }
-            product.seller_cids = SELLER_CIDS[type][attr];
-        }else{
-            if( /女/i.test(title) ){
-                type = "WOMEN";
-            }else{
-                type = "MEN";
-            }
-            var items = SELLER_CIDS[type],
-                value = "";
-            for(var item in items){
-                item.split("/").forEach(function(str){
-                    if(~title.indexOf(str)){
-                        value = items[item];
-                        return;
-                    }
-                });
-            }
-            product.seller_cids = value;
-        }
+        this.product.seller_cids = SELLER_CIDS[ this.categoryName ];
+
     },
     input_custom_cpv: function(type, value, size){
         var cache = this.cache,
@@ -858,8 +830,8 @@ productDetail.prototype = {
     }
 };
 
-exports.productDetail = function(url, callback){
-    new productDetail(url, callback);
+exports.productDetail = function(url, categoryName, callback){
+    new productDetail(url, categoryName, callback);
 };
 
 
@@ -983,20 +955,33 @@ exports.getActivity = function(activityNo, cacheID, callback){
 };
 
 
-exports.getCategoryProduct = function(callback){
+function findData(category, arr){
+    for(var i=arr.length-1, item; item = arr[i]; i--){
+        if( item.category == category ){
+            return i;
+        }
+    }
+    return -1;
+}
+
+// 获取分类下的商品
+var getCategoryProduct = function(callback){
     var main = ["WOMEN", "MEN", "SPORTS"],
         mainIndex = 0,
-        cache = {},
-        ids = [],
         urls = [],
+        products = [],
         index = 0;
     function getCategory(category){
         request.get("http://www.lativ.com/" + category)
             .end(function(err, res){
                 var $ = cheerio.load( res.text , {decodeEntities: false});
                 var $a = $(".category").find("a");
+
                 $a.each(function(i, item){
-                    urls.push(item.attribs.href);
+                    urls.push({
+                        category: $(item).closest("ul").siblings("h2").text()+ '-' + main[mainIndex],
+                        href: item.attribs.href
+                    });
                 });
                 if( mainIndex < 2 ){
                     getCategory( main[++mainIndex] );
@@ -1007,11 +992,13 @@ exports.getCategoryProduct = function(callback){
     }
     getCategory(main[mainIndex]);
 
-    function getPageProducts(url){
-        request.get("http://www.lativ.com"+ url)
+    function getPageProducts(params){
+        var lists = [],
+            cache = {};
+        request.get("http://www.lativ.com"+ params.href)
             .end(function(err, res){
                 if(err){
-                    return callback(err);
+                    return callback && callback(err);
                 }
                 var $ = cheerio.load( res.text);
                 var $imgs = $(".specialmain img");
@@ -1022,16 +1009,24 @@ exports.getCategoryProduct = function(callback){
                             product = "" + info[5];
                         if( !cache[productId] ){
                             cache[productId] = 1;
-                            ids.push( product );
+                            lists.push( product );
                         }
                     });
+                var productIndex = findData(params.category, products);
+
+                if( productIndex >= 0 ){
+                    products[productIndex].lists = products[productIndex].lists.concat( lists );
+                }else{
+                    products.push({
+                        category: params.category,
+                        lists: lists
+                    });
+                }
                 if( index < urls.length - 1 ){
                     getPageProducts(urls[++index]);
                 }else{
-                    callback(null, ids);
+                    callback && callback(null, products);
                 }
             });
     }
 };
-
-
