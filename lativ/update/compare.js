@@ -6,12 +6,16 @@ var csv = require("fast-csv"),
 
 function compare(){
 	var ids = [],
-		online = {};
-	fs.createReadStream('online.csv')
-		.pipe(csv())
+		online = {},
+		i = 0;
+	var stream = fs.createReadStream('../lativ.csv');
+
+	csv.fromStream( stream, { delimiter: '\t' } )
 		.on("data", function(arr){
 			// var data = unescape(arr[0].replace("\\u", "%")).replace("\\0", "");
-			console.log(arr);
+			i++;
+			console.log(i);
+			console.log(arr[33]);
 			// if( /^[0-9]{8}/.test(arr[33])){
 			// 	ids.push(arr[33]);
 			// }
@@ -31,6 +35,7 @@ function abc(){
 
 	var collection = [];
 	var difference = [];
+	var online = [];
 
 	for(var i=0; i<plen; i++){
 	    var item1 = productList[i];
@@ -43,19 +48,21 @@ function abc(){
 	        }
 	    }
 	}
-	// for(var k=0; k<plen; k++){
-	//     var item3 = productList[k];
+	for(var k=0; k<plen; k++){
+	    var item3 = productList[k];
+	    if( !(~collection.indexOf( item3 )) ){
+	        difference.push( item3 );
+	    }else{
+	    	online.push( item3 );
+	    }
+	}
+	// for(var k=0; k<dlen; k++){
+	//     var item3 = down[k];
 	//     if( !(~collection.indexOf( item3 )) ){
 	//         difference.push( item3 );
 	//     }
 	// }
-	for(var k=0; k<dlen; k++){
-	    var item3 = down[k];
-	    if( !(~collection.indexOf( item3 )) ){
-	        difference.push( item3 );
-	    }
-	}
 
-	console.log(difference);
+	console.log(online);
 }
 abc();

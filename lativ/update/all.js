@@ -1,5 +1,6 @@
 var async = require("async"),
-    read = require("./read"),
+    csv = require("fast-csv"),
+    read,
     json2csv = require("json2csv"),
     iconv = require("iconv-lite"),
     fs = require("fs"),
@@ -13,37 +14,98 @@ var classList,
     productList = [],
     productDetail = [],
     zhutu = {},
-    desc = [];
+    desc = [],
+    online = [];
 
 async.series([
-    // 自定义产品
+    function(done){
+        console.log("拿取lativ.csv中的数据");
+        var config = {};
+        var stream = fs.createReadStream('./lativ.csv');
+
+        csv.fromStream( stream, { delimiter: '\t' } )
+            .on("data", function(arr){
+                if( /^[0-9]{8}/.test(arr[33])){
+                    var key = arr[33],
+                        value = arr[36];
+                    online.push(key);
+                    config[ key ] = value;
+                }
+            })
+            .on("end", function(){
+                fs.writeFile("./update/config.js", "exports.data=" +JSON.stringify(config), function(){
+                    done();
+                });
+            });
+    },
+    function(done){
+        console.log("获取lativ中的产品");
+        read = require("./read");
+        read.getCategoryProduct(function(err, ids){
+            if( ids ){
+                productList = ids;
+                fs.writeFile("./update/data.js", "exports.data=" +JSON.stringify(ids), function(){
+                    done();
+                });
+            }
+        });
+    },
     function(done) {
+        console.log("对比数据");
+        var down = require("./data").data;
+        console.log(down);
+        var dlen = down.length;
+        var plen = online.length;
+
+        var collection = [];
+
+        for(var i=0; i<plen; i++){
+            var item1 = online[i];
+            for(var j=0; j<dlen; j++){
+                var item2 = down[j];
+                if( item1.slice(0, 5) == item2.slice(0, 5) ){
+
+                    collection.push(item1);
+                    break;       
+                }
+            }
+        }
+        function deleteProducts(callback){
+            var difference = [],
+                onlineData = [];
+            for(var k=0; k<plen; k++){
+                var item3 = online[k];
+                if( !(~collection.indexOf( item3 )) ){
+                    difference.push( item3 );
+                }else{
+                    onlineData.push(item3);
+                }
+            }
+            fs.writeFile("./update/deleteProducts.js", "exports.data=" +JSON.stringify(difference), function(){
+                fs.writeFile("./update/online.js", "exports.data=" +JSON.stringify(onlineData), callback);
+            });
+        }
+        function addProduct(callback){
+            var difference = [];
+            for(var k=0; k<dlen; k++){
+                var item3 = down[k];
+                if( !(~collection.indexOf( item3 )) ){
+                    difference.push( item3 );
+                }
+            }
+            fs.writeFile("./update/addProduct.js", "exports.data=" +JSON.stringify(difference), callback);
+        }
+        deleteProducts(function(){
+            addProduct(function(){
+                done();
+            });
+        });
+    },
+    function(done) {
+        // 自定义产品
         productList = require("./online").data;
-        // productList = ["22363025"];
-        // console.log(productList.length);
         done();
     },
-
-    // 获取活动产品
-    // function(done){
-    //     console.log("获取活动产品");
-    //     read.getActivity("1P59", 3424, function(err, ids){
-    //         productList = ids;
-    //         fs.writeFile("active.js", "exports.data=" +JSON.stringify(ids));
-    //         // done();
-    //     });
-    // },
-
-    // function(done){
-    //     console.log("获取产品");
-    //     read.getCategoryProduct(function(err, ids){
-    //         if( ids ){
-    //             productList = ids;
-    //             fs.writeFile("data.js", "exports.data=" +JSON.stringify(ids));
-    //             // done();
-    //         }
-    //     });
-    // },
 
     // 获取产品详情
     function(done) {

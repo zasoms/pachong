@@ -1,3 +1,4 @@
+/*
 var request = require("superagent"),
     cheerio = require("cheerio"),
     async = require("async"),
@@ -5,6 +6,7 @@ var request = require("superagent"),
     path = require("path"),
     _ = require("underscore"),
     debug = require("debug")("blog:update:read");
+
 
 request.get("http://m.lativ.com/Detail/25544011")
 	.set({
@@ -20,3 +22,37 @@ request.get("http://m.lativ.com/Detail/25544011")
     });
 
 //获取手机端的页面详情，这样请求就会少很多。
+*/
+
+var parser = require('node-csv-parse'),
+    fs = require('fs'),
+    row = 62,
+    arr = [],
+    online = [],
+    config = {},
+    i = 0,
+    sum = 0;
+
+fs.readFile('./lativ.csv', 'utf8', (err, data) => {
+    if(err) { throw err; }
+    data = data.split("\t");
+    // console.log( data.length )
+    sum = Math.floor(data.length / row);
+    while ( i < sum ) {
+        i++;
+        var line = data.splice(i * row, row);
+        line.length && arr.push(line);
+    }
+    for(var j=0, jlen=arr.length; j<jlen; j++){
+        var key = arr[j][33];
+        var value = arr[j][36];
+
+        if( key ){
+            key = key.replace(/\"/g,"");
+            online.push( key );
+            config[ key ] = value;
+        }
+    }
+    fs.writeFile("./update/online.js", "exports.data=" + JSON.stringify(online));
+    fs.writeFile("./update/config.js", "exports.data=" + JSON.stringify(config));
+});
