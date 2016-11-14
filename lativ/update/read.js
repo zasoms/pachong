@@ -25,8 +25,7 @@ function mkdirsSync(dirpath, mode) {
         dirpath.split("/").forEach(function(dirname) {
             if (pathtmp) {
                 pathtmp = path.join(pathtmp, dirname);
-            }
-            else {
+            } else {
                 pathtmp = dirname;
             }
             if (!fs.existsSync(pathtmp)) {
@@ -39,16 +38,16 @@ function mkdirsSync(dirpath, mode) {
     return true;
 }
 // 随机创建32位16进制字符
-function hex(productId){
+function hex(productId) {
     var arr = '0,1,2,3,4,5,6,7,8,9,a,b,c,d,e,f'.split(","),
-        str = productId +"",
+        str = productId + "",
         value = "";
-    for(var i=0; i<24; i++){
-        str += arr[Math.floor(Math.random()*16)];
+    for (var i = 0; i < 24; i++) {
+        str += arr[Math.floor(Math.random() * 16)];
     }
-    if( hex.cache[str] ){
+    if (hex.cache[str]) {
         arguments.callee();
-    }else{
+    } else {
         hex.cache[str] = 1;
     }
     return str;
@@ -63,26 +62,26 @@ hex.cache = {};
  * @param  {Function} callback [description]
  * @return {[type]}            [description]
  */
-exports.classList = function(url, callback){
+exports.classList = function(url, callback) {
     debug("读取产品分类列表: %s", url);
 
-	request.get(url)
-		.end(function(err, res){
-			if(err) return callback(err);
+    request.get(url)
+        .end(function(err, res) {
+            if (err) return callback(err);
 
-			var $ = cheerio.load( res.text );
+            var $ = cheerio.load(res.text);
 
-			var categorise = [];
-			$("#nav a").each(function(i, item){
-				var $item = $(item);
-				categorise.push({
-					rel: $item.attr("rel"),
-					name: $item.text().trim(),
-					href: $item.attr("href")
-				});
-			});
-			callback(null, categorise);
-		});
+            var categorise = [];
+            $("#nav a").each(function(i, item) {
+                var $item = $(item);
+                categorise.push({
+                    rel: $item.attr("rel"),
+                    name: $item.text().trim(),
+                    href: $item.attr("href")
+                });
+            });
+            callback(null, categorise);
+        });
 };
 
 
@@ -93,33 +92,33 @@ exports.classList = function(url, callback){
  * @param  {Function} callback [description]
  * @return {[type]}            [description]
  */
-exports.categorytList = function(url, category, callback){
+exports.categorytList = function(url, category, callback) {
     debug("读取分类下产品: %s", url);
 
     categoryConfig.Referer = url;
 
-	var products = [];
-	request.get(url)
-            .end(function(err, res){
-                if(err) return callback(err);
+    var products = [];
+    request.get(url)
+        .end(function(err, res) {
+            if (err) return callback(err);
 
-                var text = res.text.toString(),
-                    index = text.indexOf("cacheID");
-                    cacheID = text.slice(index+9, index+20).toString().match(/\d+/)[0];
+            var text = res.text.toString(),
+                index = text.indexOf("cacheID");
+            cacheID = text.slice(index + 9, index + 20).toString().match(/\d+/)[0];
 
-                getAjaxUrlList(category, 0, cacheID);
-            });
+            getAjaxUrlList(category, 0, cacheID);
+        });
 
-    var getAjaxUrlList = function(category, pageIndex, cacheID){
-        var url = "http://www.lativ.com/Product/GetNewProductCategoryList?MainCategory="+ category +"&pageIndex="+ pageIndex +"&cacheID="+ cacheID;
+    var getAjaxUrlList = function(category, pageIndex, cacheID) {
+        var url = "http://www.lativ.com/Product/GetNewProductCategoryList?MainCategory=" + category + "&pageIndex=" + pageIndex + "&cacheID=" + cacheID;
         request.get(url)
             .set(categoryConfig)
-            .end(function(err, res){
-            	if(err) return callback(err);
+            .end(function(err, res) {
+                if (err) return callback(err);
 
                 var data = JSON.parse(res.text);
-                if( data && data.length ){
-                    _.each(data, function(item, i){
+                if (data && data.length) {
+                    _.each(data, function(item, i) {
                         var arr = item.image_140.split("/");
                         products.push({
                             urlId: arr[3],
@@ -128,14 +127,14 @@ exports.categorytList = function(url, category, callback){
                         });
                     });
                     getAjaxUrlList(category, ++pageIndex, cacheID);
-                }else{
+                } else {
                     callback(null, products);
                 }
             });
     };
 };
 
-var productDetail = function(url, callback){
+var productDetail = function(url, callback) {
     this.product = {};
 
     this.COLOR = _.extend({}, COLOR);
@@ -145,7 +144,7 @@ var productDetail = function(url, callback){
     this.sNum = 1001;
     this.cache = {};
 
-    this.callback = callback || function(){};
+    this.callback = callback || function() {};
 
     this.zhutuPhoto = {};
     this.descPhoto = [];
@@ -163,15 +162,15 @@ productDetail.prototype = {
      * @param  {Function} callback [description]
      * @return {[type]}            [description]
      */
-    init: function(url){
+    init: function(url) {
         var product = this.product,
             _this = this;
         request.get(url)
-            .end(function(err, res){
-                if(err) return console.log(err);
+            .end(function(err, res) {
+                if (err) return console.log(err);
 
                 res.text.replace("\\r", "").replace("\\n", "");
-                var $ = cheerio.load(res.text, {decodeEntities: false}),
+                var $ = cheerio.load(res.text, { decodeEntities: false }),
                     text = res.text.toString(),
                     index = text.indexOf("$.product.Generate"),
                     html = "",
@@ -181,11 +180,11 @@ productDetail.prototype = {
 
                 var showPic = [],
                     str = "";
-                $(".product_s_img > a").each(function(){
+                $(".product_s_img > a").each(function() {
                     showPic.push(this.attribs.href);
                 });
-                for(var i=0; i< 2 && showPic[i]; i ++){
-                    str += "<img width='750px' src='"+ showPic[i] +"'>";
+                for (var i = 0; i < 2 && showPic[i]; i++) {
+                    str += "<img width='750px' src='" + showPic[i] + "'>";
                 }
                 $(".right_col").html(str);
 
@@ -204,31 +203,33 @@ productDetail.prototype = {
                 title = "台湾诚衣正品lativ2016热销" + title.slice(0, title.indexOf("（"));
                 desc = $(".label").html() + $(".oldPic.show").html();
 
-                if( index == -1 ){
-                     _this.callback(null, {}, null, null);
-                     return;
-                }else{
+                if (index == -1) {
+                    _this.callback(null, {}, null, null);
+                    return;
+                } else {
                     id = text.slice(index, index + 40).toString().match(/\d+/)[0];
                 }
                 var price = +$("#price").text();
-                if( /袜/.test(title) ){
+                if (/袜/.test(title)) {
                     price += 5;
-                }else{
+                } else {
                     price += 10;
                 }
                 product.price = price;
                 product.title = title;
                 product.subtitle = title;
-                _this.disposeDescription(url, desc, function(){
+                _this.disposeDescription(url, desc, function() {
                     detailConfig.Referer = url;
-                    _this.getProduct(url.split("Detail/")[1], showPic);
+                    _this.productId = url.split("Detail/")[1];
+                    _this.getProduct(showPic);
                 });
             });
     },
     // 获得该商品的数目、尺寸和颜色
-    getProduct: function(productId, showPic){
+    getProduct: function(showPic) {
         var product = this.product,
-            _this = this;
+            _this = this,
+            productId = this.productId;
         request.get("http://www.lativ.com/Product/ProductInfo/?styleNo=" + productId.slice(0, 5))
             .set(detailConfig)
             .end(function(err, res) {
@@ -248,7 +249,7 @@ productDetail.prototype = {
                 // }
                 // product.price = Number(product.price);
 
-                _this.dataMatch(productId);
+                _this.dataMatch();
 
                 //宝贝类目
                 _this.cid();
@@ -257,13 +258,14 @@ productDetail.prototype = {
 
                 _this.skuProps(data);
 
-                _this.picture(data, showPic, productId);
+                _this.picture(data, showPic);
                 _this.callback(err, _this.product, _this.zhutuPhoto, _this.descPhoto);
             });
     },
     // 数据处理
-    dataMatch: function(productId) {
-        var product = this.product;
+    dataMatch: function() {
+        var product = this.product,
+            productId = this.productId;
         // 属性值备注
         product.cpv_memo = "";
 
@@ -294,7 +296,7 @@ productDetail.prototype = {
         product.picture_status = "1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;";
         product.auction_point = "0";
 
-        product.video = "";  //TODO
+        product.video = ""; //TODO
 
         // 这是为了货店通的需要，所以加上
         product.outer_id = productId;
@@ -330,11 +332,10 @@ productDetail.prototype = {
         product.propAlias = "";
 
 
-
         this.seller_cids();
     },
     // 宝贝描述处理
-    disposeDescription: function(url, desc, callback){
+    disposeDescription: function(url, desc, callback) {
         var product = this.product,
             _this = this;
         var photos = [],
@@ -342,19 +343,19 @@ productDetail.prototype = {
             reminder = "",
             id = url.split("/")[4];
         desc = desc.trim();
-        desc =  desc.replace(/\r|\n/gm, "")
-                .replace(/\"/gm, "'")
-                .replace(/,/gm, "，")
-                .replace(/data-original=\'\'/gm, "")
-                .replace(/http(s?):\/\/s[0-9].lativ.com\/(.*?).(jpg|png|gif)/gm, function(match, escape, interpolate, evaluate, offset){
-                    photos.push(match);
-                    var arr = interpolate.split("/");
-                    return "FILE:\/\/\/E:/github/pachong/lativ/data/img/"+ arr[arr.length - 1] + "." + evaluate;
-                });
+        desc = desc.replace(/\r|\n/gm, "")
+            .replace(/\"/gm, "'")
+            .replace(/,/gm, "，")
+            .replace(/data-original=\'\'/gm, "")
+            .replace(/http(s?):\/\/s[0-9].lativ.com\/(.*?).(jpg|png|gif)/gm, function(match, escape, interpolate, evaluate, offset) {
+                photos.push(match);
+                var arr = interpolate.split("/");
+                return "FILE:\/\/\/E:/github/pachong/lativ/data/img/" + arr[arr.length - 1] + "." + evaluate;
+            });
 
         reminder = "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i1/465916119/TB25486tpXXXXa.XpXXXXXXXXXX_!!465916119.png'><\/P>";
 
-        _this.getReport(id, function(err, str){
+        _this.getReport(id, function(err, str) {
             var options = {
                 screenSize: {
                     width: 750,
@@ -369,9 +370,9 @@ productDetail.prototype = {
                 customCSS: "*{margin: 0; padding: 0;} table{ width: 750px;font-family: monaco, verdana,arial,sans-serif; font-size:12px; color:#333333; border-width: 1px; border-color: #666666; border-collapse: collapse; margin-bottom: 10px;} table th{border-width: 1px; padding: 8px; border-style: solid; border-color: #666666; background-color: #dedede;} table td{border-width: 1px; padding: 8px; border-style: solid; border-color: #666666; background-color: #ffffff; text-align: center;}",
                 streamType: "jpg",
             };
-            var sizePath = 'data/img/'+id+'_size.png';
+            var sizePath = 'data/img/' + id + '_size.png';
             webshot(str, sizePath, options, function(err) {
-                desc = reminder + "<img src='FILE:\/\/\/E:/github/pachong/lativ/"+ sizePath +"'>" + desc;
+                desc = reminder + "<img src='FILE:\/\/\/E:/github/pachong/lativ/" + sizePath + "'>" + desc;
                 product.description = desc;
                 _this.descPhoto = _this.descPhoto.concat(photos);
                 callback();
@@ -379,7 +380,7 @@ productDetail.prototype = {
         });
     },
     // 宝贝类目
-    cid: function(){
+    cid: function() {
         var product = this.product,
             title = product.title,
             cid = "";
@@ -395,50 +396,50 @@ productDetail.prototype = {
         // 运动短裤-男  50023108
         // 运动长裤-男  50023107
 
-        if( ~title.indexOf("男") ){
-            if( /POLO/i.test(title) ){
+        if (~title.indexOf("男")) {
+            if (/POLO/i.test(title)) {
                 cid = "50010402";
                 product.cateProps += "20000:29534;42722636:20213;122216345:29457;122216507:3226292;122216515:29535;122216586:29947;";
             }
-            if( /T恤/i.test(title) ){
+            if (/T恤/i.test(title)) {
                 cid = "50000436";
                 product.cateProps += "20000:29534;20551:22252803;20603:29452;20663:29447;42722636:248572013;122216345:29457;122216348:29445;122216507:3226292;122216515:29535;122216586:29947;";
             }
-            if( /背心/.test(title) ){
+            if (/背心/.test(title)) {
                 cid = "50011153";
                 product.cateProps += "20000:29534;42722636:20213;122216515:29535;122216586:29947;122276315:3273241;";
             }
-            if( /衬衫/.test(title) ){
+            if (/衬衫/.test(title)) {
                 cid = "50011123";
                 product.cateProps += "20000:29534;20663:20213;42722636:20213;122216345:29938;122216348:29444;122216507:3226292;122216515:29535;122216586:29947;";
             }
-            if( /牛仔裤/.test(title) ){
+            if (/牛仔裤/.test(title)) {
                 cid = "50010167";
                 product.cateProps += "20000:29534;42722636:248572013;122216515:29535;122276111:20525;";
                 //尺寸 20518
                 this.sizePre = "20518";
             }
-            if( /短裤|中裤|沙滩裤|五分裤|七分裤|松紧短裤/.test(title) ){
+            if (/短裤|中裤|沙滩裤|五分裤|七分裤|松紧短裤/.test(title)) {
                 cid = "50023108";
                 product.cateProps += "20000:29534;122216608:20532;";
                 product.inputPids = "20000610347613000000";
-                product.inputValues = "lativ,"+ product.price +",短裤";
+                product.inputValues = "lativ," + product.price + ",短裤";
                 product.subtitle = "";
             }
-            if( /三角短裤|平角短裤|平脚短裤|棉质短裤|印花短裤/.test(title) ){
+            if (/三角短裤|平角短裤|平脚短裤|棉质短裤|印花短裤/.test(title)) {
                 cid = "50008882";
                 product.cateProps += "20000:29534;24477:20532;";
                 product.inputPids = "166332348";
                 product.inputValues = "1条";
                 product.subtitle = "";
             }
-            if( /长裤|松紧裤|休闲裤/.test(title) ){
+            if (/长裤|松紧裤|休闲裤/.test(title)) {
                 cid = "3035";
                 product.cateProps += "20000:29534;42722636:248572013;122216515:29535;122216586:29947;122276111:20525;";
                 //尺寸 20518
                 this.sizePre = "20518";
             }
-            if( /运动T恤/i.test(title) ){
+            if (/运动T恤/i.test(title)) {
                 cid = "50013228";
                 product.cateProps += "20000:29534;20663:29447;122216348:29445;122216608:20532;";
                 product.inputPids = "610347613021751";
@@ -449,41 +450,41 @@ productDetail.prototype = {
                 // propAlias   这里要把自定义属性值改成销售属性别名
                 // 20509:29696:其它尺码
             }
-            if( /运动短裤/i.test(title) ){
+            if (/运动短裤/i.test(title)) {
                 cid = "50023108";
                 product.cateProps += "20000:29534;122216608:20532;";
                 product.inputPids = "610347613021751";
                 product.inputValues = product.price + ",短裤";
             }
-            if( /运动(.*?)长裤|运动(.*?)紧身裤|紧身裤/i.test(title) ){
+            if (/运动(.*?)长裤|运动(.*?)紧身裤|紧身裤/i.test(title)) {
                 cid = "50023107";
                 product.cateProps += "20000:29534;122216608:20532;";
                 product.inputPids = "610347613021751";
                 product.inputValues = product.price + ",长裤";
             }
-            if( /羽绒/.test(title) ){
+            if (/羽绒/.test(title)) {
                 cid = "50011167";
                 product.cateProps += "20000:29534;6861561:20213;42722636:20213;122216515:29535;122216562:3226292;";
             }
-            if( /风衣/.test(title) ){
-                 cid = "50011159";
+            if (/风衣/.test(title)) {
+                cid = "50011159";
                 product.cateProps += "20000:29534;31611:26486055;42722636:20213;122216345:29938;122216515:29535;122216562:3226292;122216586:29947;";
             }
-            if( /西服/.test(title) ){
-                 cid = "50010160";
+            if (/西服/.test(title)) {
+                cid = "50010160";
                 product.cateProps += "20000:29534;31611:3267617;42722636:20213;122216507:3226292;122216515:29535;122216586:29947;122276377:3267910;";
             }
-            if( /茄克|外套/.test(title) ){
+            if (/茄克|外套/.test(title)) {
                 cid = "50011739";
                 product.cateProps += "20000:29534;122216608:20532;";
                 product.inputPids = "610347613021751";
-                product.inputValues = product.price +",茄克/外套";
+                product.inputValues = product.price + ",茄克/外套";
             }
-            if( /羽绒/.test(title) ){
+            if (/羽绒/.test(title)) {
                 cid = "50011167";
                 product.cateProps += "20000:29534;6861561:20213;42722636:20213;122216515:29535;122216562:3226292;";
             }
-            if( /棉衣/.test(title) ){
+            if (/棉衣/.test(title)) {
                 cid = "50011165";
                 product.cateProps += "20000:29534;42722636:20213;122216515:29535;122216562:3226292;122216586:29947;";
             }
@@ -505,50 +506,50 @@ productDetail.prototype = {
         // 运动短裤-女 50023108
         // 运动长裤-女 50023107
 
-        if( /女|bra/i.test(title) ){
-            if( /T恤|中袖|长衫|七分袖/i.test(title) ){
+        if (/女|bra/i.test(title)) {
+            if (/T恤|中袖|长衫|七分袖/i.test(title)) {
                 cid = "50000671";
                 product.cateProps += "20021:105255;13328588:492838734;";
             }
-            if( /POLO/i.test(title) ){
+            if (/POLO/i.test(title)) {
                 cid = "50022889";
                 product.cateProps += "20000:109712276;122216608:20533;";
                 product.inputPids = "610347613021751";
-                product.inputValues = product.price +",POLO衫";
+                product.inputValues = product.price + ",POLO衫";
             }
-            if( /吊带|背心/.test(title) ){
+            if (/吊带|背心/.test(title)) {
                 cid = "50010394";
                 product.cateProps += "20000:29534;20021:105255;24477:20533;";
             }
-            if( /文胸/.test(title) ){
+            if (/文胸/.test(title)) {
                 cid = "50008881";
                 product.cateProps += "20000:29534;5260022:113084;122216483:103092;122216591:3269820;122216608:3269958;122442403:3269842;122508284:607964276;";
 
                 // 尺寸 122508275
                 this.sizePre = "122508275";
             }
-            if( /雪纺/.test(title) ){
+            if (/雪纺/.test(title)) {
                 cid = "162116";
                 product.cateProps += "122216347:828914351;";
             }
-            if( /针织/.test(title) ){
+            if (/针织/.test(title)) {
                 cid = "50000697";
                 product.cateProps += "20551:105255;13328588:492838732;122216347:828914351;";
             }
-            if( /衬衫/.test(title) ){
+            if (/衬衫/.test(title)) {
                 cid = "162104";
                 product.cateProps += "20021:105255;13328588:492838731;";
             }
-            if( /西装/.test(title) ){
+            if (/西装/.test(title)) {
                 cid = "50008897";
                 product.cateProps += "122216347:728146012;";
             }
-            if( /连衣裙/.test(title) ){
+            if (/连衣裙/.test(title)) {
                 cid = "50010850";
                 product.cateProps += "122216347:828914351;";
             }
 
-            if( /运动(.*?)短裤|短裤|中裤|七分裤|宽腿裤/.test(title) ){
+            if (/运动(.*?)短裤|短裤|中裤|七分裤|宽腿裤/.test(title)) {
                 cid = "50023108";
                 product.cateProps += "20000:29534;122216608:20533;";
                 product.inputPids = "610347613021751";
@@ -557,146 +558,125 @@ productDetail.prototype = {
                 // 尺寸 20509
                 this.sizePre = "20509";
             }
-            if( /内裤|三角短裤|平脚短裤|生理裤|安全裤|平口裤/.test(title) ){
+            if (/内裤|三角短裤|平脚短裤|生理裤|安全裤|平口裤/.test(title)) {
                 cid = "50008882";
                 product.cateProps += "20000:29534;24477:20533;122216608:3267959;";
                 product.inputPids = "166332348";
                 product.inputValues = "1条";
                 product.subtitle = "";
             }
-            if( /短裙|牛仔(.*?)裙|紧身裙|窄裙|迷你裙|中裙|裤裙|裙裤|喇叭裙|印花长裙/.test(title) ){
+            if (/短裙|牛仔(.*?)裙|紧身裙|窄裙|迷你裙|中裙|裤裙|裙裤|喇叭裙|印花长裙/.test(title)) {
                 cid = "1623";
                 product.cateProps += "122216347:828914351;";
             }
-            if( /长裤|休闲裤|紧身裤|九分裤|紧身裤|踩脚裤|带裤紧身窄裙|百搭裤|松紧裤/.test(title) ){
+            if (/长裤|休闲裤|紧身裤|九分裤|紧身裤|踩脚裤|带裤紧身窄裙|百搭裤|松紧裤/.test(title)) {
                 cid = "162201";
                 //尺寸 20518
                 this.sizePre = "20518";
             }
-            if( /牛仔裤|牛仔(.*?)裤/.test(title) ){
+            if (/牛仔裤|牛仔(.*?)裤/.test(title)) {
                 cid = "162205";
                 product.cateProps += "122216347:828914351;";
                 //尺寸 20518
                 this.sizePre = "20518";
             }
-            if( /运动(.*?|[^POLO])衫/i.test(title) ){
+            if (/运动(.*?|[^POLO])衫/i.test(title)) {
                 cid = "50011717";
                 product.cateProps += "20000:29534;122216608:20533;";
                 product.inputPids = "1302175161034760000000";
                 product.inputValues = product.price + ",运动卫衣/套头衫";
             }
-            if( /运动(.*?)T恤|运动(.*?)吊带衫|运动(.*?)背心/.test(title) ){
+            if (/运动(.*?)T恤|运动(.*?)吊带衫|运动(.*?)背心/.test(title)) {
                 cid = "50013228";
                 product.cateProps += "20000:29534;20663:29448;122216348:29445;122216608:20533;";
                 product.inputPids = "610347613021751";
                 product.inputValues = product.price + ",T恤";
             }
-            if( /运动(.*?)长裤|运动(.*?)裤/.test(title) ){
+            if (/运动(.*?)长裤|运动(.*?)裤/.test(title)) {
                 cid = "50023107";
                 product.cateProps += "20000:29534;122216608:20533;";
                 product.inputPids = "610347613021751";
                 product.inputValues = product.price + ",长裤";
             }
 
-            if( /羽绒大衣|羽绒(.*?)外套/.test(title) ){
+            if (/羽绒大衣|羽绒(.*?)外套/.test(title)) {
                 cid = "50008899";
                 product.cateProps += "20000:29534;122216347:740138901;";
             }
-            if( /茄克|外套|连帽/.test(title) ){
+            if (/茄克|外套|连帽/.test(title)) {
                 cid = "50011739";
                 product.cateProps += "20000:29534;122216608:20533;";
                 product.inputPids = "610347613021751";
-                product.inputValues = product.price +",茄克/外套";
+                product.inputValues = product.price + ",茄克/外套";
             }
-            if( /风衣|连帽外套/.test(title) ){
+            if (/风衣|连帽外套/.test(title)) {
                 cid = "50008901";
                 product.cateProps += "122216347:728146012;";
             }
-            if( /大衣/.test(title) ){
+            if (/大衣/.test(title)) {
                 cid = "50013194";
                 product.cateProps += "20021:20213;13328588:492838731;122216347:728146012;";
             }
-            if( /羽绒/.test(title) ){
+            if (/羽绒/.test(title)) {
                 cid = "50008899";
                 product.cateProps += "20000:29534;122216347:740138901;1627207:28332;20509:6215318;";
             }
-            if( /棉衣/.test(title) ){
+            if (/棉衣/.test(title)) {
                 cid = "50008900";
                 product.cateProps += "20000:29534;122216347:740138901;";
             }
         }
-        if( !cid ){
+        if (!cid) {
             cid = "50000671";
             product.cateProps += "20021:105255;13328588:492838734;";
         }
         product.cid = cid;
     },
     //宝贝分类
-    seller_cids: function(){
-        var product = this.product,
-            title = product.title;
-        var isSports = ~title.indexOf("运动");
-        var type = "",
-            attr = "";
-        if( isSports ){
-            type = "SPORTS";
-            if( /女|bra/i.test(title) ){
-                attr = "女装";
-            }else{
-                attr = "男装";
+    seller_cids: function() {
+        var categorys = require("./category").data,
+            category,
+            productId = this.productId;
+        this.product.seller_cids = "";
+        for(var i = 0 ,ilen = categorys.length; i<ilen; i++){
+            category = categorys[i];
+            if( ~category.lists.indexOf(productId) ){
+                this.product.seller_cids += SELLER_CIDS[ category.categoryName ];
             }
-            product.seller_cids = SELLER_CIDS[type][attr];
-        }else{
-            if( /女/i.test(title) ){
-                type = "WOMEN";
-            }else{
-                type = "MEN";
-            }
-            var items = SELLER_CIDS[type],
-                value = "";
-            for(var item in items){
-                item.split("/").forEach(function(str){
-                    if(~title.indexOf(str)){
-                        value = items[item];
-                        return;
-                    }
-                });
-            }
-            product.seller_cids = value;
         }
     },
-    input_custom_cpv: function(type, value, size){
+    input_custom_cpv: function(type, value, size) {
         var cache = this.cache,
             product = this.product,
             sizePre = this.sizePre;
 
         var data = type === 'color' ? this.COLOR : this.SIZE;
 
-        if( type == 'color' ){
-            if( !data[value] ){
-                data[value] = "1627207:-"+ this.cNum + ";";
-                product.input_custom_cpv += "1627207:-" + this.cNum + ":"+ value +";";
+        if (type == 'color') {
+            if (!data[value]) {
+                data[value] = "1627207:-" + this.cNum + ";";
+                product.input_custom_cpv += "1627207:-" + this.cNum + ":" + value + ";";
                 this.cNum++;
             }
         }
-        if( type == 'size' ){
-            if( !value.trim() ){
+        if (type == 'size') {
+            if (!value.trim()) {
                 value = size;
             }
-            if( !data[value] ){
-                data[value] = sizePre +":-"+ this.sNum + ";";
-                product.input_custom_cpv += sizePre +":-" + this.sNum + ":"+ value + "("+ size +");";
+            if (!data[value]) {
+                data[value] = sizePre + ":-" + this.sNum + ";";
+                product.input_custom_cpv += sizePre + ":-" + this.sNum + ":" + value + "(" + size + ");";
                 this.sNum++;
-            }else{
-                if( !cache[value] ){
-                    product.cpv_memo += data[value].slice(0, -1) + ":" + size +";";
+            } else {
+                if (!cache[value]) {
+                    product.cpv_memo += data[value].slice(0, -1) + ":" + size + ";";
                     cache[value] = 1;
                 }
             }
         }
         return data[value];
     },
-    propAlias: function(value, size){
+    propAlias: function(value, size) {
         var cache = this.cache,
             product = this.product,
             sizePre = this.sizePre;
@@ -704,13 +684,13 @@ productDetail.prototype = {
         var SIZE = this.SIZE,
             item = "20509:";
 
-        if( !value.trim() ){
+        if (!value.trim()) {
             value = size;
         }
-        if( !SIZE[value] ){
+        if (!SIZE[value]) {
             item += this.propPrex++;
             SIZE[value] = item + ";";
-            product.propAlias += item + ":"+ value + "("+ size +");";
+            product.propAlias += item + ":" + value + "(" + size + ");";
         }
         return SIZE[value];
         // 20509:28313:XS(XS);
@@ -731,7 +711,7 @@ productDetail.prototype = {
         var str = "",
             i = 0;
 
-        if( /50022889|50013228|162104|50011739|50011717|50023108|50023107/.test(product.cid) ){
+        if (/50022889|50013228|162104|50011739|50011717|50023108|50023107/.test(product.cid)) {
             this.propPrex = 28313;
             datas.forEach(function(data) {
                 product.cateProps += _this.input_custom_cpv("color", data.color);
@@ -740,7 +720,7 @@ productDetail.prototype = {
                     str += _this.propAlias(item['體型尺寸'], item.size);
                 });
             });
-        }else{
+        } else {
             datas.forEach(function(data) {
                 product.cateProps += _this.input_custom_cpv("color", data.color);
 
@@ -770,9 +750,9 @@ productDetail.prototype = {
             data.ItemList.forEach(function(item) {
                 num += item.invt;
                 numPrice = price + ":" + item.invt + "::";
-                if( item['體型尺寸'].trim() ){
+                if (item['體型尺寸'].trim()) {
                     sizes = SIZE[item['體型尺寸']];
-                }else{
+                } else {
                     sizes = SIZE[item['size']];
                 }
                 str += numPrice + colors + sizes;
@@ -783,7 +763,7 @@ productDetail.prototype = {
         product.num = num;
     },
     // 图片处理
-    picture: function(datas, showPic, productId){
+    picture: function(datas, showPic) {
         var photos = {},
             pics = {},
             colors = [],
@@ -793,36 +773,36 @@ productDetail.prototype = {
             k = 0,
             s = 0;
         var product = this.product,
-            COLOR = this.COLOR;
+            COLOR = this.COLOR,
+            productId = this.productId;
 
-        for(var j=0, len = showPic.length; len > j; j++){
+        for (var j = 0, len = showPic.length; len > j; j++) {
             pics[showPic[j]] = hex(productId);
         }
         datas.forEach(function(data, i) {
             colors.push(data.color);
             var id = "";
-            for(var item in data.ItemList){
+            for (var item in data.ItemList) {
                 var size = data.ItemList[item];
                 id = "http://s2.lativ.com" + size.img280;
                 break;
             }
             photos[id] = hex(productId);
         });
-        for(var pic in pics){
-            if( i < 2 ){
-                zhutu +=  pics[ showPic[i] ] + ":1:" + i + ":|;" ;
+        for (var pic in pics) {
+            if (i < 2) {
+                zhutu += pics[showPic[i]] + ":1:" + i + ":|;";
                 i++;
-            }
-            else{
+            } else {
                 break;
             }
         }
-        for(var attr in photos){
-            if( i < 5 ){
-                zhutu += photos[attr] + ":1:" + i + ":|;" ;
+        for (var attr in photos) {
+            if (i < 5) {
+                zhutu += photos[attr] + ":1:" + i + ":|;";
                 i++;
             }
-            colorImg += photos[attr] + ":2:0:" + COLOR[colors[k]].slice(0, -1) + "|;" ;
+            colorImg += photos[attr] + ":2:0:" + COLOR[colors[k]].slice(0, -1) + "|;";
             k++;
         }
         product.picture = zhutu + colorImg;
@@ -836,51 +816,51 @@ productDetail.prototype = {
      * @param  {Function} callback [description]
      * @return {[type]}            [description]
      */
-    getReport: function(id, callback){
+    getReport: function(id, callback) {
         console.log(id);
-        request.get("http://m.lativ.com/Detail/"+ id)
+        request.get("http://m.lativ.com/Detail/" + id)
             .set({
                 "Upgrade-Insecure-Requests": 1,
                 "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1"
             })
-            .end(function(err, res){
-                if(err) return console.log(err);
-                    var $ = cheerio.load(res.text, {decodeEntities: false});
+            .end(function(err, res) {
+                if (err) return console.log(err);
+                var $ = cheerio.load(res.text, { decodeEntities: false });
 
-                    var str = $(".product-report .product-size").html();
-                    str += "<img src='https://img.alicdn.com/imgextra/i3/465916119/TB2AzL5tVXXXXXcXpXXXXXXXXXX_!!465916119.gif'>"+
-                            "<img src='https://img.alicdn.com/imgextra/i2/465916119/TB2X766tVXXXXbDXpXXXXXXXXXX_!!465916119.gif'>";
+                var str = $(".product-report .product-size").html();
+                str += "<img src='https://img.alicdn.com/imgextra/i3/465916119/TB2AzL5tVXXXXXcXpXXXXXXXXXX_!!465916119.gif'>" +
+                    "<img src='https://img.alicdn.com/imgextra/i2/465916119/TB2X766tVXXXXbDXpXXXXXXXXXX_!!465916119.gif'>";
 
 
-                    callback(null, str.replace(/\r|\n/gm, "").trim());
+                callback(null, str.replace(/\r|\n/gm, "").trim());
             });
 
     }
 };
 
-exports.productDetail = function(url, callback){
+exports.productDetail = function(url, callback) {
     new productDetail(url, callback);
 };
 
 
 // 图片下载
-var downloadImg = function(photos, num, root, callback){
-    if( !(this instanceof downloadImg) ){
+var downloadImg = function(photos, num, root, callback) {
+    if (!(this instanceof downloadImg)) {
         return new downloadImg(photos, num, root, callback);
     }
     var _this = this;
     this._arr = [];
-    if( mkdirsSync(root) ){
+    if (mkdirsSync(root)) {
         var imgs = [];
-        if( Object.prototype.toString.call(photos) === "[object Object]" ){
+        if (Object.prototype.toString.call(photos) === "[object Object]") {
             _this._arr = photos;
-            for(var attr in photos){
-                imgs.push( attr );
+            for (var attr in photos) {
+                imgs.push(attr);
             }
-        }else{
+        } else {
             imgs = photos;
         }
-        async.mapLimit(imgs, num, function(photo, cb){
+        async.mapLimit(imgs, num, function(photo, cb) {
             _this.requestAndwrite(photo, root, cb);
         }, function(err, result) {
             if (err) {
@@ -892,18 +872,18 @@ var downloadImg = function(photos, num, root, callback){
         });
     }
 };
-downloadImg.prototype.requestAndwrite = function(url, root, callback){
+downloadImg.prototype.requestAndwrite = function(url, root, callback) {
     var _arr = this._arr;
 
     var fileName = "";
-    if( _arr && _arr[url] ){
-        fileName = _arr[url]+ ".tbi";
-    }else{
+    if (_arr && _arr[url]) {
+        fileName = _arr[url] + ".tbi";
+    } else {
         fileName = path.basename(url);
     }
-    
-    fs.exists(root + fileName, function(isexists){
-        if( !isexists ){
+
+    fs.exists(root + fileName, function(isexists) {
+        if (!isexists) {
             request.get(url).end(function(err, res) {
                 if (err) {
                     console.log("有一张图片请求失败啦...");
@@ -918,25 +898,26 @@ downloadImg.prototype.requestAndwrite = function(url, root, callback){
                     });
                 }
             });
-        }else{
+        } else {
             callback(null, "successful !");
         }
     });
-    
+
 };
-exports.downloadImg = function(photos, num, root, callback){
+exports.downloadImg = function(photos, num, root, callback) {
     downloadImg(photos, num, root, callback);
 };
 
 // 获取活动中的产品
-exports.getActivity = function(activityNo, cacheID, callback){
+exports.getActivity = function(activityNo, cacheID, callback) {
     var cache = {},
         ids = [],
         category = ["WOMEN", "MEN", "SPORTS"],
         categoryIndex = 0,
         pageIndex = 1;
-    function getParam(activityNo, mainCategory, pageIndex, cacheID){
-        var url = "http://www.lativ.com/Product/GetOnSaleList?activityNo="+ activityNo +"&mainCategory="+ mainCategory +"&pageIndex="+ pageIndex +"&cacheID="+ cacheID;
+
+    function getParam(activityNo, mainCategory, pageIndex, cacheID) {
+        var url = "http://www.lativ.com/Product/GetOnSaleList?activityNo=" + activityNo + "&mainCategory=" + mainCategory + "&pageIndex=" + pageIndex + "&cacheID=" + cacheID;
         request.get(url)
             .set({
                 "_1_auth": "S9Bc5scO1d8dS16GOCJ0mpkcSegR3z",
@@ -952,27 +933,27 @@ exports.getActivity = function(activityNo, cacheID, callback){
                 "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36",
                 "X-Requested-With": "XMLHttpRequest"
             })
-            .end(function(err, res){
-                if(err) {
+            .end(function(err, res) {
+                if (err) {
                     callback(err);
                     return;
                 }
                 var SaleInfo = JSON.parse(JSON.parse(res.text).SaleInfo);
-                if( SaleInfo.length ){
-                    SaleInfo.forEach(function(item){
+                if (SaleInfo.length) {
+                    SaleInfo.forEach(function(item) {
                         var arr = item["圖片"].split("/");
-                        if( !cache[arr[2]] ){
+                        if (!cache[arr[2]]) {
                             ids.push(arr[3]);
                             cache[arr[2]] = 1;
                         }
                     });
                     getParam(activityNo, mainCategory, ++pageIndex, cacheID);
-                }else{
+                } else {
                     categoryIndex += 1;
-                    if( category[categoryIndex] ){
+                    if (category[categoryIndex]) {
                         pageIndex = 1;
                         getParam(activityNo, category[categoryIndex], pageIndex, cacheID, callback);
-                    }else{
+                    } else {
                         callback(null, ids);
                     }
                 }
@@ -983,53 +964,79 @@ exports.getActivity = function(activityNo, cacheID, callback){
 };
 
 
-exports.getCategoryProduct = function(callback){
-    var main = ["WOMEN", "MEN"],
+function findData(category, arr) {
+    for (var i = arr.length - 1, item; item = arr[i]; i--) {
+        if (item.category == category) {
+            return i;
+        }
+    }
+    return -1;
+}
+exports.getCategoryProduct = function(callback) {
+    var main = ["WOMEN", "MEN", "BABY"],
         mainIndex = 0,
-        cache = {},
-        ids = [],
         urls = [],
+        ids = [],
+        datas = [],
+        products = [],
         index = 0;
-    function getCategory(category){
+
+    function getCategory(category) {
         request.get("http://www.lativ.com/" + category)
-            .end(function(err, res){
-                var $ = cheerio.load( res.text , {decodeEntities: false});
+            .end(function(err, res) {
+                var $ = cheerio.load(res.text, { decodeEntities: false });
                 var $a = $(".category").find("a");
-                // console.log($(".category"));
-                $a.each(function(i, item){
-                    urls.push(item.attribs.href);
+                $a.each(function(i, item) {
+                    urls.push({
+                        categoryName: $(item).closest("ul").siblings("h2").text() + '-' + main[mainIndex],
+                        href: item.attribs.href
+                    });
+                    datas.push(item.attribs.href);
                 });
-                if( mainIndex < 2 ){
-                    getCategory( main[++mainIndex] );
-                }else{
+                if (mainIndex < 2) {
+                    getCategory(main[++mainIndex]);
+                } else {
                     getPageProducts(urls[index]);
                 }
             });
     }
     getCategory(main[mainIndex]);
 
-    function getPageProducts(url){
-        request.get("http://www.lativ.com"+ url)
+    function getPageProducts(params){
+        var lists = [],
+            cache = {};
+        request.get("http://www.lativ.com"+ params.href)
             .end(function(err, res){
                 if(err){
-                    return callback(err);
+                    return callback && callback(err);
                 }
-                var $ = cheerio.load( res.text);
+                var $ = cheerio.load(res.text);
                 var $imgs = $(".specialmain img");
 
-                    $imgs.each(function(i, item){
-                        var info = item.attribs["data-original"].split("/"),
-                            productId = info[4],
-                            product = "" + info[5];
-                        if( !cache[productId] ){
-                            cache[productId] = 1;
-                            ids.push( product );
-                        }
+                $imgs.each(function(i, item) {
+                    var info = item.attribs["data-original"].split("/"),
+                        productId = info[4],
+                        product = "" + info[5];
+                    if (!cache[productId]) {
+                        cache[productId] = 1;
+                        ids.push(product);
+                        lists.push(product);
+                    }
+                });
+                var productIndex = findData(params.categoryName, products);
+
+                if (productIndex >= 0) {
+                    products[productIndex].lists = products[productIndex].lists.concat(lists);
+                } else {
+                    products.push({
+                        categoryName: params.categoryName,
+                        lists: lists
                     });
-                if( index < urls.length - 1 ){
+                }
+                if (index < urls.length - 1) {
                     getPageProducts(urls[++index]);
-                }else{
-                    callback(null, ids);
+                } else {
+                    callback(null, ids, products);
                 }
             });
     }

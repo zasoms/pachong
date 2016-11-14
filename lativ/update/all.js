@@ -41,11 +41,12 @@ async.series([
     function(done){
         console.log("获取lativ中的产品");
         read = require("./read");
-        read.getCategoryProduct(function(err, ids){
+        read.getCategoryProduct(function(err, ids, products){
             if( ids ){
-                productList = ids;
                 fs.writeFile("./update/data.js", "exports.data=" +JSON.stringify(ids), function(){
-                    done();
+                    fs.writeFile("./update/category.js", "exports.data=" +JSON.stringify(products), function(){
+                        done();
+                    });
                 });
             }
         });
@@ -53,7 +54,6 @@ async.series([
     function(done) {
         console.log("对比数据");
         var down = require("./data").data;
-        console.log(down);
         var dlen = down.length;
         var plen = online.length;
 
@@ -103,6 +103,7 @@ async.series([
     },
     function(done) {
         // 自定义产品
+        // read = require("./read");
         productList = require("./online").data;
         done();
     },
