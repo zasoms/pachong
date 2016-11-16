@@ -14,13 +14,13 @@
     "async": "*",
     "cheerio": "*",
     "cron": "*",
+    "cross-spawn": "^0.2.3",
     "debug": "*",
     "ejs": "^2.5.1",
     "express": "^4.14.0",
-    "fast-csv": "^2.1.0",
-    "request": "*",
+    "fast-csv": "^2.3.0",
     "graceful-fs": "~3.0.4",
-    "cross-spawn": "^0.2.3",
+    "request": "*",
     "tmp": "~0.0.25"
   },
   "optionalDependencies": {

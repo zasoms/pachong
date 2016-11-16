@@ -827,7 +827,7 @@ productDetail.prototype = {
                 if (err) return console.log(err);
                 var $ = cheerio.load(res.text, { decodeEntities: false });
 
-                var str = $(".product-report .product-size").html();
+                    var str = $(".product-report .product-size").html() + $(".product-report .product-desc").html();
                 str += "<img src='https://img.alicdn.com/imgextra/i3/465916119/TB2AzL5tVXXXXXcXpXXXXXXXXXX_!!465916119.gif'>" +
                     "<img src='https://img.alicdn.com/imgextra/i2/465916119/TB2X766tVXXXXbDXpXXXXXXXXXX_!!465916119.gif'>";
 

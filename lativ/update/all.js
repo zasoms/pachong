@@ -199,7 +199,7 @@ async.series([
                     next();
                 }else{
                     images(path)
-                        .draw( images("logo.png"), 10, 10 )
+                        .draw( images("logo.png"), 200, 200 )
                         .saveAsync( path, {
                             quality: 80
                         }, null, function(){

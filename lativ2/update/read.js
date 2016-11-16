@@ -214,16 +214,18 @@ productDetail.prototype = {
                 product.price = +$("#price").text() + 10;
                 product.title = title;
                 product.subtitle = title;
-                _this.disposeDescription(url, desc, function(){
+                _this.disposeDescription(url, desc, function() {
                     detailConfig.Referer = url;
-                    _this.getProduct(url.split("Detail/")[1], showPic);
+                    _this.productId = url.split("Detail/")[1];
+                    _this.getProduct(showPic);
                 });
             });
     },
     // 获得该商品的数目、尺寸和颜色
-    getProduct: function(productId, showPic){
+    getProduct: function(showPic) {
         var product = this.product,
-            _this = this;
+            _this = this,
+            productId = this.productId;
         request.get("http://www.lativ.com/Product/ProductInfo/?styleNo=" + productId.slice(0, 5))
             .set(detailConfig)
             .end(function(err, res) {
@@ -243,7 +245,7 @@ productDetail.prototype = {
                 // }
                 // product.price = Number(product.price);
 
-                _this.dataMatch(productId);
+                _this.dataMatch();
 
                 //宝贝类目
                 _this.cid();
@@ -252,13 +254,14 @@ productDetail.prototype = {
 
                 _this.skuProps(data);
 
-                _this.picture(data, showPic, productId);
+                _this.picture(data, showPic);
                 _this.callback(err, _this.product, _this.zhutuPhoto, _this.descPhoto);
             });
     },
     // 数据处理
-    dataMatch: function(productId) {
-        var product = this.product;
+    dataMatch: function() {
+        var product = this.product,
+            productId = this.productId;
         // 属性值备注
         product.cpv_memo = "";
 
@@ -386,37 +389,16 @@ productDetail.prototype = {
         product.cid = cid;
     },
     //宝贝分类
-    seller_cids: function(){
-        var product = this.product,
-            title = product.title;
-        var isSports = ~title.indexOf("运动");
-        var type = "",
-            attr = "";
-        if( isSports ){
-            type = "SPORTS";
-            if( /女|bra/i.test(title) ){
-                attr = "女装";
-            }else{
-                attr = "男装";
+    seller_cids: function() {
+        var categorys = require("./category").data,
+            category,
+            productId = this.productId;
+        this.product.seller_cids = "";
+        for(var i = 0 ,ilen = categorys.length; i<ilen; i++){
+            category = categorys[i];
+            if( ~category.lists.indexOf(productId) ){
+                this.product.seller_cids += SELLER_CIDS[ category.categoryName ];
             }
-            product.seller_cids = SELLER_CIDS[type][attr];
-        }else{
-            if( /女/i.test(title) ){
-                type = "WOMEN";
-            }else{
-                type = "MEN";
-            }
-            var items = SELLER_CIDS[type],
-                value = "";
-            for(var item in items){
-                item.split("/").forEach(function(str){
-                    if(~title.indexOf(str)){
-                        value = items[item];
-                        return;
-                    }
-                });
-            }
-            product.seller_cids = value;
         }
     },
     input_custom_cpv: function(type, value, size){
@@ -537,7 +519,7 @@ productDetail.prototype = {
         product.num = num;
     },
     // 图片处理
-    picture: function(datas, showPic, productId){
+    picture: function(datas, showPic) {
         var photos = {},
             pics = {},
             colors = [],
@@ -547,7 +529,8 @@ productDetail.prototype = {
             k = 0,
             s = 0;
         var product = this.product,
-            COLOR = this.COLOR;
+            COLOR = this.COLOR,
+            productId = this.productId;
 
         for(var j=0, len = showPic.length; len > j; j++){
             pics[showPic[j]] = hex(productId);
@@ -600,7 +583,7 @@ productDetail.prototype = {
                 if(err) return console.log(err);
                     var $ = cheerio.load(res.text, {decodeEntities: false});
 
-                    var str = $(".product-report .product-size").html();
+                    var str = $(".product-report .product-size").html() + $(".product-report .product-desc").html();
                     str += "<img src='https://img.alicdn.com/imgextra/i3/465916119/TB2AzL5tVXXXXXcXpXXXXXXXXXX_!!465916119.gif'>"+
                             "<img src='https://img.alicdn.com/imgextra/i2/465916119/TB2X766tVXXXXbDXpXXXXXXXXXX_!!465916119.gif'>";
 
@@ -734,20 +717,33 @@ exports.getActivity = function(activityNo, cacheID, callback){
 };
 
 
+function findData(category, arr) {
+    for (var i = arr.length - 1, item; item = arr[i]; i--) {
+        if (item.category == category) {
+            return i;
+        }
+    }
+    return -1;
+}
 exports.getCategoryProduct = function(callback){
     var main = ["KIDS", "BABY"],
         mainIndex = 0,
-        cache = {},
-        ids = [],
         urls = [],
+        ids = [],
+        datas = [],
+        products = [],
         index = 0;
     function getCategory(category){
         request.get("http://www.lativ.com/" + category)
             .end(function(err, res){
                 var $ = cheerio.load( res.text , {decodeEntities: false});
                 var $a = $(".category").find("a");
-                $a.each(function(i, item){
-                    urls.push(item.attribs.href);
+                $a.each(function(i, item) {
+                    urls.push({
+                        categoryName: $(item).closest("ul").siblings("h2").text() + '-' + main[mainIndex],
+                        href: item.attribs.href
+                    });
+                    datas.push(item.attribs.href);
                 });
                 if( mainIndex < 2 ){
                     getCategory( main[++mainIndex] );
@@ -758,28 +754,41 @@ exports.getCategoryProduct = function(callback){
     }
     getCategory(main[mainIndex]);
 
-    function getPageProducts(url){
-        request.get("http://www.lativ.com"+ url)
+    function getPageProducts(params){
+        var lists = [],
+            cache = {};
+        request.get("http://www.lativ.com"+ params.href)
             .end(function(err, res){
                 if(err){
-                    return callback(err);
+                    return callback && callback(err);
                 }
                 var $ = cheerio.load( res.text);
                 var $imgs = $(".specialmain img");
 
-                    $imgs.each(function(i, item){
-                        var info = item.attribs["data-original"].split("/"),
-                            productId = info[4],
-                            product = "" + info[5];
-                        if( !cache[productId] ){
-                            cache[productId] = 1;
-                            ids.push( product );
-                        }
+                $imgs.each(function(i, item) {
+                    var info = item.attribs["data-original"].split("/"),
+                        productId = info[4],
+                        product = "" + info[5];
+                    if (!cache[productId]) {
+                        cache[productId] = 1;
+                        ids.push(product);
+                        lists.push(product);
+                    }
+                });
+                var productIndex = findData(params.categoryName, products);
+
+                if (productIndex >= 0) {
+                    products[productIndex].lists = products[productIndex].lists.concat(lists);
+                } else {
+                    products.push({
+                        categoryName: params.categoryName,
+                        lists: lists
                     });
-                if( index < urls.length - 1 ){
+                }
+                if (index < urls.length - 1) {
                     getPageProducts(urls[++index]);
-                }else{
-                    callback(null, ids);
+                } else {
+                    callback(null, ids, products);
                 }
             });
     }
