@@ -636,14 +636,21 @@ productDetail.prototype = {
     seller_cids: function() {
         var categorys = require("./category").data,
             category,
-            productId = this.productId;
-        this.product.seller_cids = "";
+            lists,
+            id,
+            productId = this.productId,
+            seller_cids = "";
         for(var i = 0 ,ilen = categorys.length; i<ilen; i++){
             category = categorys[i];
-            if( ~category.lists.indexOf(productId) ){
-                this.product.seller_cids += SELLER_CIDS[ category.categoryName ];
+            lists = category.lists;
+            for(var j=0, jlen=lists.length; j<jlen; j++){
+                id = lists[j];
+                if( id.slice(0, 5) == productId.slice(0, 5) ){
+                    seller_cids += SELLER_CIDS[ category.categoryName ] + ",";
+                }
             }
         }
+        this.product.seller_cids = seller_cids;
     },
     input_custom_cpv: function(type, value, size) {
         var cache = this.cache,
@@ -972,13 +979,55 @@ function findData(category, arr) {
     }
     return -1;
 }
+function findTogether(callback){
+    var categories = [],
+        ids = [];
+    request.get("http://www.lativ.com/SpecialIssue/together")
+        .end(function(err, res){
+            var $ = cheerio.load(res.text, { decodeEntities: false });
+
+            $(".specialcontent [name^=category] img").each(function(){
+                var category = {
+                    categoryName: this.attribs.alt + "-TOGETHER"
+                };
+                categories.push( category );
+            });
+            $(".list_display_5").each(function(i){
+                var lists = [];
+                $(this).find("a").each(function(){
+                    var id = this.attribs.href.match(/\d{1,}/g)[0];
+                    lists.push( id );
+                    ids.push( id );
+                });
+                categories[i].lists = lists;
+            });
+            callback( ids, categories );
+        });
+}
+
+function getIds( ids ){
+    var cache = {},
+        id = "",
+        prefix = "",
+        lists = [];
+    for(var i=0, len = ids.length; i<len; i++){
+        id = ids[i];
+        prefix = id.slice(0, 5);
+        if( !cache[prefix] ){
+            lists.push(id);
+            cache[prefix] = 1;
+        }
+    }
+    return lists;
+}
+
 exports.getCategoryProduct = function(callback) {
-    var main = ["WOMEN", "MEN", "BABY"],
+    var main = ["WOMEN", "MEN", "SPORTS"],
         mainIndex = 0,
         urls = [],
         ids = [],
         datas = [],
-        products = [],
+        categories = [],
         index = 0;
 
     function getCategory(category) {
@@ -1023,12 +1072,12 @@ exports.getCategoryProduct = function(callback) {
                         lists.push(product);
                     }
                 });
-                var productIndex = findData(params.categoryName, products);
+                var productIndex = findData(params.categoryName, categories);
 
                 if (productIndex >= 0) {
-                    products[productIndex].lists = products[productIndex].lists.concat(lists);
+                    categories[productIndex].lists = categories[productIndex].lists.concat(lists);
                 } else {
-                    products.push({
+                    categories.push({
                         categoryName: params.categoryName,
                         lists: lists
                     });
@@ -1036,7 +1085,11 @@ exports.getCategoryProduct = function(callback) {
                 if (index < urls.length - 1) {
                     getPageProducts(urls[++index]);
                 } else {
-                    callback(null, ids, products);
+                    findTogether(function(tids, cats){
+                        ids = getIds(ids.concat( tids ));
+                        categories = categories.concat( cats );
+                        callback(null, ids, categories);
+                    });
                 }
             });
     }

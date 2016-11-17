@@ -130,6 +130,7 @@ var SELLER_CIDS = {
     "印花T恤-TOGETHER":    1276391404,
     "上衣-TOGETHER":       1276391405,
     "POLO衫-TOGETHER":     1276391406,
+    "休闲衬衫-TOGETHER":    1281599842,
     "外套-TOGETHER":       1276391407,
     "裤装-TOGETHER":       1276391408,
     "其他-TOGETHER":       1276391409,

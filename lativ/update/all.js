@@ -103,7 +103,7 @@ async.series([
     },
     function(done) {
         // 自定义产品
-        // read = require("./read");
+        read = require("./read");
         productList = require("./online").data;
         done();
     },
