@@ -17,7 +17,7 @@ var classList,
     desc = [],
     online = [];
 
-async.series([
+async.series([/*
     function(done){
         console.log("拿取lativ.csv中的数据");
         var config = {};
@@ -100,7 +100,7 @@ async.series([
                 done();
             });
         });
-    },
+    },*/
     function(done) {
         // 自定义产品
         read = require("./read");

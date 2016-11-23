@@ -355,29 +355,40 @@ productDetail.prototype = {
 
         reminder = "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i1/465916119/TB25486tpXXXXa.XpXXXXXXXXXX_!!465916119.png'><\/P>";
 
-        _this.getReport(id, function(err, str) {
-            var options = {
-                screenSize: {
-                    width: 750,
-                    height: "all"
-                },
-                shotSize: {
-                    width: 750,
-                    height: "all"
-                },
-                siteType: 'html',
-                defaultWhiteBackground: true,
-                customCSS: "*{margin: 0; padding: 0;} table{ width: 750px;font-family: monaco, verdana,arial,sans-serif; font-size:12px; color:#333333; border-width: 1px; border-color: #666666; border-collapse: collapse; margin-bottom: 10px;} table th{border-width: 1px; padding: 8px; border-style: solid; border-color: #666666; background-color: #dedede;} table td{border-width: 1px; padding: 8px; border-style: solid; border-color: #666666; background-color: #ffffff; text-align: center;}",
-                streamType: "jpg",
-            };
-            var sizePath = 'data/img/' + id + '_size.png';
-            webshot(str, sizePath, options, function(err) {
+
+        var sizePath = 'data/img/' + id + '_size.png';
+        fs.exists(sizePath, function(isexists) {
+            if (isexists) {
                 desc = reminder + "<img src='FILE:\/\/\/E:/github/pachong/lativ/" + sizePath + "'>" + desc;
                 product.description = desc;
                 _this.descPhoto = _this.descPhoto.concat(photos);
                 callback();
-            });
+            } else {
+                _this.getReport(id, function(err, str) {
+                    var options = {
+                        screenSize: {
+                            width: 750,
+                            height: "all"
+                        },
+                        shotSize: {
+                            width: 750,
+                            height: "all"
+                        },
+                        siteType: 'html',
+                        defaultWhiteBackground: true,
+                        customCSS: "*{margin: 0; padding: 0;} table{ width: 750px;font-family: monaco, verdana,arial,sans-serif; font-size:12px; color:#333333; border-width: 1px; border-color: #666666; border-collapse: collapse; margin-bottom: 10px;} table th{border-width: 1px; padding: 8px; border-style: solid; border-color: #666666; background-color: #dedede;} table td{border-width: 1px; padding: 8px; border-style: solid; border-color: #666666; background-color: #ffffff; text-align: center;}",
+                        streamType: "jpg",
+                    };
+                    webshot(str, sizePath, options, function(err) {
+                        desc = reminder + "<img src='FILE:\/\/\/E:/github/pachong/lativ/" + sizePath + "'>" + desc;
+                        product.description = desc;
+                        _this.descPhoto = _this.descPhoto.concat(photos);
+                        callback();
+                    });
+                });
+            }
         });
+        
     },
     // 宝贝类目
     cid: function() {

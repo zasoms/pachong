@@ -61,3 +61,5 @@ lativ2/update/data
 *.js
 *.js
 lativ/update/config.js
+lativ2/update/online.js
+lativ2/update/data.js
