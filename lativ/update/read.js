@@ -453,7 +453,7 @@ productDetail.prototype = {
             if (/运动T恤/i.test(title)) {
                 cid = "50013228";
                 product.cateProps += "20000:29534;20663:29447;122216348:29445;122216608:20532;";
-                product.inputPids = "610347613021751";
+                product.inputPids = "6103476,13021751";
                 product.inputValues = product.price + ",other";
 
                 this.sizePre = "20509";
@@ -464,13 +464,13 @@ productDetail.prototype = {
             if (/运动短裤/i.test(title)) {
                 cid = "50023108";
                 product.cateProps += "20000:29534;122216608:20532;";
-                product.inputPids = "610347613021751";
+                product.inputPids = "6103476,13021751";
                 product.inputValues = product.price + ",短裤";
             }
             if (/运动(.*?)长裤|运动(.*?)紧身裤|紧身裤/i.test(title)) {
                 cid = "50023107";
                 product.cateProps += "20000:29534;122216608:20532;";
-                product.inputPids = "610347613021751";
+                product.inputPids = "6103476,13021751";
                 product.inputValues = product.price + ",长裤";
             }
             if (/羽绒/.test(title)) {
@@ -488,7 +488,7 @@ productDetail.prototype = {
             if (/茄克|外套/.test(title)) {
                 cid = "50011739";
                 product.cateProps += "20000:29534;122216608:20532;";
-                product.inputPids = "610347613021751";
+                product.inputPids = "6103476,13021751";
                 product.inputValues = product.price + ",茄克/外套";
             }
             if (/羽绒/.test(title)) {
@@ -525,7 +525,7 @@ productDetail.prototype = {
             if (/POLO/i.test(title)) {
                 cid = "50022889";
                 product.cateProps += "20000:109712276;122216608:20533;";
-                product.inputPids = "610347613021751";
+                product.inputPids = "6103476,13021751";
                 product.inputValues = product.price + ",POLO衫";
             }
             if (/吊带|背心/.test(title)) {
@@ -563,7 +563,7 @@ productDetail.prototype = {
             if (/运动(.*?)短裤|短裤|中裤|七分裤|宽腿裤/.test(title)) {
                 cid = "50023108";
                 product.cateProps += "20000:29534;122216608:20533;";
-                product.inputPids = "610347613021751";
+                product.inputPids = "6103476,13021751";
                 product.inputValues = product.price + ",短裤";
 
                 // 尺寸 20509
@@ -600,13 +600,13 @@ productDetail.prototype = {
             if (/运动(.*?)T恤|运动(.*?)吊带衫|运动(.*?)背心/.test(title)) {
                 cid = "50013228";
                 product.cateProps += "20000:29534;20663:29448;122216348:29445;122216608:20533;";
-                product.inputPids = "610347613021751";
+                product.inputPids = "6103476,13021751";
                 product.inputValues = product.price + ",T恤";
             }
             if (/运动(.*?)长裤|运动(.*?)裤/.test(title)) {
                 cid = "50023107";
                 product.cateProps += "20000:29534;122216608:20533;";
-                product.inputPids = "610347613021751";
+                product.inputPids = "6103476,13021751";
                 product.inputValues = product.price + ",长裤";
             }
 
@@ -617,7 +617,7 @@ productDetail.prototype = {
             if (/茄克|外套|连帽/.test(title)) {
                 cid = "50011739";
                 product.cateProps += "20000:29534;122216608:20533;";
-                product.inputPids = "610347613021751";
+                product.inputPids = "6103476,13021751";
                 product.inputValues = product.price + ",茄克/外套";
             }
             if (/风衣|连帽外套/.test(title)) {
