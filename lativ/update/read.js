@@ -193,6 +193,8 @@ productDetail.prototype = {
                     $item.attr("src", $item.attr("data-original"));
                 });
 
+                $("[href='http://www.lativ.com/page/down_pc']").remove();
+                $("[href^='http://www.lativ.com/Search']").remove();
                 $(".oldPic img").attr("style", "WIDTH: 750px;").prepend("<p>");
 
                 $("[data-original]").attr("data-original", "");
@@ -201,7 +203,7 @@ productDetail.prototype = {
 
                 title = $(".title1").text().trim();
                 title = "台湾诚衣正品lativ2016热销" + title.slice(0, title.indexOf("（"));
-                desc = $(".label").html() + $(".oldPic.show").html();
+                desc = $(".oldPic.show").html();
 
                 if (index == -1) {
                     _this.callback(null, {}, null, null);
@@ -221,6 +223,7 @@ productDetail.prototype = {
                 _this.disposeDescription(url, desc, function() {
                     detailConfig.Referer = url;
                     _this.productId = url.split("Detail/")[1];
+                    console.log(_this.productId);
                     _this.getProduct(showPic);
                 });
             });
@@ -353,8 +356,7 @@ productDetail.prototype = {
                 return "FILE:\/\/\/E:/github/pachong/lativ/data/img/" + arr[arr.length - 1] + "." + evaluate;
             });
 
-        reminder = "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i1/465916119/TB25486tpXXXXa.XpXXXXXXXXXX_!!465916119.png'><\/P>";
-
+        reminder = "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i1/465916119/TB2RnnHegSI.eBjy1XcXXc1jXXa_!!465916119.png'><\/P>";
 
         var sizePath = 'data/img/' + id + '_size.png';
         fs.exists(sizePath, function(isexists) {
@@ -846,9 +848,6 @@ productDetail.prototype = {
                 var $ = cheerio.load(res.text, { decodeEntities: false });
 
                     var str = $(".product-report .product-size").html() + $(".product-report .product-desc").html();
-                str += "<img src='https://img.alicdn.com/imgextra/i3/465916119/TB2AzL5tVXXXXXcXpXXXXXXXXXX_!!465916119.gif'>" +
-                    "<img src='https://img.alicdn.com/imgextra/i2/465916119/TB2X766tVXXXXbDXpXXXXXXXXXX_!!465916119.gif'>";
-
 
                 callback(null, str.replace(/\r|\n/gm, "").trim());
             });
@@ -1033,7 +1032,7 @@ function getIds( ids ){
 }
 
 exports.getCategoryProduct = function(callback) {
-    var main = ["WOMEN", "MEN", "SPORTS"],
+    var main = ["WOMEN", "MEN", "KIDS", "BABY", "SPORTS"],
         mainIndex = 0,
         urls = [],
         ids = [],
@@ -1053,7 +1052,7 @@ exports.getCategoryProduct = function(callback) {
                     });
                     datas.push(item.attribs.href);
                 });
-                if (mainIndex < 2) {
+                if (mainIndex < main.length - 1) {
                     getCategory(main[++mainIndex]);
                 } else {
                     getPageProducts(urls[index]);
