@@ -356,7 +356,8 @@ productDetail.prototype = {
                 return "FILE:\/\/\/E:/github/pachong/lativ/data/img/" + arr[arr.length - 1] + "." + evaluate;
             });
 
-        reminder = "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i1/465916119/TB2RnnHegSI.eBjy1XcXXc1jXXa_!!465916119.png'><\/P>";
+        reminder = "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i1/465916119/TB2xJ3rXctnpuFjSZFKXXalFFXa_!!465916119.png'><\/P>" +
+                    "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i1/465916119/TB2s0YZXbFkpuFjy1XcXXclapXa_!!465916119.png'><\/P>";
 
         var sizePath = 'data/img/' + id + '_size.png';
         fs.exists(sizePath, function(isexists) {
@@ -435,8 +436,8 @@ productDetail.prototype = {
             if (/短裤|中裤|沙滩裤|五分裤|七分裤|松紧短裤/.test(title)) {
                 cid = "50023108";
                 product.cateProps += "20000:29534;122216608:20532;";
-                product.inputPids = "20000610347613000000";
-                product.inputValues = "lativ," + product.price + ",短裤";
+                product.inputPids = "6103476,13021751";
+                product.inputValues = product.price + ",短裤";
                 product.subtitle = "";
             }
             if (/三角短裤|平角短裤|平脚短裤|棉质短裤|印花短裤/.test(title)) {
@@ -596,7 +597,7 @@ productDetail.prototype = {
             if (/运动(.*?|[^POLO])衫/i.test(title)) {
                 cid = "50011717";
                 product.cateProps += "20000:29534;122216608:20533;";
-                product.inputPids = "1302175161034760000000";
+                product.inputPids = "6103476,13021751";
                 product.inputValues = product.price + ",运动卫衣/套头衫";
             }
             if (/运动(.*?)T恤|运动(.*?)吊带衫|运动(.*?)背心/.test(title)) {
@@ -1038,7 +1039,8 @@ exports.getCategoryProduct = function(callback) {
         ids = [],
         datas = [],
         categories = [],
-        index = 0;
+        index = 0,
+        cache = {};
 
     function getCategory(category) {
         request.get("http://www.lativ.com/" + category)
@@ -1062,8 +1064,7 @@ exports.getCategoryProduct = function(callback) {
     getCategory(main[mainIndex]);
 
     function getPageProducts(params){
-        var lists = [],
-            cache = {};
+        var lists = [];
         request.get("http://www.lativ.com"+ params.href)
             .end(function(err, res){
                 if(err){
@@ -1073,9 +1074,9 @@ exports.getCategoryProduct = function(callback) {
                 var $imgs = $(".specialmain img");
 
                 $imgs.each(function(i, item) {
-                    var info = item.attribs["data-original"].split("/"),
-                        productId = info[4],
-                        product = "" + info[5];
+                    var info = item.attribs["data-prodpic"].split("/"),
+                        productId = info[2],
+                        product = info[3];
                     if (!cache[productId]) {
                         cache[productId] = 1;
                         ids.push(product);
