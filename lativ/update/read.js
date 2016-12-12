@@ -202,6 +202,7 @@ productDetail.prototype = {
                 $(".tag").remove();
 
                 title = $(".title1").text().trim();
+                // MTZLNZJXYW
                 title = "台湾诚衣正品lativ2016热销" + title.slice(0, title.indexOf("（"));
                 desc = $(".oldPic.show").html();
 
