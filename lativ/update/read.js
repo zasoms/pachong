@@ -357,7 +357,7 @@ productDetail.prototype = {
                 return "FILE:\/\/\/E:/github/pachong/lativ/data/img/" + arr[arr.length - 1] + "." + evaluate;
             });
 
-        reminder = "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i1/465916119/TB2xJ3rXctnpuFjSZFKXXalFFXa_!!465916119.png'><\/P>" +
+        reminder = "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i1/465916119/TB20IRWaiBnpuFjSZFzXXaSrpXa_!!465916119.png'><\/P>" +
                     "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i1/465916119/TB2s0YZXbFkpuFjy1XcXXclapXa_!!465916119.png'><\/P>";
 
         var sizePath = 'data/img/' + id + '_size.png';
