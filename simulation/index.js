@@ -1,60 +1,75 @@
 var cheerio = require("cheerio");
 var request = require("superagent");
 
+function extend(source, target){
+    for(var attr in target){
+       source[attr] = target[attr]; 
+    }
+}
 
-var base_headers = {
-	"_1_auth":"13CRyDlKQOFNlzYZ0rWRNoDbePrv3T",
-	"_1_ver":"0.3.0",
-	"Accept":"*/*",
-	"Accept-Encoding":"gzip, deflate, br",
-	"Accept-Language":"zh-CN,zh;q=0.8",
-	"Connection":"keep-alive",
-	"Content-Length":"54",
-	"Content-Type":"application/x-www-form-urlencoded; charset=UTF-8",
-	
-	"Host":"segmentfault.com",
-	"Origin":"https://segmentfault.com",
-	"Referer":"https://segmentfault.com/",
-	"User-Agent":"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36",
-	"X-Requested-With":"XMLHttpRequest"
-};
-var cookie;
-
-function getToken(s){
-	var $ = cheerio.load(s),
-		text = $("body script").eq(4).text(),
-		fn = new Function("window", text + "; return window.SF.token"),
-		token = fn({});
-
-	$ = null;
-	return token;
+function convertCookie(cookies){
+    var cookie = {},
+        str = "",
+        item, index = 0;
+    for(var i=0, ilen=cookies.length; i<ilen; i++){
+        item = cookies[i].split(';')[0];
+        str += item +"; ";
+        index = item.indexOf('=');
+        cookie[ item.slice(0, index) ] = item.slice(index+1);
+    }
+    return {
+        object: cookie,
+        str: str
+    };
 }
 
 var params = {
-	mail: "623064100@qq.com",
-	password: "zh19930721",
-	remember: "1"
+	"email": "623064100@qq.com",
+	"pw": "zh19930721"
 };
 
-request.get("https://segmentfault.com")
-	.end(function(err, res){
-		var token = getToken(res.text);
-		cookie = res.headers['set-cookie']
-                .join(',').match(/(PHPSESSID=.+?);/)[1];
-
-
-        request
-        	.post("https://segmentfault.com/api/user/login")
-        	.query({"_": token})
-        	.set(base_headers)
-        	.set("Cookie", cookie)
-        	.type("form")
-        	.send(params)
-        	.redirects("0")
-        	.end(function(err, res){
-        		request.get("https://segmentfault.com/user/settings")
-        			.end(function(err, res){
-        				console.log(res);
-        			})
-        	})
-	});
+var loginUrl = "https://m.lativ.com/Home/Login";
+request.get(loginUrl)
+    .set({
+        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1",
+        "Host": "m.lativ.com"
+    })
+    .end(function(err, res){
+        var $ = cheerio.load(res.text, {decodeEntities: false});
+        params["__RequestVerificationToken"] = $('[name="__RequestVerificationToken"]').val();
+        var cookies = convertCookie(res.headers['set-cookie']);
+        // console.log(cookies);
+        request.post(loginUrl)
+            .set({
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+                "Accept-Encoding": "gzip, deflate, br",
+                "Accept-Language": "zh-CN,zh;q=0.8",
+                "Cache-Control": "max-age=0",
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Host": "m.lativ.com",
+                "Origin": "https://m.lativ.com",
+                "Referer": "https://m.lativ.com/Home/Login",
+                "Upgrade-Insecure-Requests": "1",
+                "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1"
+            })
+            // .set("Cookie", '__RequestVerificationToken_Lw__=' + cookies.object['__RequestVerificationToken_Lw__'])
+            .set("Cookie", cookies.str)
+            .send(params)
+            .type('form')
+            .redirects(0)
+            .end(function(err, res){
+                var cookie = res.headers['set-cookie'];
+                request.get("https://m.lativ.com/Member")
+                    .set({
+                        "Host": "m.lativ.com",
+                        "Referer": "https://m.lativ.com/Home/Login",
+                        "Upgrade-Insecure-Requests": "1",
+                        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1"
+                    })
+                    .end(function(err, res){
+                        console.log(res);
+                        var $ = cheerio.load(res.text, {decodeEntities: false});
+                        console.log( $(".order-list-content").length );
+                    });
+            });
+    });
