@@ -1,4 +1,5 @@
-var request = require("superagent"),
+var requests = require("superagent"),
+    request = require("request"),
     cheerio = require("cheerio"),
     async = require("async"),
     fs = require("fs"),
@@ -65,7 +66,7 @@ hex.cache = {};
 exports.classList = function(url, callback) {
     debug("读取产品分类列表: %s", url);
 
-    request.get(url)
+    requests.get(url)
         .end(function(err, res) {
             if (err) return callback(err);
 
@@ -98,7 +99,7 @@ exports.categorytList = function(url, category, callback) {
     categoryConfig.Referer = url;
 
     var products = [];
-    request.get(url)
+    requests.get(url)
         .end(function(err, res) {
             if (err) return callback(err);
 
@@ -111,7 +112,7 @@ exports.categorytList = function(url, category, callback) {
 
     var getAjaxUrlList = function(category, pageIndex, cacheID) {
         var url = "http://www.lativ.com/Product/GetNewProductCategoryList?MainCategory=" + category + "&pageIndex=" + pageIndex + "&cacheID=" + cacheID;
-        request.get(url)
+        requests.get(url)
             .set(categoryConfig)
             .end(function(err, res) {
                 if (err) return callback(err);
@@ -165,7 +166,7 @@ productDetail.prototype = {
     init: function(url) {
         var product = this.product,
             _this = this;
-        request.get(url)
+        requests.get(url)
             .end(function(err, res) {
                 if (err) return console.log(err);
 
@@ -178,7 +179,7 @@ productDetail.prototype = {
                     title = "",
                     desc = "";
 
-                var showPic = [],
+                var showPic = _this.showPic = [],
                     str = "";
                 $(".product_s_img > a").each(function() {
                     showPic.push(this.attribs.href);
@@ -204,7 +205,7 @@ productDetail.prototype = {
                 title = $(".title1").text().trim();
                 // MTZLNZJXYW
                 title = "台湾诚衣正品lativ2016热销" + title.slice(0, title.indexOf("（"));
-                desc = $(".oldPic.show").html();
+                desc = str + $(".oldPic.show").html();
 
                 if (index == -1) {
                     _this.callback(null, {}, null, null);
@@ -220,21 +221,21 @@ productDetail.prototype = {
                 }
                 product.price = price;
                 product.title = title;
-                product.subtitle = title;
+                product.subtitle = '┏一一一低价、促销一一一┓ ┏一一一服务、保障一一一┓┏一一一百搭、简约一一一┓ ┊★全场满减★贴心服务★┊ ┊★承诺七天无理由退换★┊┊★亲的满意我们的追求★┊ ┗一一一一一一一一一一一┛ ┗一一一一一一一一一一一┛┗一一一一一一一一一一一┛';
                 _this.disposeDescription(url, desc, function() {
                     detailConfig.Referer = url;
                     _this.productId = url.split("Detail/")[1];
                     console.log(_this.productId);
-                    _this.getProduct(showPic);
+                    _this.getProduct();
                 });
             });
     },
     // 获得该商品的数目、尺寸和颜色
-    getProduct: function(showPic) {
+    getProduct: function() {
         var product = this.product,
             _this = this,
             productId = this.productId;
-        request.get("http://www.lativ.com/Product/ProductInfo/?styleNo=" + productId.slice(0, 5))
+        requests.get("http://www.lativ.com/Product/ProductInfo/?styleNo=" + productId.slice(0, 5))
             .set(detailConfig)
             .end(function(err, res) {
                 if (err) return console.log(err);
@@ -262,7 +263,7 @@ productDetail.prototype = {
 
                 _this.skuProps(data);
 
-                _this.picture(data, showPic);
+                _this.picture(data);
                 _this.callback(err, _this.product, _this.zhutuPhoto, _this.descPhoto);
             });
     },
@@ -368,6 +369,7 @@ productDetail.prototype = {
                 _this.descPhoto = _this.descPhoto.concat(photos);
                 callback();
             } else {
+                console.log(sizePath);
                 _this.getReport(id, function(err, str) {
                     var options = {
                         screenSize: {
@@ -733,11 +735,16 @@ productDetail.prototype = {
         var str = "",
             i = 0;
 
+        // 在颜色部分添加 根据试穿记录选择尺码
         if (/50022889|50013228|162104|50011739|50011717|50023108|50023107/.test(product.cid)) {
             this.propPrex = 28313;
             datas.forEach(function(data) {
                 product.cateProps += _this.input_custom_cpv("color", data.color);
 
+                var item = _.extend({}, data.ItemList[0]);
+                item.size = item['體型尺寸'] = "请看试穿记录";
+                item.invt = 0;
+                data.ItemList.push( item );
                 data.ItemList.forEach(function(item) {
                     str += _this.propAlias(item['體型尺寸'], item.size);
                 });
@@ -746,6 +753,10 @@ productDetail.prototype = {
             datas.forEach(function(data) {
                 product.cateProps += _this.input_custom_cpv("color", data.color);
 
+                var item = _.extend({}, data.ItemList[0]);
+                item.size = item['體型尺寸'] = "请看试穿记录";
+                item.invt = 0;
+                data.ItemList.push( item );
                 data.ItemList.forEach(function(item) {
                     str += _this.input_custom_cpv("size", item['體型尺寸'], item.size);
                 });
@@ -785,7 +796,7 @@ productDetail.prototype = {
         product.num = num;
     },
     // 图片处理
-    picture: function(datas, showPic) {
+    picture: function(datas) {
         var photos = {},
             pics = {},
             colors = [],
@@ -797,6 +808,8 @@ productDetail.prototype = {
         var product = this.product,
             COLOR = this.COLOR,
             productId = this.productId;
+
+        var showPic = this.showPic;
 
         for (var j = 0, len = showPic.length; len > j; j++) {
             pics[showPic[j]] = hex(productId);
@@ -839,10 +852,9 @@ productDetail.prototype = {
      * @return {[type]}            [description]
      */
     getReport: function(id, callback) {
-        console.log(id);
-        request.get("http://m.lativ.com/Detail/" + id)
+        requests.get("http://m.lativ.com/Detail/" + id)
             .set({
-                "Upgrade-Insecure-Requests": 1,
+                "Upgrade-Insecure-Requestss": 1,
                 "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1"
             })
             .end(function(err, res) {
@@ -880,7 +892,7 @@ var downloadImg = function(photos, num, root, callback) {
             imgs = photos;
         }
         async.mapLimit(imgs, num, function(photo, cb) {
-            _this.requestAndwrite(photo, root, cb);
+            _this.requestsAndwrite(photo, root, cb);
         }, function(err, result) {
             if (err) {
                 console.log(err);
@@ -891,7 +903,7 @@ var downloadImg = function(photos, num, root, callback) {
         });
     }
 };
-downloadImg.prototype.requestAndwrite = function(url, root, callback) {
+downloadImg.prototype.requestsAndwrite = function(url, root, callback) {
     var _arr = this._arr;
 
     var fileName = "";
@@ -900,23 +912,26 @@ downloadImg.prototype.requestAndwrite = function(url, root, callback) {
     } else {
         fileName = path.basename(url);
     }
-
     fs.exists(root + fileName, function(isexists) {
         if (!isexists) {
-            request.get(url).end(function(err, res) {
-                if (err) {
-                    console.log("有一张图片请求失败啦...");
-                } else {
-                    fs.writeFile(root + fileName, res.body, function(err) {
-                        if (err) {
-                            console.log("有一张图片写入失败啦...");
-                        } else {
-                            callback(null, "successful !");
-                            // callback貌似必须调用，第二个参数为下一个回调函数的result参数
-                        }
-                    });
-                }
-            });
+            try{
+                requests.get(url).end(function(err, res) {
+                    if (err) {
+                        console.log("有一张图片请求失败啦...");
+                    } else {
+                        fs.writeFile(root + fileName, res.body, function(err) {
+                            if (err) {
+                                console.log("有一张图片写入失败啦...");
+                            } else {
+                                callback(null, "successful !");
+                                // callback貌似必须调用，第二个参数为下一个回调函数的result参数
+                            }
+                        });
+                    }
+                });
+            }catch(e){
+                callback(null, "successful !");
+            }
         } else {
             callback(null, "successful !");
         }
@@ -937,7 +952,7 @@ exports.getActivity = function(activityNo, cacheID, callback) {
 
     function getParam(activityNo, mainCategory, pageIndex, cacheID) {
         var url = "http://www.lativ.com/Product/GetOnSaleList?activityNo=" + activityNo + "&mainCategory=" + mainCategory + "&pageIndex=" + pageIndex + "&cacheID=" + cacheID;
-        request.get(url)
+        requests.get(url)
             .set({
                 "_1_auth": "S9Bc5scO1d8dS16GOCJ0mpkcSegR3z",
                 "_1_ver": "0.3.0",
@@ -950,7 +965,7 @@ exports.getActivity = function(activityNo, cacheID, callback) {
                 "Host": "www.lativ.com",
                 "Referer": "http://www.lativ.com/OnSale/" + activityNo,
                 "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36",
-                "X-Requested-With": "XMLHttpRequest"
+                "X-Requestsed-With": "XMLHttpRequests"
             })
             .end(function(err, res) {
                 if (err) {
@@ -994,7 +1009,7 @@ function findData(category, arr) {
 function findTogether(callback){
     var categories = [],
         ids = [];
-    request.get("http://www.lativ.com/SpecialIssue/together")
+    requests.get("http://www.lativ.com/SpecialIssue/together")
         .end(function(err, res){
             var $ = cheerio.load(res.text, { decodeEntities: false });
 
@@ -1044,7 +1059,7 @@ exports.getCategoryProduct = function(callback) {
         cache = {};
 
     function getCategory(category) {
-        request.get("http://www.lativ.com/" + category)
+        requests.get("http://www.lativ.com/" + category)
             .end(function(err, res) {
                 var $ = cheerio.load(res.text, { decodeEntities: false });
                 var $a = $(".category").find("a");
@@ -1066,7 +1081,7 @@ exports.getCategoryProduct = function(callback) {
 
     function getPageProducts(params){
         var lists = [];
-        request.get("http://www.lativ.com"+ params.href)
+        requests.get("http://www.lativ.com"+ params.href)
             .end(function(err, res){
                 if(err){
                     return callback && callback(err);
