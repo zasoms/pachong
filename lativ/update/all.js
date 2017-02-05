@@ -33,7 +33,11 @@ var queue = [
     function(done) {
         // 自定义产品
         read = require("./read");
-        productList = require("./online").data;
+        if( style == 'add' ){
+            productList = require("./add").data;
+        }else{
+            productList = require("./online").data;
+        }
         console.log(productList.length);
         done();
     },
