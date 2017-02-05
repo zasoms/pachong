@@ -34,7 +34,7 @@ var queue = [
         // 自定义产品
         read = require("./read");
         if( style == 'add' ){
-            productList = require("./add").data;
+            productList = require("./addProduct").data;
         }else{
             productList = require("./online").data;
         }
