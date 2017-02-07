@@ -57,9 +57,6 @@ lativ2/data
 lativ/public/libs
 lativ/update/data
 lativ2/update/data
-*.js
-*.js
-*.js
 lativ/update/config.js
 lativ2/update/online.js
 lativ2/update/data.js
