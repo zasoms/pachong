@@ -1,5 +1,6 @@
 var async = require("async"),
     csv = require("fast-csv"),
+    argv = require('argv'),
     read,
     json2csv = require("json2csv"),
     iconv = require("iconv-lite"),
@@ -7,6 +8,17 @@ var async = require("async"),
     images = require("images"),
     _ = require("underscore"),
     debug = require("debug")("lativ:update:all");
+
+var args = argv.option({
+    name: 'style',
+    short: 's',
+    type: 'string',
+    description: 'Defines an style for your srcript',
+    example: '"script --style=value" or "script -s value"'
+}).run();
+
+var style = args.options.style || 'normal';
+
 
 var lastData = require("../lastData").data;
 
@@ -17,96 +29,18 @@ var classList,
     desc = [],
     online = [];
 
-async.series([/*
-    function(done){
-        console.log("拿取lativ.csv中的数据");
-        var config = {};
-        var stream = fs.createReadStream('./lativ.csv');
-
-        csv.fromStream( stream, { delimiter: '\t' } )
-            .on("data", function(arr){
-                if( /^[0-9]{8}/.test(arr[33])){
-                    var key = arr[33],
-                        value = arr[36];
-                    online.push(key);
-                    config[ key ] = value;
-                }
-            })
-            .on("end", function(){
-                fs.writeFile("./update/config.js", "exports.data=" +JSON.stringify(config), function(){
-                    done();
-                });
-            });
-    },
-    function(done){
-        console.log("获取lativ中的产品");
-        read = require("./read");
-        read.getCategoryProduct(function(err, ids, products){
-            if( ids ){
-                fs.writeFile("./update/data.js", "exports.data=" +JSON.stringify(ids), function(){
-                    fs.writeFile("./update/category.js", "exports.data=" +JSON.stringify(products), function(){
-                        done();
-                    });
-                });
-            }
-        });
-    },
-    function(done) {
-        console.log("对比数据");
-        var down = require("./data").data;
-        var dlen = down.length;
-        var plen = online.length;
-
-        var collection = [];
-
-        for(var i=0; i<plen; i++){
-            var item1 = online[i];
-            for(var j=0; j<dlen; j++){
-                var item2 = down[j];
-                if( item1.slice(0, 5) == item2.slice(0, 5) ){
-                    collection.push(item1);
-                    break;       
-                }
-            }
-        }
-        function deleteProducts(callback){
-            var difference = [],
-                onlineData = [];
-            for(var k=0; k<plen; k++){
-                var item3 = online[k];
-                if( !(~collection.indexOf( item3 )) ){
-                    difference.push( item3 );
-                }else{
-                    onlineData.push(item3);
-                }
-            }
-            fs.writeFile("./update/deleteProducts.js", "exports.data=" +JSON.stringify(difference), function(){
-                fs.writeFile("./update/online.js", "exports.data=" +JSON.stringify(onlineData), callback);
-            });
-        }
-        function addProduct(callback){
-            var difference = [];
-            for(var k=0; k<dlen; k++){
-                var item3 = down[k];
-                if( !(~collection.indexOf( item3 )) ){
-                    difference.push( item3 );
-                }
-            }
-            fs.writeFile("./update/addProduct.js", "exports.data=" +JSON.stringify(difference), callback);
-        }
-        deleteProducts(function(){
-            addProduct(function(){
-                done();
-            });
-        });
-    },*/
+var queue = [
     function(done) {
         // 自定义产品
         read = require("./read");
-        productList = require("./addProduct").data;
+        if( style == 'add' ){
+            productList = require("./addProduct").data;
+        }else{
+            productList = require("./online").data;
+        }
+        console.log(productList.length);
         done();
     },
-
     // 获取产品详情
     function(done) {
         console.log("获取产品详情");
@@ -139,6 +73,7 @@ async.series([/*
                             "desc:"+ JSON.stringify(desc) +
                             "}");
         }
+        // console.log( zhutu )
         read.downloadImg(zhutu, 5, "./data/", function() {
             done();
         });
@@ -192,9 +127,9 @@ async.series([/*
         console.log("水印添加");
         var rootPath = "data/img/";
         fs.readdir(rootPath, function(err, files){
-            async.mapLimit(files, 1, function(file , next){
+            async.mapLimit(files, 5, function(file , next){
                 var path = rootPath + file;
-                if( /\.gif/.test(file) ){
+                if( /gif|_size\.png$/.test(file) ){
                     next();
                 }else{
                     images(path)
@@ -209,8 +144,94 @@ async.series([/*
         });
     },
     function() {
-        fs.writeFile("./lastData.js", "");
+        // fs.writeFile("./lastData.js", "");
         console.log("完成");
         process.exit(0);
     }
-]);
+];
+
+if( style == 'normal' ){
+    queue.unshift(function(done){
+        console.log("拿取lativ.csv中的数据");
+        var config = {};
+        var stream = fs.createReadStream('./lativ.csv');
+
+        csv.fromStream( stream, { delimiter: '\t' } )
+            .on("data", function(arr){
+                if( /^[0-9]{8}/.test(arr[33])){
+                    var key = arr[33],
+                        value = arr[36];
+                    online.push(key);
+                    config[ key ] = value;
+                }
+            })
+            .on("end", function(){
+                fs.writeFile("./update/config.js", "exports.data=" +JSON.stringify(config), function(){
+                    done();
+                });
+            });
+    }, function(done){
+        console.log("获取lativ中的产品");
+        read = require("./read");
+        read.getCategoryProduct(function(err, ids, products){
+            if( ids ){
+                fs.writeFile("./update/data.js", "exports.data=" +JSON.stringify(ids), function(){
+                    fs.writeFile("./update/category.js", "exports.data=" +JSON.stringify(products), function(){
+                        done();
+                    });
+                });
+            }
+        });
+    }, function(done) {
+        console.log("对比数据");
+        var down = require("./data").data;
+        var dlen = down.length;
+        var plen = online.length;
+
+        var collection = [];
+
+        for(var i=0; i<plen; i++){
+            var item1 = online[i];
+            for(var j=0; j<dlen; j++){
+                var item2 = down[j];
+                if( item1.slice(0, 5) == item2.slice(0, 5) ){
+
+                    collection.push(item1);
+                    break;       
+                }
+            }
+        }
+        function deleteProducts(callback){
+            var difference = [],
+                onlineData = [];
+            for(var k=0; k<plen; k++){
+                var item3 = online[k];
+                if( !(~collection.indexOf( item3 )) ){
+                    difference.push( item3 );
+                }else{
+                    onlineData.push(item3);
+                }
+            }
+            fs.writeFile("./update/deleteProducts.js", "exports.data=" +JSON.stringify(difference), function(){
+                fs.writeFile("./update/online.js", "exports.data=" +JSON.stringify(onlineData), callback);
+            });
+        }
+        function addProduct(callback){
+            var difference = [];
+            for(var k=0; k<dlen; k++){
+                var item3 = down[k];
+                if( !(~collection.indexOf( item3 )) ){
+                    difference.push( item3 );
+                }
+            }
+            fs.writeFile("./update/addProduct.js", "exports.data=" +JSON.stringify(difference), callback);
+        }
+        deleteProducts(function(){
+            addProduct(function(){
+                done();
+            });
+        });
+    });
+}
+
+async.series(queue);

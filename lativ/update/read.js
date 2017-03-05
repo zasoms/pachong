@@ -181,31 +181,26 @@ productDetail.prototype = {
 
                 var showPic = _this.showPic = [],
                     str = "";
-                $(".product_s_img > a").each(function() {
-                    showPic.push(this.attribs.href);
-                });
-                for (var i = 0; i < 2 && showPic[i]; i++) {
-                    str += "<img width='750px' src='" + showPic[i] + "'>";
-                }
-                $(".right_col").html(str);
+                // $(".product_s_img > a").each(function() {
+                //     showPic.push(this.attribs.href);
+                // });
+                // for (var i = 0; i < 2 && showPic[i]; i++) {
+                //     str += "<img width='750px' src='" + showPic[i] + "'>";
+                // }
 
-                $("img").each(function(i, item) {
+                $("[src='http://s1.lativ.com/i/CommonPicture/213/71.jpg']").remove();
+                // $("[href^='http://www.lativ.com/Search']").remove();
+
+                $(".oldPic img").each(function(i, item) {
                     var $item = $(item);
-                    $item.attr("src", $item.attr("data-original"));
+                    $item.attr("src", $item.attr("data-original")).attr("style", "WIDTH: 750px;").prepend("<p>");
                 });
-
-                $("[href='http://www.lativ.com/page/down_pc']").remove();
-                $("[href^='http://www.lativ.com/Search']").remove();
-                $(".oldPic img").attr("style", "WIDTH: 750px;").prepend("<p>");
 
                 $("[data-original]").attr("data-original", "");
                 $("a").attr("href", "javascript:;");
-                $(".tag").remove();
 
-                title = $(".title1").text().trim();
-                // MTZLNZJXYW
-                title = "台湾诚衣正品lativ2016热销" + title.slice(0, title.indexOf("（"));
-                desc = str + $(".oldPic.show").html();
+                title = $(".title1").text().trim().replace('-', ' ');
+                desc = $(".oldPic ").html();
 
                 if (index == -1) {
                     _this.callback(null, {}, null, null);
@@ -214,6 +209,11 @@ productDetail.prototype = {
                     id = text.slice(index, index + 40).toString().match(/\d+/)[0];
                 }
                 var price = +$("#price").text();
+                // MTZLNZJXYW
+                title = "台湾lativ 诚衣 正品2016热销" + title.slice(0, title.indexOf("（"));
+                if( +id >= 30000 ){
+                    title = title.replace('2016', '2017新品');
+                }
                 if (/袜/.test(title)) {
                     price += 5;
                 } else {
@@ -860,9 +860,7 @@ productDetail.prototype = {
             .end(function(err, res) {
                 if (err) return console.log(err);
                 var $ = cheerio.load(res.text, { decodeEntities: false });
-
-                    var str = $(".product-report .product-size").html() + $(".product-report .product-desc").html();
-
+                var str = $("#size-report-area").html() + $("#try-report-area").html() + $("#model-info-area").html();
                 callback(null, str.replace(/\r|\n/gm, "").trim());
             });
 
