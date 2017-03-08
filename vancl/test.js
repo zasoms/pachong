@@ -62,4 +62,51 @@ function getProducts() {
   };
 }
 
-getCategory();
+var selColor = [];
+request.get( 'http://item.vancl.com/6374384.html' )
+  .end(function(err, res) {
+    var $ = cheerio.load(res.text, { decodeEntities: false });
+    var $selColor = $('.selColorArea .selColor li');
+
+    // 处理商品颜色
+    $selColor.each( (i, item) => {
+      selColor.push( {
+        name: $(item)[0].attribs.title,
+        id: $(item).find('a')[0].attribs.href.slice(0, 7),
+        size: {}
+      });
+    } );
+
+    // 商品详情
+    var $sideBarSettabArea = $('.sideBarSettabArea');
+    var descImgs = [];
+
+    $sideBarSettabArea.find('img').each( (i, item) => {
+      var imgSrc = $(item)[0].attribs.original;
+      descImgs.push( imgSrc );
+      $(item).attr('src', './data/img/' + imgSrc.substr(27).replace('/', '_'));
+    });
+
+    console.log( selColor );
+    getSize();
+  });
+
+
+function getSize(){
+  var colorItem = selColor[0];
+  request.get( `http://item.vancl.com/styles/AjaxChangeProduct.aspx?productcode=${colorItem.id}` )
+    .end( (err, res) => {
+      var $ = cheerio.load(res.text, { decodeEntities: false });
+      var $selSize = $('.selSize li');
+
+      $selSize.each( (i, item) => {
+        var $item = $(item);
+        colorItem.size[ $item.text().replace(/[\r\n\s]/g, '') ] = $item[0].attribs.onclick.match(/',(.*?)\)/)[1]
+        colorItem.img = $('#midimg')[0].attribs.src;
+      } );
+
+      console.log( selColor );
+    });
+}
+
+// getCategory();
