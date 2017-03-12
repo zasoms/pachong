@@ -6,128 +6,84 @@ var request = require("superagent"),
   _ = require("underscore"),
   debug = require("debug")("blog:update:read");
 
-const host = 'http://s.vancl.com';
+
 
 var products = [];
 
-var urls = [];
+const host = 'http://s.vancl.com';
 
-function getCategory() {
-  request.get(`${host}/27531-s1-p1.html`)
+var main = ["27531-s1-p1", "27532-s1-p1", "28968-s1-p1", "27537-s1-p1", "27533-s1-p1"],
+  mainIndex = 0,
+  urls = [],
+  ids = [],
+  categories = [],
+  index = 0,
+  cache = {};
+
+function getCategory(category) {
+  request.get(`${host}/${category}.html`)
     .end(function(err, res) {
       var $ = cheerio.load(res.text, { decodeEntities: false });
+      var categoryName  = $('.selectareaLeft').text().replace(/[\\r\\n\s]/g, '');
       $('.selectareaRight').eq(0).find('li').each((i, item) => {
         var $item = $(item).find('a');
         urls.push({
-          name: '男装-' + $item.text().replace(/[\d\s\(\)]/g, ''),
-          url: host + '/' + $(item).find('a')[0].attribs.href.replace(/\.html/, '-p{page}.html'),
-          products: []
+          categoryName: categoryName + '-' + $item.text().replace(/[\d\s\(\)]/g, ''),
+          href: host + '/' + $(item).find('a')[0].attribs.href.replace(/\.html/, '-p{page}.html'),
+          lists: []
         });
       });
-      getProducts();
+      if (main[++mainIndex]) {
+        getCategory(main[mainIndex]);
+      } else {
+        getPageProducts();
+      }
     });
 }
 
+getCategory(main[mainIndex]);
 
-function getProducts() {
+function getPageProducts() {
   var mainIndex = 0;
   var pageIndex = 1;
-  return function(){
+  function child(){
     var catetory = urls[mainIndex]
-    request.get( catetory.url.replace(/{page}/, pageIndex) )
+    request.get( catetory.href.replace(/{page}/, pageIndex) )
       .end(function(err, res) {
         var $ = cheerio.load(res.text, { decodeEntities: false });
         var $li = $("#vanclproducts li");
         if ($li.length) {
           $li.each((i, item) => {
-            var $item = $(item)
-            var $presale = $item.find('.presale')
+            var $item = $(item);
+            var $presale = $item.find('.presale');
+            var id = $item.find('a')[0].attribs.href.match(/\d+/g)[0];
             if (!$presale.length) {
-              catetory.products.push( $item.find('a')[0].attribs.href )
+              catetory.lists.push( id );
+              ids.push( id );
             }
           });
           ++pageIndex;
-          getProducts();
+          console.log(pageIndex);
+          child();
         }else{
           console.log(mainIndex);
           ++mainIndex;
           pageIndex = 1;
           if( urls[mainIndex] ){
-            getProducts();
+            child();
           }else{
-            console.log(urls);
+            console.log(null ,ids, urls);
           }
         }
       });
-  };
+  }
+  child();
 }
 
-var defaults = {
-  // 属性值备注
-  cpv_memo: "",
-
-  stuff_status: 1,
-  location_state: "上海",
-  location_city: "上海",
-  item_type: 1,
-  auction_increment: "0",
-  valid_thru: 7,
-  freight_payer: 2,
-  post_fee: "1.4139E-38",
-  ems_fee: "2.8026e-45",
-  express_fee: 0,
-  has_invoice: 0,
-  has_warranty: 0,
-  approve_status: 1,
-  has_showcase: 1,
-  list_time: "",
-  //邮费模板
-  // postage_id: 5478758160,
-  // 119包邮
-  postage_id: 8151607820,
-
-  has_discount: 0,
-  modified: "",
-  upload_fail_msg: 200,
-  picture_status: "1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;",
-  auction_point: "0",
-
-  video: "", //TOD
-
-  // 这是为了货店通的需要，所以加上
-  // outer_id: productId,
-
-  //宝贝分类
-  navigation_type: 2,
-
-  is_lighting_consigment: "32",
-  sub_stock_type: 2,
-  syncStatus: "1",
-  user_name: "623064100_00",
-  features: "mysize_tp:-1;sizeGroupId:136553091;sizeGroupType:women_top",
-
-  // 数字ID
-  num_id: '',
-
-  is_xinpin: "248",
-  auto_fill: "0",
-  item_suze: "bulk:0.000000",
-  global_stock_type: "-1",
-  qualification: "%7B%20%20%7D",
-  add_qualification: 0,
-  o2o_bind_service: 0,
-  newprepay: 1,
-
-  // 自定义属性
-  input_custom_cpv: "",
-  //宝贝属性
-  cateProps: "",
-
-  propAlias: ""
-};
 
 
 
+/*
 var product = {
   id: '6374384',
   title: '',
@@ -147,10 +103,10 @@ var product = {
     // }
   ]
 };
-
+var productId = '6374384';
 async.series([
   function(done){
-    request.get( 'http://item.vancl.com/6374384.html' )
+    request.get( `http://item.vancl.com/${productId}.html` )
       .end(function(err, res) {
         var $ = cheerio.load(res.text, { decodeEntities: false });
 
@@ -205,12 +161,10 @@ async.series([
           if( product.color[++index] ){
             size();
           }else{
-            console.log( _.extend({}, product, defaults ) );
+            console.log( product.color );
           }
         });
     }
     size();
   }
-]);
-
-// getCategory();
+]);*/

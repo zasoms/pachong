@@ -55,91 +55,13 @@ function hex(productId) {
 }
 hex.cache = {};
 
+var cacheProductId = {};
 
-/**
- * 获取产品分类
- * @method classList
- * @param  {[type]}   url      [description]
- * @param  {Function} callback [description]
- * @return {[type]}            [description]
- */
-exports.classList = function(url, callback) {
-  debug("读取产品分类列表: %s", url);
-
-  requests.get(url)
-    .end(function(err, res) {
-      if (err) return callback(err);
-
-      var $ = cheerio.load(res.text);
-
-      var categorise = [];
-      $("#nav a").each(function(i, item) {
-        var $item = $(item);
-        categorise.push({
-          rel: $item.attr("rel"),
-          name: $item.text().trim(),
-          href: $item.attr("href")
-        });
-      });
-      callback(null, categorise);
-    });
-};
-
-
-/**
- * 获取分类下的产品
- * @param  {[type]}   url      [description]
- * @param  {[type]}   category [description]
- * @param  {Function} callback [description]
- * @return {[type]}            [description]
- */
-exports.categorytList = function(url, category, callback) {
-  debug("读取分类下产品: %s", url);
-
-  categoryConfig.Referer = url;
-
-  var products = [];
-  requests.get(url)
-    .end(function(err, res) {
-      if (err) return callback(err);
-
-      var text = res.text.toString(),
-        index = text.indexOf("cacheID");
-      cacheID = text.slice(index + 9, index + 20).toString().match(/\d+/)[0];
-
-      getAjaxUrlList(category, 0, cacheID);
-    });
-
-  var getAjaxUrlList = function(category, pageIndex, cacheID) {
-    var url = "http://www.lativ.com/Product/GetNewProductCategoryList?MainCategory=" + category + "&pageIndex=" + pageIndex + "&cacheID=" + cacheID;
-    requests.get(url)
-      .set(categoryConfig)
-      .end(function(err, res) {
-        if (err) return callback(err);
-
-        var data = JSON.parse(res.text);
-        if (data && data.length) {
-          _.each(data, function(item, i) {
-            var arr = item.image_140.split("/");
-            products.push({
-              urlId: arr[3],
-              productId: arr[2],
-              productName: item.ProductName
-            });
-          });
-          getAjaxUrlList(category, ++pageIndex, cacheID);
-        } else {
-          callback(null, products);
-        }
-      });
-  };
-};
-
-var productDetail = function(url, callback) {
+var productDetail = function(productId, callback) {
   this.product = {};
 
   this.COLOR = _.extend({}, COLOR);
-  this.SIZE = {};
+  this.SIZE = _.extend({}, SIZE);
 
   this.cNum = 1001;
   this.sNum = 1001;
@@ -152,7 +74,9 @@ var productDetail = function(url, callback) {
 
   this.sizePre = "20509";
 
-  this.init(url);
+  this.productId = productId;
+  console.log(this.productId);
+  this.init();
 };
 
 productDetail.prototype = {
@@ -166,106 +90,102 @@ productDetail.prototype = {
   init: function(url) {
     var product = this.product,
       _this = this;
-    requests.get(url)
+
+    requests.get( `http://item.vancl.com/${this.productId}.html` )
       .end(function(err, res) {
         if (err) return console.log(err);
 
-        res.text.replace("\\r", "").replace("\\n", "");
         var $ = cheerio.load(res.text, { decodeEntities: false }),
-          text = res.text.toString(),
-          index = text.indexOf("$.product.Generate"),
-          html = "",
-          id = "",
           title = "",
           desc = "";
 
-        var showPic = _this.showPic = [],
-          str = "";
-        // $(".product_s_img > a").each(function() {
-        //     showPic.push(this.attribs.href);
-        // });
-        // for (var i = 0; i < 2 && showPic[i]; i++) {
-        //     str += "<img width='750px' src='" + showPic[i] + "'>";
-        // }
-
-        $("[src='http://s1.lativ.com/i/CommonPicture/213/71.jpg']").remove();
-        // $("[href^='http://www.lativ.com/Search']").remove();
-
-        $(".oldPic img").each(function(i, item) {
-          var $item = $(item);
-          $item.attr("src", $item.attr("data-original")).attr("style", "WIDTH: 750px;").prepend("<p>");
-        });
-
-        $("[data-original]").attr("data-original", "");
-        $("a").attr("href", "javascript:;");
-
-        title = $(".title1").text().trim().replace('-', ' ');
-        desc = $(".oldPic ").html();
-
-        if (index == -1) {
-          _this.callback(null, {}, null, null);
-          return;
-        } else {
-          id = text.slice(index, index + 40).toString().match(/\d+/)[0];
-        }
-        var price = +$("#price").text();
-        // MTZLNZJXYW
-        title = "台湾lativ 诚衣 正品2016热销" + title.slice(0, title.indexOf("（"));
-        if (+id >= 30000) {
-          title = title.replace('2016', '2017新品');
-        }
-        if (/袜/.test(title)) {
-          price += 5;
-        } else {
-          price += 10;
-        }
-        product.price = price;
+        title = $('h2').eq(0).text().trim();
+        title = title.slice(0,  title.lastIndexOf(' '));
         product.title = title;
-        product.subtitle = '┏一一一低价、促销一一一┓ ┏一一一服务、保障一一一┓┏一一一百搭、简约一一一┓ ┊★全场满减★贴心服务★┊ ┊★承诺七天无理由退换★┊┊★亲的满意我们的追求★┊ ┗一一一一一一一一一一一┛ ┗一一一一一一一一一一一┛┗一一一一一一一一一一一┛';
-        _this.disposeDescription(url, desc, function() {
-          detailConfig.Referer = url;
-          _this.productId = url.split("Detail/")[1];
-          console.log(_this.productId);
-          _this.getProduct();
+        product.price = parseInt($('.priceLayout').eq(2).text().replace(/[\r\n\s]/g, ''));
+
+        // 如果是预售和韩国购的就不添加进来
+        if( /预售|韩国购/g.test( title ) || cacheProductId[title] ){
+          _this.callback(err, {});
+          return;
+        }
+        // 为了不捕捉到同一件商品，做个记号
+        cacheProductId[title] = 1;
+
+        var $selColor = $('.selColorArea .selColor li');
+        var colors = [];
+        // 处理商品颜色
+        $selColor.each( (i, item) => {
+          colors.push( {
+            name: $(item)[0].attribs.title,
+            id: $(item).find('a')[0].attribs.href.slice(0, 7),
+            size: {}
+          });
+        } );
+
+        // 商品详情
+        var $sideBarSettabArea = $('.sideBarSettabArea');
+
+        // 删除详情中的script和style和提问部分
+        $sideBarSettabArea.find('.productPinglun').remove();
+        $sideBarSettabArea.find('style').remove();
+        $sideBarSettabArea.find('script').remove();
+
+        var photos = [];
+        $sideBarSettabArea.find('img').each( (i, item) => {
+          var $item = $(item);
+          var imgSrc = item.attribs.original;
+          photos.push( imgSrc );
+          $item.attr('src', '"FILE:\/\/\/E:/github/pachong/vancl/data/img/' + imgSrc.split('/').slice(-2).join('_') + '"');
+          $item.attr('original', '1');
+        });
+        $sideBarSettabArea.find('a').each( (i, item) => {
+          $(item).attr('href', '1');
+        });
+        html = $sideBarSettabArea.html();
+        _this.disposeDescription(html, photos, function() {
+          _this.getProduct(colors);
         });
       });
   },
   // 获得该商品的数目、尺寸和颜色
-  getProduct: function() {
+  getProduct: function(colors) {
     var product = this.product,
       _this = this,
       productId = this.productId;
-    requests.get("http://www.lativ.com/Product/ProductInfo/?styleNo=" + productId.slice(0, 5))
-      .set(detailConfig)
-      .end(function(err, res) {
-        if (err) return console.log(err);
 
-        var data = JSON.parse(JSON.parse(res.text).info);
-        var activity = JSON.parse(JSON.parse(res.text).activity);
 
-        // if( activity.Discount ){
-        //     if( /1件/.test(activity.ActivityName) ){
-        //         if( activity.Discount < 1 ){
-        //             product.price = Math.ceil(product.price * activity.Discount);
-        //         }else{
-        //             product.price = parseInt(activity.Discount);
-        //         }
-        //     }
-        // }
-        // product.price = Number(product.price);
+    var index = 0;
+    function size(){
+      var colorItem = colors[index];     
+      requests.get( `http://item.vancl.com/styles/AjaxChangeProduct.aspx?productcode=${colorItem.id}` )
+        .end( (err, res) => {
+          var $ = cheerio.load(res.text, { decodeEntities: false });
+          var $selSize = $('.selSize li');
+          $selSize.each( (i, item) => {
+            var $item = $(item);
+            colorItem.size[ $item.text().replace(/[\r\n\s]/g, '') ] = $item[0].attribs.onclick.match(/',(.*?)\)/)[1]
+            colorItem.img = $('#midimg')[0].attribs.src
+          } );        
 
-        _this.dataMatch();
+          if( colors[++index] ){
+            size();
+          }else{
+            _this.dataMatch();
 
-        //宝贝类目
-        _this.cid();
+            // //宝贝类目
+            _this.cid();
 
-        _this.cateProps(data);
+            _this.cateProps(colors);
 
-        _this.skuProps(data);
+            _this.skuProps(colors);
 
-        _this.picture(data);
-        _this.callback(err, _this.product, _this.zhutuPhoto, _this.descPhoto);
-      });
+            _this.picture(colors);
+            _this.callback(err, _this.product, _this.zhutuPhoto, _this.descPhoto);
+          }
+        });
+    }
+    size();
   },
   // 数据处理
   dataMatch: function() {
@@ -318,7 +238,7 @@ productDetail.prototype = {
 
     // 数字ID
 
-    product.num_id = DATA[productId];
+    product.num_id = DATA[productId] || '';
 
     product.is_xinpin = "248";
     product.auto_fill = "0";
@@ -340,61 +260,11 @@ productDetail.prototype = {
     this.seller_cids();
   },
   // 宝贝描述处理
-  disposeDescription: function(url, desc, callback) {
-    var product = this.product,
-      _this = this;
-    var photos = [],
-      style = "",
-      reminder = "",
-      id = url.split("/")[4];
-    desc = desc.trim();
-    desc = desc.replace(/\r|\n/gm, "")
-      .replace(/\"/gm, "'")
-      .replace(/,/gm, "，")
-      .replace(/data-original=\'\'/gm, "")
-      .replace(/http(s?):\/\/s[0-9].lativ.com\/(.*?).(jpg|png|gif)/gm, function(match, escape, interpolate, evaluate, offset) {
-        photos.push(match);
-        var arr = interpolate.split("/");
-        return "FILE:\/\/\/E:/github/pachong/lativ/data/img/" + arr[arr.length - 1] + "." + evaluate;
-      });
-
-    reminder = "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i1/465916119/TB20IRWaiBnpuFjSZFzXXaSrpXa_!!465916119.png'><\/P>" +
-      "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i1/465916119/TB2s0YZXbFkpuFjy1XcXXclapXa_!!465916119.png'><\/P>";
-
-    var sizePath = 'data/img/' + id + '_size.png';
-    fs.exists(sizePath, function(isexists) {
-      if (isexists) {
-        desc = reminder + "<img src='FILE:\/\/\/E:/github/pachong/lativ/" + sizePath + "'>" + desc;
-        product.description = desc;
-        _this.descPhoto = _this.descPhoto.concat(photos);
-        callback();
-      } else {
-        console.log(sizePath);
-        _this.getReport(id, function(err, str) {
-          var options = {
-            screenSize: {
-              width: 750,
-              height: "all"
-            },
-            shotSize: {
-              width: 750,
-              height: "all"
-            },
-            siteType: 'html',
-            defaultWhiteBackground: true,
-            customCSS: "*{margin: 0; padding: 0;} table{ width: 750px;font-family: monaco, verdana,arial,sans-serif; font-size:12px; color:#333333; border-width: 1px; border-color: #666666; border-collapse: collapse; margin-bottom: 10px;} table th{border-width: 1px; padding: 8px; border-style: solid; border-color: #666666; background-color: #dedede;} table td{border-width: 1px; padding: 8px; border-style: solid; border-color: #666666; background-color: #ffffff; text-align: center;}",
-            streamType: "jpg",
-          };
-          webshot(str, sizePath, options, function(err) {
-            desc = reminder + "<img src='FILE:\/\/\/E:/github/pachong/lativ/" + sizePath + "'>" + desc;
-            product.description = desc;
-            _this.descPhoto = _this.descPhoto.concat(photos);
-            callback();
-          });
-        });
-      }
-    });
-
+  disposeDescription: function(html, photos, callback) {
+    var product = this.product;
+    product.description = html.replace(/[\r\n]/g, '' );
+    this.descPhoto = this.descPhoto.concat(photos);
+    callback();
   },
   // 宝贝类目
   cid: function() {
@@ -412,51 +282,42 @@ productDetail.prototype = {
     // 运动T恤-男  50013228
     // 运动短裤-男  50023108
     // 运动长裤-男  50023107
-
-    if (~title.indexOf("男")) {
+    if (/男/g.test(title)) {
       if (/POLO/i.test(title)) {
         cid = "50010402";
         product.cateProps += "20000:29534;42722636:20213;122216345:29457;122216507:3226292;122216515:29535;122216586:29947;";
-      }
-      if (/T恤/i.test(title)) {
+      }else if (/T恤|短袖/i.test(title)) {
         cid = "50000436";
         product.cateProps += "20000:29534;20551:22252803;20603:29452;20663:29447;42722636:248572013;122216345:29457;122216348:29445;122216507:3226292;122216515:29535;122216586:29947;";
-      }
-      if (/背心/.test(title)) {
+      }else if (/背心/.test(title)) {
         cid = "50011153";
         product.cateProps += "20000:29534;42722636:20213;122216515:29535;122216586:29947;122276315:3273241;";
-      }
-      if (/衬衫/.test(title)) {
+      }else if (/衬衫/.test(title)) {
         cid = "50011123";
         product.cateProps += "20000:29534;20663:20213;42722636:20213;122216345:29938;122216348:29444;122216507:3226292;122216515:29535;122216586:29947;";
-      }
-      if (/牛仔裤/.test(title)) {
+      }else if (/牛仔裤/.test(title)) {
         cid = "50010167";
         product.cateProps += "20000:29534;42722636:248572013;122216515:29535;122276111:20525;";
         //尺寸 20518
         this.sizePre = "20518";
-      }
-      if (/短裤|中裤|沙滩裤|五分裤|七分裤|松紧短裤/.test(title)) {
+      }else if (/短裤|中裤|沙滩裤|五分裤|七分裤|松紧短裤/.test(title)) {
         cid = "50023108";
         product.cateProps += "20000:29534;122216608:20532;";
         product.inputPids = "6103476,13021751";
         product.inputValues = product.price + ",短裤";
         product.subtitle = "";
-      }
-      if (/三角短裤|平角短裤|平脚短裤|棉质短裤|印花短裤/.test(title)) {
+      }else if (/三角短裤|平角短裤|平脚短裤|棉质短裤|印花短裤/.test(title)) {
         cid = "50008882";
         product.cateProps += "20000:29534;24477:20532;";
         product.inputPids = "166332348";
         product.inputValues = "1条";
         product.subtitle = "";
-      }
-      if (/长裤|松紧裤|休闲裤/.test(title)) {
+      }else if (/长裤|松紧裤|休闲裤/.test(title)) {
         cid = "3035";
         product.cateProps += "20000:29534;42722636:248572013;122216515:29535;122216586:29947;122276111:20525;";
         //尺寸 20518
         this.sizePre = "20518";
-      }
-      if (/运动T恤/i.test(title)) {
+      }else if (/运动T恤/i.test(title)) {
         cid = "50013228";
         product.cateProps += "20000:29534;20663:29447;122216348:29445;122216608:20532;";
         product.inputPids = "6103476,13021751";
@@ -466,42 +327,34 @@ productDetail.prototype = {
         // 尺寸 20509
         // propAlias   这里要把自定义属性值改成销售属性别名
         // 20509:29696:其它尺码
-      }
-      if (/运动短裤/i.test(title)) {
+      }else if (/运动短裤/i.test(title)) {
         cid = "50023108";
         product.cateProps += "20000:29534;122216608:20532;";
         product.inputPids = "6103476,13021751";
         product.inputValues = product.price + ",短裤";
-      }
-      if (/运动(.*?)长裤|运动(.*?)紧身裤|紧身裤/i.test(title)) {
+      }else if (/运动(.*?)长裤|运动(.*?)紧身裤|紧身裤/i.test(title)) {
         cid = "50023107";
         product.cateProps += "20000:29534;122216608:20532;";
         product.inputPids = "6103476,13021751";
         product.inputValues = product.price + ",长裤";
-      }
-      if (/羽绒/.test(title)) {
+      }else if (/羽绒/.test(title)) {
         cid = "50011167";
         product.cateProps += "20000:29534;6861561:20213;42722636:20213;122216515:29535;122216562:3226292;";
-      }
-      if (/风衣/.test(title)) {
+      }else if (/风衣/.test(title)) {
         cid = "50011159";
         product.cateProps += "20000:29534;31611:26486055;42722636:20213;122216345:29938;122216515:29535;122216562:3226292;122216586:29947;";
-      }
-      if (/西服/.test(title)) {
+      }else if (/西服/.test(title)) {
         cid = "50010160";
         product.cateProps += "20000:29534;31611:3267617;42722636:20213;122216507:3226292;122216515:29535;122216586:29947;122276377:3267910;";
-      }
-      if (/茄克|外套/.test(title)) {
+      }else if (/茄克|外套/.test(title)) {
         cid = "50011739";
         product.cateProps += "20000:29534;122216608:20532;";
         product.inputPids = "6103476,13021751";
         product.inputValues = product.price + ",茄克/外套";
-      }
-      if (/羽绒/.test(title)) {
+      }else if (/羽绒/.test(title)) {
         cid = "50011167";
         product.cateProps += "20000:29534;6861561:20213;42722636:20213;122216515:29535;122216562:3226292;";
-      }
-      if (/棉衣/.test(title)) {
+      }else if (/棉衣/.test(title)) {
         cid = "50011165";
         product.cateProps += "20000:29534;42722636:20213;122216515:29535;122216562:3226292;122216586:29947;";
       }
@@ -523,7 +376,7 @@ productDetail.prototype = {
     // 运动短裤-女 50023108
     // 运动长裤-女 50023107
 
-    if (/女|bra/i.test(title)) {
+    else if (/女|bra/i.test(title)) {
       if (/T恤|中袖|长衫|七分袖/i.test(title)) {
         cid = "50000671";
         product.cateProps += "20021:105255;13328588:492838734;";
@@ -651,25 +504,26 @@ productDetail.prototype = {
   },
   //宝贝分类
   seller_cids: function() {
-    var categorys = require("./category").data,
-      category,
-      lists,
-      id,
-      productId = this.productId,
-      seller_cids = "";
-    for (var i = 0, ilen = categorys.length; i < ilen; i++) {
-      category = categorys[i];
-      lists = category.lists;
-      for (var j = 0, jlen = lists.length; j < jlen; j++) {
-        id = lists[j];
-        if (id.slice(0, 5) == productId.slice(0, 5)) {
-          seller_cids += SELLER_CIDS[category.categoryName] + ",";
-        }
-      }
-    }
-    this.product.seller_cids = seller_cids;
+    // TODO
+    // var categorys = require("./category").data,
+    //   category,
+    //   lists,
+    //   id,
+    //   productId = this.productId,
+    //   seller_cids = "";
+    // for (var i = 0, ilen = categorys.length; i < ilen; i++) {
+    //   category = categorys[i];
+    //   lists = category.lists;
+    //   for (var j = 0, jlen = lists.length; j < jlen; j++) {
+    //     id = lists[j];
+    //     if (id.slice(0, 5) == productId.slice(0, 5)) {
+    //       seller_cids += SELLER_CIDS[category.categoryName] + ",";
+    //     }
+    //   }
+    // }
+    // this.product.seller_cids = seller_cids;
   },
-  input_custom_cpv: function(type, value, size) {
+  input_custom_cpv: function(type, value) {
     var cache = this.cache,
       product = this.product,
       sizePre = this.sizePre;
@@ -684,23 +538,20 @@ productDetail.prototype = {
       }
     }
     if (type == 'size') {
-      if (!value.trim()) {
-        value = size;
-      }
       if (!data[value]) {
         data[value] = sizePre + ":-" + this.sNum + ";";
-        product.input_custom_cpv += sizePre + ":-" + this.sNum + ":" + value + "(" + size + ");";
+        product.input_custom_cpv += sizePre + ":-" + this.sNum + ":" + value + ";";
         this.sNum++;
       } else {
         if (!cache[value]) {
-          product.cpv_memo += data[value].slice(0, -1) + ":" + size + ";";
+          product.cpv_memo += data[value].slice(0, -1) + ":" + value + ";";
           cache[value] = 1;
         }
       }
     }
     return data[value];
   },
-  propAlias: function(value, size) {
+  propAlias: function(value) {
     var cache = this.cache,
       product = this.product,
       sizePre = this.sizePre;
@@ -708,13 +559,10 @@ productDetail.prototype = {
     var SIZE = this.SIZE,
       item = "20509:";
 
-    if (!value.trim()) {
-      value = size;
-    }
     if (!SIZE[value]) {
       item += this.propPrex++;
       SIZE[value] = item + ";";
-      product.propAlias += item + ":" + value + "(" + size + ");";
+      product.propAlias += item + ":" + value + ";";
     }
     return SIZE[value];
     // 20509:28313:XS(XS);
@@ -735,31 +583,23 @@ productDetail.prototype = {
     var str = "",
       i = 0;
 
-    // 在颜色部分添加 根据试穿记录选择尺码
     if (/50022889|50013228|162104|50011739|50011717|50023108|50023107/.test(product.cid)) {
       this.propPrex = 28313;
-      datas.forEach(function(data) {
-        product.cateProps += _this.input_custom_cpv("color", data.color);
 
-        var item = _.extend({}, data.ItemList[0]);
-        item.size = item['體型尺寸'] = "请看试穿记录";
-        item.invt = 0;
-        data.ItemList.push(item);
-        data.ItemList.forEach(function(item) {
-          str += _this.propAlias(item['體型尺寸'], item.size);
-        });
+      datas.forEach(function(data) {
+        product.cateProps += _this.input_custom_cpv("color", data.name);
+
+        for(var attr in data.size){
+          str += _this.propAlias(attr);
+        }
       });
     } else {
       datas.forEach(function(data) {
-        product.cateProps += _this.input_custom_cpv("color", data.color);
+        product.cateProps += _this.input_custom_cpv("color", data.name);
 
-        var item = _.extend({}, data.ItemList[0]);
-        item.size = item['體型尺寸'] = "请看试穿记录";
-        item.invt = 0;
-        data.ItemList.push(item);
-        data.ItemList.forEach(function(item) {
-          str += _this.input_custom_cpv("size", item['體型尺寸'], item.size);
-        });
+        for(var attr in data.size){
+          str += _this.input_custom_cpv('size', attr);
+        }
       });
     }
     product.cateProps += str;
@@ -776,20 +616,18 @@ productDetail.prototype = {
       price = product.price,
       COLOR = this.COLOR,
       SIZE = this.SIZE;
-
+      
     datas.forEach(function(data) {
-      colors = COLOR[data.color];
+      colors = COLOR[data.name];
 
-      data.ItemList.forEach(function(item) {
-        num += item.invt;
-        numPrice = price + ":" + item.invt + "::";
-        if (item['體型尺寸'].trim()) {
-          sizes = SIZE[item['體型尺寸']];
-        } else {
-          sizes = SIZE[item['size']];
-        }
+      for(var attr in data.size){
+        var val = data.size[attr];
+        num += +val;
+
+        numPrice = price + ":" + val + "::";
+        sizes = SIZE[ attr ];
         str += numPrice + colors + sizes;
-      });
+      }
     });
 
     product.skuProps = str;
@@ -798,7 +636,6 @@ productDetail.prototype = {
   // 图片处理
   picture: function(datas) {
     var photos = {},
-      pics = {},
       colors = [],
       zhutu = "",
       colorImg = "",
@@ -809,29 +646,10 @@ productDetail.prototype = {
       COLOR = this.COLOR,
       productId = this.productId;
 
-    var showPic = this.showPic;
-
-    for (var j = 0, len = showPic.length; len > j; j++) {
-      pics[showPic[j]] = hex(productId);
-    }
     datas.forEach(function(data, i) {
-      colors.push(data.color);
-      var id = "";
-      for (var item in data.ItemList) {
-        var size = data.ItemList[item];
-        id = "http://s2.lativ.com" + size.img280;
-        break;
-      }
-      photos[id] = hex(productId);
+      colors.push(data.name);
+      photos[data.img] = hex(productId);
     });
-    for (var pic in pics) {
-      if (i < 2) {
-        zhutu += pics[showPic[i]] + ":1:" + i + ":|;";
-        i++;
-      } else {
-        break;
-      }
-    }
     for (var attr in photos) {
       if (i < 5) {
         zhutu += photos[attr] + ":1:" + i + ":|;";
@@ -841,29 +659,7 @@ productDetail.prototype = {
       k++;
     }
     product.picture = zhutu + colorImg;
-    _.extend(this.zhutuPhoto, photos, pics);
-  },
-  //获取商品的尺寸表/试穿表
-  /**
-   * [getReport description]
-   * @param  {[type]}   type     Size\Try
-   * @param  {[type]}   id       [description]
-   * @param  {Function} callback [description]
-   * @return {[type]}            [description]
-   */
-  getReport: function(id, callback) {
-    requests.get("http://m.lativ.com/Detail/" + id)
-      .set({
-        "Upgrade-Insecure-Requestss": 1,
-        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1"
-      })
-      .end(function(err, res) {
-        if (err) return console.log(err);
-        var $ = cheerio.load(res.text, { decodeEntities: false });
-        var str = $("#size-report-area").html() + $("#try-report-area").html() + $("#model-info-area").html();
-        callback(null, str.replace(/\r|\n/gm, "").trim());
-      });
-
+    _.extend(this.zhutuPhoto, photos);
   }
 };
 
@@ -908,7 +704,7 @@ downloadImg.prototype.requestsAndwrite = function(url, root, callback) {
   if (_arr && _arr[url]) {
     fileName = _arr[url] + ".tbi";
   } else {
-    fileName = path.basename(url);
+    fileName = url.split('/').slice(-2).join('_');
   }
   fs.exists(root + fileName, function(isexists) {
     if (!isexists) {
@@ -940,183 +736,74 @@ exports.downloadImg = function(photos, num, root, callback) {
   downloadImg(photos, num, root, callback);
 };
 
-// 获取活动中的产品
-exports.getActivity = function(activityNo, cacheID, callback) {
-  var cache = {},
-    ids = [],
-    category = ["WOMEN", "MEN", "SPORTS"],
-    categoryIndex = 0,
-    pageIndex = 1;
-
-  function getParam(activityNo, mainCategory, pageIndex, cacheID) {
-    var url = "http://www.lativ.com/Product/GetOnSaleList?activityNo=" + activityNo + "&mainCategory=" + mainCategory + "&pageIndex=" + pageIndex + "&cacheID=" + cacheID;
-    requests.get(url)
-      .set({
-        "_1_auth": "S9Bc5scO1d8dS16GOCJ0mpkcSegR3z",
-        "_1_ver": "0.3.0",
-        "Accept": "application/json, text/javascript, */*; q=0.01",
-        "Accept-Encoding": "gzip, deflate, sdch",
-        "Accept-Language": "zh-CN,zh;q=0.8",
-        "Cache-Control": "max-age=0",
-        "Connection": "keep-alive",
-        "Cookie": "mCart=1470413101221; ASP.NET_SessionId=3mdq1hf3cpb0c5dyibxac10m; lativ_=dc25406f-aaf3-43ac-b351-2aca75b34c4e; fav_item=%7B%22login%22%3Afalse%2C%22item%22%3A%22%22%7D; Hm_lvt_56ad3bce3340fedae44bef6312d6df70=1470228492,1470312869,1470405270,1470413101; Hm_lpvt_56ad3bce3340fedae44bef6312d6df70=1470413204",
-        "Host": "www.lativ.com",
-        "Referer": "http://www.lativ.com/OnSale/" + activityNo,
-        "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36",
-        "X-Requestsed-With": "XMLHttpRequests"
-      })
-      .end(function(err, res) {
-        if (err) {
-          callback(err);
-          return;
-        }
-        var SaleInfo = JSON.parse(JSON.parse(res.text).SaleInfo);
-        if (SaleInfo.length) {
-          SaleInfo.forEach(function(item) {
-            var arr = item["圖片"].split("/");
-            if (!cache[arr[2]]) {
-              ids.push(arr[3]);
-              cache[arr[2]] = 1;
-            }
-          });
-          getParam(activityNo, mainCategory, ++pageIndex, cacheID);
-        } else {
-          categoryIndex += 1;
-          if (category[categoryIndex]) {
-            pageIndex = 1;
-            getParam(activityNo, category[categoryIndex], pageIndex, cacheID, callback);
-          } else {
-            callback(null, ids);
-          }
-        }
-
-      });
-  }
-  getParam(activityNo, category[categoryIndex], pageIndex, cacheID, callback);
-};
-
-
-function findData(category, arr) {
-  for (var i = arr.length - 1, item; item = arr[i]; i--) {
-    if (item.category == category) {
-      return i;
-    }
-  }
-  return -1;
-}
-
-function findTogether(callback) {
-  var categories = [],
-    ids = [];
-  requests.get("http://www.lativ.com/SpecialIssue/together")
-    .end(function(err, res) {
-      var $ = cheerio.load(res.text, { decodeEntities: false });
-
-      $(".specialcontent [name^=category] img").each(function() {
-        var category = {
-          categoryName: this.attribs.alt + "-TOGETHER"
-        };
-        categories.push(category);
-      });
-      $(".list_display_5").each(function(i) {
-        var lists = [];
-        $(this).find("a").each(function() {
-          var id = this.attribs.href.match(/\d{1,}/g)[0];
-          lists.push(id);
-          ids.push(id);
-        });
-        categories[i].lists = lists;
-      });
-      callback(ids, categories);
-    });
-}
-
-function getIds(ids) {
-  var cache = {},
-    id = "",
-    prefix = "",
-    lists = [];
-  for (var i = 0, len = ids.length; i < len; i++) {
-    id = ids[i];
-    prefix = id.slice(0, 5);
-    if (!cache[prefix]) {
-      lists.push(id);
-      cache[prefix] = 1;
-    }
-  }
-  return lists;
-}
-
 exports.getCategoryProduct = function(callback) {
-  var main = ["WOMEN", "MEN", "KIDS", "BABY", "SPORTS"],
+  const host = 'http://s.vancl.com';
+
+  var main = ["27531-s1-p1", "27532-s1-p1", "28968-s1-p1", "27537-s1-p1", "27533-s1-p1"],
     mainIndex = 0,
     urls = [],
     ids = [],
-    datas = [],
     categories = [],
     index = 0,
     cache = {};
 
   function getCategory(category) {
-    requests.get("http://www.lativ.com/" + category)
+    request.get(`${host}/${category}.html`)
       .end(function(err, res) {
         var $ = cheerio.load(res.text, { decodeEntities: false });
-        var $a = $(".category").find("a");
-        $a.each(function(i, item) {
+        var categoryName  = $('.selectareaLeft').text().replace(/[\\r\\n\s]/g, '');
+        $('.selectareaRight').eq(0).find('li').each((i, item) => {
+          var $item = $(item).find('a');
           urls.push({
-            categoryName: $(item).closest("ul").siblings("h2").text() + '-' + main[mainIndex],
-            href: item.attribs.href
+            categoryName: categoryName + '-' + $item.text().replace(/[\d\s\(\)]/g, ''),
+            href: host + '/' + $(item).find('a')[0].attribs.href.replace(/\.html/, '-p{page}.html'),
+            lists: []
           });
-          datas.push(item.attribs.href);
         });
-        if (mainIndex < main.length - 1) {
-          getCategory(main[++mainIndex]);
+        if (main[++mainIndex]) {
+          getCategory(main[mainIndex]);
         } else {
-          getPageProducts(urls[index]);
+          getPageProducts();
         }
       });
   }
+
   getCategory(main[mainIndex]);
 
-  function getPageProducts(params) {
-    var lists = [];
-    requests.get("http://www.lativ.com" + params.href)
-      .end(function(err, res) {
-        if (err) {
-          return callback && callback(err);
-        }
-        var $ = cheerio.load(res.text);
-        var $imgs = $(".specialmain img");
-
-        $imgs.each(function(i, item) {
-          var info = item.attribs["data-prodpic"].split("/"),
-            productId = info[2],
-            product = info[3];
-          if (!cache[productId]) {
-            cache[productId] = 1;
-            ids.push(product);
-            lists.push(product);
+  function getPageProducts() {
+    var mainIndex = 0;
+    var pageIndex = 1;
+    function child(){
+      var catetory = urls[mainIndex];
+      request.get( catetory.href.replace(/{page}/, pageIndex) )
+        .end(function(err, res) {
+          var $ = cheerio.load(res.text, { decodeEntities: false });
+          var $li = $("#vanclproducts li");
+          if ($li.length) {
+            $li.each((i, item) => {
+              var $item = $(item);
+              var $presale = $item.find('.presale');
+              var id = $item.find('a')[0].attribs.href.match(/\d+/g)[0];
+              if (!$presale.length) {
+                catetory.lists.push( id );
+                ids.push( id );
+              }
+            });
+            ++pageIndex;
+            console.log(pageIndex);
+            child();
+          }else{
+            console.log(mainIndex);
+            ++mainIndex;
+            pageIndex = 1;
+            if( urls[mainIndex] ){
+              child();
+            }else{
+              callback(null ,ids, urls);
+            }
           }
         });
-        var productIndex = findData(params.categoryName, categories);
-
-        if (productIndex >= 0) {
-          categories[productIndex].lists = categories[productIndex].lists.concat(lists);
-        } else {
-          categories.push({
-            categoryName: params.categoryName,
-            lists: lists
-          });
-        }
-        if (index < urls.length - 1) {
-          getPageProducts(urls[++index]);
-        } else {
-          findTogether(function(tids, cats) {
-            ids = getIds(ids.concat(tids));
-            categories = categories.concat(cats);
-            callback(null, ids, categories);
-          });
-        }
-      });
+    }
+    child();
   }
 };
