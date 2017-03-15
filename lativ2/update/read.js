@@ -285,7 +285,7 @@ productDetail.prototype = {
         //邮费模板
         // product.postage_id = 5478758160;
         // 119包邮
-        product.postage_id = 8492765960;
+        product.postage_id = 9225024610;
 
         product.has_discount = 0;
         product.list_time = "";

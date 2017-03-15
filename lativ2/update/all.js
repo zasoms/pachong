@@ -52,6 +52,7 @@ var queue = [
         }else{
             async.mapLimit(productList, 5, function(c, next) {
                 var url = "http://www.lativ.com/Detail/" + c;
+                console.log(c)
                 read.productDetail(url, function(err, data, zhutuPhoto, descPhoto) {
                     if (data.title) {
                         productDetail.push(data);
@@ -144,7 +145,7 @@ var queue = [
         });
     },
     function() {
-        // fs.writeFile("./lastData.js", "");
+        fs.writeFile("./lastData.js", "");
         console.log("完成");
         process.exit(0);
     }
