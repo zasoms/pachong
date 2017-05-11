@@ -134,10 +134,12 @@ productDetail.prototype = {
         var photos = [];
         $sideBarSettabArea.find('img').each( (i, item) => {
           var $item = $(item);
-          var imgSrc = item.attribs.original;
-          photos.push( imgSrc );
-          $item.attr('src', '"FILE:\/\/\/E:/github/pachong/vancl/data/img/' + imgSrc.split('/').slice(-2).join('_') + '"');
-          $item.attr('original', '1');
+          var imgSrc = item.attribs.original || item.attribs.src;
+          if( imgSrc ){
+            photos.push( imgSrc );
+            $item.attr('src', '"FILE:\/\/\/E:/github/pachong/vancl/data/img/' + imgSrc.split('/').slice(-2).join('_') + '"');
+            $item.attr('original', '1');
+          }
         });
         $sideBarSettabArea.find('a').each( (i, item) => {
           $(item).attr('href', '1');
@@ -164,7 +166,13 @@ productDetail.prototype = {
           var $selSize = $('.selSize li');
           $selSize.each( (i, item) => {
             var $item = $(item);
-            colorItem.size[ $item.text().replace(/[\r\n\s]/g, '') ] = $item[0].attribs.onclick.match(/',(.*?)\)/)[1]
+            var type = $item.text().replace(/[\r\n\s]/g, '')
+            var attribs = $item[0].attribs
+            if( attribs.title ){
+              colorItem.size[ type ] = attribs.title
+            }else{
+              colorItem.size[ type ] = attribs.onclick.match(/',(.*?)\)/)[1]
+            }
             colorItem.img = $('#midimg')[0].attribs.src
           } );        
 
@@ -709,20 +717,26 @@ downloadImg.prototype.requestsAndwrite = function(url, root, callback) {
   fs.exists(root + fileName, function(isexists) {
     if (!isexists) {
       try {
-        requests.get(url).end(function(err, res) {
-          if (err) {
-            console.log("有一张图片请求失败啦...");
-          } else {
-            fs.writeFile(root + fileName, res.body, function(err) {
-              if (err) {
-                console.log("有一张图片写入失败啦...");
-              } else {
-                callback(null, "successful !");
-                // callback貌似必须调用，第二个参数为下一个回调函数的result参数
-              }
-            });
-          }
-        });
+        if(url != 'undefined'){
+          url = /^http/.test(url) ? url : 'http:'+url
+          requests.get(url).end(function(err, res) {
+            if (err) {
+              console.log(url, "有一张图片请求失败啦...");
+                  callback(null, "successful !");
+            } else {
+              fs.writeFile(root + fileName, res.body, function(err) {
+                if (err) {
+                  console.log(url, "有一张图片写入失败啦...");
+                } else {
+                  callback(null, "successful !");
+                  // callback貌似必须调用，第二个参数为下一个回调函数的result参数
+                }
+              });
+            }
+          });
+        }else{
+          callback(null, "successful !");
+        }
       } catch (e) {
         callback(null, "successful !");
       }

@@ -38,7 +38,7 @@ var queue = [
     // }else{
     //     productList = require("./online").data;
     // }
-    productList = ['6374384', '6375890'];
+    productList = ['6194599', '6139862', '6375449', '6375278', '6375135', '6375135', '6374256', '6375473', '6375192', '6374460', '6375355', '6375683', '6375337'];
     console.log(productList.length);
     done();
   },
