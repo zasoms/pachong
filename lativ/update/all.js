@@ -51,7 +51,7 @@ var queue = [
       done();
     } else {
       async.mapLimit(productList, 5, function(c, next) {
-        var url = "http://www.lativ.com/Detail/" + c;
+        var url = "http://m.lativ.com/Detail/" + c;
         read.productDetail(url, function(err, data, zhutuPhoto, descPhoto) {
           console.log(c)
           if (data.title) {

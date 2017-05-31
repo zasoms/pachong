@@ -2,6 +2,7 @@ var requests = require("superagent"),
   request = require("request"),
   cheerio = require("cheerio"),
   async = require("async"),
+  http = require("http"),
   fs = require("fs"),
   path = require("path"),
   _ = require("underscore"),
@@ -19,11 +20,23 @@ var SELLER_CIDS = config.SELLER_CIDS;
 
 var DATA = require("./config").data;
 
+http.ClientRequest.prototype.setTimeout = function (timeout, callback) {
+  var self = this;
+  if (callback) {
+    self.on('timeout', callback);
+  }
+  self.connection.setTimeout(timeout, function () {
+    self.abort();
+    self.emit('timeout');
+  });
+};
+
+
 // 创建目录
 function mkdirsSync(dirpath, mode) {
   if (!fs.existsSync(dirpath)) {
     var pathtmp;
-    dirpath.split("/").forEach(function(dirname) {
+    dirpath.split("/").forEach(function (dirname) {
       if (pathtmp) {
         pathtmp = path.join(pathtmp, dirname);
       } else {
@@ -63,18 +76,18 @@ hex.cache = {};
  * @param  {Function} callback [description]
  * @return {[type]}            [description]
  */
-exports.classList = function(url, callback) {
+exports.classList = function (url, callback) {
   debug("读取产品分类列表: %s", url);
 
   requests.get(url)
     .timeout(5000)
-    .end(function(err, res) {
+    .end(function (err, res) {
       if (err) return callback(err);
 
       var $ = cheerio.load(res.text);
 
       var categorise = [];
-      $("#nav a").each(function(i, item) {
+      $("#nav a").each(function (i, item) {
         var $item = $(item);
         categorise.push({
           rel: $item.attr("rel"),
@@ -94,7 +107,7 @@ exports.classList = function(url, callback) {
  * @param  {Function} callback [description]
  * @return {[type]}            [description]
  */
-exports.categorytList = function(url, category, callback) {
+exports.categorytList = function (url, category, callback) {
   debug("读取分类下产品: %s", url);
 
   categoryConfig.Referer = url;
@@ -102,7 +115,7 @@ exports.categorytList = function(url, category, callback) {
   var products = [];
   requests.get(url)
     .timeout(5000)
-    .end(function(err, res) {
+    .end(function (err, res) {
       if (err) return callback(err);
 
       var text = res.text.toString(),
@@ -112,17 +125,17 @@ exports.categorytList = function(url, category, callback) {
       getAjaxUrlList(category, 0, cacheID);
     });
 
-  var getAjaxUrlList = function(category, pageIndex, cacheID) {
+  var getAjaxUrlList = function (category, pageIndex, cacheID) {
     var url = "http://www.lativ.com/Product/GetNewProductCategoryList?MainCategory=" + category + "&pageIndex=" + pageIndex + "&cacheID=" + cacheID;
     requests.get(url)
       .timeout(5000)
       .set(categoryConfig)
-      .end(function(err, res) {
+      .end(function (err, res) {
         if (err) return callback(err);
 
         var data = JSON.parse(res.text);
         if (data && data.length) {
-          _.each(data, function(item, i) {
+          _.each(data, function (item, i) {
             var arr = item.image_140.split("/");
             products.push({
               urlId: arr[3],
@@ -138,7 +151,7 @@ exports.categorytList = function(url, category, callback) {
   };
 };
 
-var productDetail = function(url, callback) {
+var productDetail = function (url, callback) {
   this.product = {};
 
   this.COLOR = _.extend({}, COLOR);
@@ -148,7 +161,7 @@ var productDetail = function(url, callback) {
   this.sNum = 1001;
   this.cache = {};
 
-  this.callback = callback || function() {};
+  this.callback = callback || function () {};
 
   this.zhutuPhoto = {};
   this.descPhoto = [];
@@ -166,20 +179,26 @@ productDetail.prototype = {
    * @param  {Function} callback [description]
    * @return {[type]}            [description]
    */
-  init: function(url) {
+  init: function (url) {
     var product = this.product,
       _this = this;
     requests.get(url)
       .timeout(5000)
-      .end(function(err, res) {
+      .set({
+        "Upgrade-Insecure-Requestss": 1,
+        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1"
+      })
+      .end(function (err, res) {
         if (err) {
           console.log(err, url + '获取内容失败');
-          _this.callback(null, _this.product, _this.zhutuPhoto, _this.descPhoto)
+            _this.callback(null, {}, null, null);
           return;
-        }else{
+        } else {
 
           res.text.replace("\\r", "").replace("\\n", "");
-          var $ = cheerio.load(res.text, { decodeEntities: false }),
+          var $ = cheerio.load(res.text, {
+              decodeEntities: false
+            }),
             text = res.text.toString(),
             index = text.indexOf("$.product.Generate"),
             html = "",
@@ -190,7 +209,7 @@ productDetail.prototype = {
           $("[src='http://s1.lativ.com/i/CommonPicture/213/71.jpg']").remove();
           // $("[href^='http://www.lativ.com/Search']").rrfeffemove();
 
-          $(".oldPic img").each(function(i, item) {
+          $(".product-img img").each(function (i, item) {
             var $item = $(item);
             $item.attr("src", $item.attr("data-original")).attr("style", "WIDTH: 750px;").prepend("<p>");
           });
@@ -198,20 +217,18 @@ productDetail.prototype = {
           $("[data-original]").attr("data-original", "");
           $("a").attr("href", "javascript:;");
 
-          title = $(".title1").text().trim().replace('-', ' ');
-          desc = $(".oldPic ").html();
+          title = $(".name-area").text().trim().replace('-', ' ');
+          desc = $(".product-img").html();
 
-          if (index == -1) {
-            _this.callback(null, {}, null, null);
-            return;
-          } else {
-            id = text.slice(index, index + 40).toString().match(/\d+/)[0];
-          }
-          var price = +$("#price").text();
+          var productId = url.split("Detail/")[1];
+          _this.productId = productId;
+          
+          _this.getReport(res.text)
+          var price = +($("#price").text() || $('.store-price').text());
           // MTZLNZJXYW
           title = "台湾lativ 诚衣正品2016热销" + title.slice(0, title.indexOf("（"));
-          if (+id >= 30000) {
-            title = title.replace('2016', '2017新品');
+          if (+productId >= 30000000) {
+            title = title.replace('2016', '2017新款');
           }
           if (/袜/.test(title)) {
             price += 5;
@@ -221,23 +238,22 @@ productDetail.prototype = {
           product.price = price;
           product.title = title;
           product.subtitle = '便宜、实惠、舒适是我们的宗旨';
-          _this.disposeDescription(url, desc, function() {
-            detailConfig.Referer = url;
-            _this.productId = url.split("Detail/")[1];
+          _this.disposeDescription(url, desc, function () {
+            detailConfig.Referer = 'http://www.lativ.com/Detail/' + productId;
             _this.getProduct();
           });
         }
       });
   },
   // 获得该商品的数目、尺寸和颜色
-  getProduct: function() {
+  getProduct: function () {
     var product = this.product,
       _this = this,
       productId = this.productId;
     requests.get("http://www.lativ.com/Product/ProductInfo/?styleNo=" + productId.slice(0, 5))
       .timeout(5000)
       .set(detailConfig)
-      .end(function(err, res) {
+      .end(function (err, res) {
         if (err) return console.log(err, '获取商品数目-尺码-颜色-失败');
 
         var data = JSON.parse(JSON.parse(res.text).info);
@@ -268,7 +284,7 @@ productDetail.prototype = {
       });
   },
   // 数据处理
-  dataMatch: function() {
+  dataMatch: function () {
     var product = this.product,
       productId = this.productId;
     // 属性值备注
@@ -340,19 +356,19 @@ productDetail.prototype = {
     this.seller_cids();
   },
   // 宝贝描述处理
-  disposeDescription: function(url, desc, callback) {
+  disposeDescription: function (url, desc, callback) {
     var product = this.product,
       _this = this;
     var photos = [],
       style = "",
       reminder = "",
       id = url.split("/")[4];
-    desc = desc.trim();
+    desc = (desc || '').trim();
     desc = desc.replace(/\r|\n/gm, "")
       .replace(/\"/gm, "'")
       .replace(/,/gm, "，")
       .replace(/data-original=\'\'/gm, "")
-      .replace(/http(s?):\/\/s[0-9].lativ.com\/(.*?).(jpg|png|gif)/gm, function(match, escape, interpolate, evaluate, offset) {
+      .replace(/http(s?):\/\/s[0-9].lativ.com\/(.*?).(jpg|png|gif)/gm, function (match, escape, interpolate, evaluate, offset) {
         photos.push(match);
         var arr = interpolate.split("/");
         return "FILE:\/\/\/E:/github/pachong/lativ/data/img/" + arr[arr.length - 1] + "." + evaluate;
@@ -362,42 +378,39 @@ productDetail.prototype = {
       "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i1/465916119/TB2s0YZXbFkpuFjy1XcXXclapXa_!!465916119.png'><\/P>";
 
     var sizePath = 'data/img/' + id + '_size.png';
-    fs.exists(sizePath, function(isexists) {
+    fs.exists(sizePath, function (isexists) {
       if (isexists) {
         desc = reminder + "<img src='FILE:\/\/\/E:/github/pachong/lativ/" + sizePath + "'>" + desc;
         product.description = desc;
         _this.descPhoto = _this.descPhoto.concat(photos);
         callback();
       } else {
-        console.log(sizePath);
-        _this.getReport(id, function(err, str) {
-          var options = {
-            screenSize: {
-              width: 750,
-              height: "all"
-            },
-            shotSize: {
-              width: 750,
-              height: "all"
-            },
-            siteType: 'html',
-            defaultWhiteBackground: true,
-            customCSS: "*{margin: 0; padding: 0;} table{ width: 750px;font-family: monaco, verdana,arial,sans-serif; font-size:12px; color:#333333; border-width: 1px; border-color: #666666; border-collapse: collapse; margin-bottom: 10px;} table th{border-width: 1px; padding: 8px; border-style: solid; border-color: #666666; background-color: #dedede;} table td{border-width: 1px; padding: 8px; border-style: solid; border-color: #666666; background-color: #ffffff; text-align: center;}",
-            streamType: "jpg",
-          };
-          webshot(str, sizePath, options, function(err) {
-            desc = reminder + "<img src='FILE:\/\/\/E:/github/pachong/lativ/" + sizePath + "'>" + desc;
-            product.description = desc;
-            _this.descPhoto = _this.descPhoto.concat(photos);
-            callback();
-          });
+        var options = {
+          screenSize: {
+            width: 750,
+            height: "all"
+          },
+          shotSize: {
+            width: 750,
+            height: "all"
+          },
+          siteType: 'html',
+          defaultWhiteBackground: true,
+          customCSS: "*{margin: 0; padding: 0;} table{ width: 750px;font-family: monaco, verdana,arial,sans-serif; font-size:12px; color:#333333; border-width: 1px; border-color: #666666; border-collapse: collapse; margin-bottom: 10px;} table th{border-width: 1px; padding: 8px; border-style: solid; border-color: #666666; background-color: #dedede;} table td{border-width: 1px; padding: 8px; border-style: solid; border-color: #666666; background-color: #ffffff; text-align: center;}",
+          streamType: "jpg",
+        };
+        webshot(this.reportStr, sizePath, options, function (err) {
+          desc = reminder + "<img src='FILE:\/\/\/E:/github/pachong/lativ/" + sizePath + "'>" + desc;
+          product.description = desc;
+          _this.descPhoto = _this.descPhoto.concat(photos);
+          callback();
         });
       }
     });
 
   },
   // 宝贝类目
-  cid: function() {
+  cid: function () {
     var product = this.product,
       title = product.title,
       cid = "";
@@ -654,7 +667,7 @@ productDetail.prototype = {
     product.cid = cid;
   },
   //宝贝分类
-  seller_cids: function() {
+  seller_cids: function () {
     var categorys = require("./category").data,
       category,
       lists,
@@ -673,7 +686,7 @@ productDetail.prototype = {
     }
     this.product.seller_cids = seller_cids;
   },
-  input_custom_cpv: function(type, value, size) {
+  input_custom_cpv: function (type, value, size) {
     var cache = this.cache,
       product = this.product,
       sizePre = this.sizePre;
@@ -704,7 +717,7 @@ productDetail.prototype = {
     }
     return data[value];
   },
-  propAlias: function(value, size) {
+  propAlias: function (value, size) {
     var cache = this.cache,
       product = this.product,
       sizePre = this.sizePre;
@@ -731,7 +744,7 @@ productDetail.prototype = {
     // 20509:29696:其它尺码(xxs);
   },
   // 宝贝属性
-  cateProps: function(datas) {
+  cateProps: function (datas) {
     var _this = this,
       product = this.product;
     product.cateProps += "";
@@ -742,26 +755,26 @@ productDetail.prototype = {
     // 在颜色部分添加 根据试穿记录选择尺码
     if (/50022889|50013228|162104|50011739|50011717|50023108|50023107/.test(product.cid)) {
       this.propPrex = 28313;
-      datas.forEach(function(data) {
+      datas.forEach(function (data) {
         product.cateProps += _this.input_custom_cpv("color", data.color);
 
         var item = _.extend({}, data.ItemList[0]);
         item.size = item['體型尺寸'] = "请看试穿记录";
         item.invt = 0;
         data.ItemList.push(item);
-        data.ItemList.forEach(function(item) {
+        data.ItemList.forEach(function (item) {
           str += _this.propAlias(item['體型尺寸'], item.size);
         });
       });
     } else {
-      datas.forEach(function(data) {
+      datas.forEach(function (data) {
         product.cateProps += _this.input_custom_cpv("color", data.color);
 
         var item = _.extend({}, data.ItemList[0]);
         item.size = item['體型尺寸'] = "请看试穿记录";
         item.invt = 0;
         data.ItemList.push(item);
-        data.ItemList.forEach(function(item) {
+        data.ItemList.forEach(function (item) {
           str += _this.input_custom_cpv("size", item['體型尺寸'], item.size);
         });
       });
@@ -769,7 +782,7 @@ productDetail.prototype = {
     product.cateProps += str;
   },
   // 销售属性组合
-  skuProps: function(datas) {
+  skuProps: function (datas) {
     var str = "",
       numPrice = "",
       sizes = "",
@@ -781,10 +794,10 @@ productDetail.prototype = {
       COLOR = this.COLOR,
       SIZE = this.SIZE;
 
-    datas.forEach(function(data) {
+    datas.forEach(function (data) {
       colors = COLOR[data.color];
 
-      data.ItemList.forEach(function(item) {
+      data.ItemList.forEach(function (item) {
         num += item.invt;
         numPrice = price + ":" + item.invt + "::";
         if (item['體型尺寸'].trim()) {
@@ -800,7 +813,7 @@ productDetail.prototype = {
     product.num = num;
   },
   // 图片处理
-  picture: function(datas) {
+  picture: function (datas) {
     var photos = {},
       pics = {},
       colors = [],
@@ -813,7 +826,7 @@ productDetail.prototype = {
       COLOR = this.COLOR,
       productId = this.productId;
 
-    datas.forEach(function(data, i) {
+    datas.forEach(function (data, i) {
       colors.push(data.color);
       var id = "http://s2.lativ.com" + data.colorImg.replace('_24', '_500');
       photos[id] = hex(productId);
@@ -845,49 +858,42 @@ productDetail.prototype = {
    * @param  {Function} callback [description]
    * @return {[type]}            [description]
    */
-  getReport: function(id, callback) {
-    requests.get("http://m.lativ.com/Detail/" + id)
-      .timeout(5000)
-      .set({
-        "Upgrade-Insecure-Requestss": 1,
-        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1"
-      })
-      .end(function(err, res) {
-        if (err) return console.log(err, '获取尺码表失败');
-        var $ = cheerio.load(res.text, { decodeEntities: false });
+  getReport: function (text) {
+    var $ = cheerio.load(text, {
+      decodeEntities: false
+    });
 
-        var caizhi = $('.product-desc').html()
-        var size = $("#size-report-area").html()
-        var try1 = $("#try-report-area").html()
-        var model = $("#model-info-area").html()
+    var caizhi = $('.product-desc').html()
+    var size = $("#size-report-area").html()
+    var try1 = $("#try-report-area").html()
+    var model = $("#model-info-area").html()
 
-        var str = '';
-        str += "<h2>面料组成：</h2>" + caizhi;
-        if( size.trim() ){
-          str += "<h2 style='text-align: center;'>商品尺码表</h2>"
-          str +=size
-        }
-        if( try1.trim() ){
-          str += "<h2 style='text-align: center;'>试穿纪录</h2>"
-          str +=try1
-        }
-        if( model.trim() ){
-          str += "<h2 style='text-align: center;'>模特儿信息</h2>"
-          str +=model
-        }
-        callback(null, (str||"").replace(/\r|\n/gm, "").trim());
-      });
+    var str = '';
+    str += "<h2>面料组成：</h2>" + caizhi;
+    if (size && size.trim()) {
+      str += "<h2 style='text-align: center;'>商品尺码表</h2>"
+      str += size
+    }
+    if (try1 && try1.trim()) {
+      str += "<h2 style='text-align: center;'>试穿纪录</h2>"
+      str += try1
+    }
+    if (model && model.trim()) {
+      str += "<h2 style='text-align: center;'>模特儿信息</h2>"
+      str += model
+    }
+    this.reportStr = (str || "").replace(/\r|\n/gm, "").trim()
 
   }
 };
 
-exports.productDetail = function(url, callback) {
+exports.productDetail = function (url, callback) {
   new productDetail(url, callback);
 };
 
 
 // 图片下载
-var downloadImg = function(photos, num, root, callback) {
+var downloadImg = function (photos, num, root, callback) {
   if (!(this instanceof downloadImg)) {
     return new downloadImg(photos, num, root, callback);
   }
@@ -903,9 +909,9 @@ var downloadImg = function(photos, num, root, callback) {
     } else {
       imgs = photos;
     }
-    async.mapLimit(imgs, num, function(photo, cb) {
+    async.mapLimit(imgs, num, function (photo, cb) {
       _this.requestsAndwrite(photo, root, cb);
-    }, function(err, result) {
+    }, function (err, result) {
       if (err) {
         console.log(err);
       } else {
@@ -915,7 +921,7 @@ var downloadImg = function(photos, num, root, callback) {
     });
   }
 };
-downloadImg.prototype.requestsAndwrite = function(url, root, callback) {
+downloadImg.prototype.requestsAndwrite = function (url, root, callback) {
   var _arr = this._arr;
 
   var fileName = "";
@@ -924,26 +930,55 @@ downloadImg.prototype.requestsAndwrite = function(url, root, callback) {
   } else {
     fileName = path.basename(url);
   }
-  fs.exists(root + fileName, function(isexists) {
+  fs.exists(root + fileName, function (isexists) {
     if (!isexists) {
       try {
-        requests.get(url)
-        .timeout(5000)
-        .end(function(err, res) {
-          if (err) {
-            console.log(url, "有一张图片请求失败啦...");
+        // requests.get(url)
+        // .timeout(5000)
+        // .end(function(err, res) {
+        //   if (err) {
+        //     console.log(url, "有一张图片请求失败啦...");
+        //     callback(null, "successful !");
+        //   } else {
+        //     fs.writeFile(root + fileName, res.body, function(err) {
+        //       if (err) {
+        //         console.log("有一张图片写入失败啦...");
+        //       } else {
+        //         callback(null, "successful !");
+        //         // callback貌似必须调用，第二个参数为下一个回调函数的result参数
+        //       }
+        //     });
+        //   }
+        // });
+        var req = http.get(url, function (res) {
+            // 等待响应60秒超时
+            var res_timer = setTimeout(function () {
+              res.destroy();
+              console.log(url, 'Response Timeout.');
+            }, 60000)
+
+            var imgData = ''
+            res.setEncoding('binary')
+
+            res.on('data', function (chunk) {
+              imgData += chunk;
+            })
+            res.on('end', function () {
+              clearTimeout(res_timer);
+              fs.writeFile(root + fileName, imgData, "binary", function (err) {
+                if (err) {
+                  console.log("有一张图片写入失败啦...");
+                } else {
+                  callback(null, "successful !");
+                  // callback貌似必须调用，第二个参数为下一个回调函数的result参数
+                }
+              });
+            })
+          })
+          .on('error', function (e) {
             callback(null, "successful !");
-          } else {
-            fs.writeFile(root + fileName, res.body, function(err) {
-              if (err) {
-                console.log("有一张图片写入失败啦...");
-              } else {
-                callback(null, "successful !");
-                // callback貌似必须调用，第二个参数为下一个回调函数的result参数
-              }
-            });
-          }
-        });
+            console.log(url + " Got error: " + e.message);
+          })
       } catch (e) {
         callback(null, "successful !");
       }
@@ -953,12 +988,12 @@ downloadImg.prototype.requestsAndwrite = function(url, root, callback) {
   });
 
 };
-exports.downloadImg = function(photos, num, root, callback) {
+exports.downloadImg = function (photos, num, root, callback) {
   downloadImg(photos, num, root, callback);
 };
 
 // 获取活动中的产品
-exports.getActivity = function(activityNo, cacheID, callback) {
+exports.getActivity = function (activityNo, cacheID, callback) {
   var cache = {},
     ids = [],
     category = ["WOMEN", "MEN", "SPORTS"],
@@ -983,14 +1018,14 @@ exports.getActivity = function(activityNo, cacheID, callback) {
         "X-Requestsed-With": "XMLHttpRequests"
       })
       .timeout(5000)
-      .end(function(err, res) {
+      .end(function (err, res) {
         if (err) {
           callback(err);
           return;
         }
         var SaleInfo = JSON.parse(JSON.parse(res.text).SaleInfo);
         if (SaleInfo.length) {
-          SaleInfo.forEach(function(item) {
+          SaleInfo.forEach(function (item) {
             var arr = item["圖片"].split("/");
             if (!cache[arr[2]]) {
               ids.push(arr[3]);
@@ -1028,18 +1063,20 @@ function findTogether(callback) {
     ids = [];
   requests.get("http://www.lativ.com/SpecialIssue/together")
     .timeout(5000)
-    .end(function(err, res) {
-      var $ = cheerio.load(res.text, { decodeEntities: false });
+    .end(function (err, res) {
+      var $ = cheerio.load(res.text, {
+        decodeEntities: false
+      });
 
-      $(".specialcontent [name^=category] img").each(function() {
+      $(".specialcontent [name^=category] img").each(function () {
         var category = {
           categoryName: this.attribs.alt + "-TOGETHER"
         };
         categories.push(category);
       });
-      $(".list_display_5").each(function(i) {
+      $(".list_display_5").each(function (i) {
         var lists = [];
-        $(this).find("a").each(function() {
+        $(this).find("a").each(function () {
           var id = this.attribs.href.match(/\d{1,}/g)[0];
           lists.push(id);
           ids.push(id);
@@ -1066,7 +1103,7 @@ function getIds(ids) {
   return lists;
 }
 
-exports.getCategoryProduct = function(callback) {
+exports.getCategoryProduct = function (callback) {
   var main = ["WOMEN", "MEN", "KIDS", "BABY", "SPORTS"],
     mainIndex = 0,
     urls = [],
@@ -1079,10 +1116,12 @@ exports.getCategoryProduct = function(callback) {
   function getCategory(category) {
     requests.get("http://www.lativ.com/" + category)
       .timeout(5000)
-      .end(function(err, res) {
-        var $ = cheerio.load(res.text, { decodeEntities: false });
+      .end(function (err, res) {
+        var $ = cheerio.load(res.text, {
+          decodeEntities: false
+        });
         var $a = $(".category").find("a");
-        $a.each(function(i, item) {
+        $a.each(function (i, item) {
           urls.push({
             categoryName: $(item).closest("ul").siblings("h2").text() + '-' + main[mainIndex],
             href: item.attribs.href
@@ -1102,14 +1141,14 @@ exports.getCategoryProduct = function(callback) {
     var lists = [];
     requests.get("http://www.lativ.com" + params.href)
       .timeout(5000)
-      .end(function(err, res) {
+      .end(function (err, res) {
         if (err) {
           return callback && callback(err);
         }
         var $ = cheerio.load(res.text);
         var $imgs = $(".specialmain img");
 
-        $imgs.each(function(i, item) {
+        $imgs.each(function (i, item) {
           var info = item.attribs["data-prodpic"].split("/"),
             productId = info[4],
             product = info[5];
@@ -1132,7 +1171,7 @@ exports.getCategoryProduct = function(callback) {
         if (index < urls.length - 1) {
           getPageProducts(urls[++index]);
         } else {
-          findTogether(function(tids, cats) {
+          findTogether(function (tids, cats) {
             ids = getIds(ids.concat(tids));
             categories = categories.concat(cats);
             callback(null, ids, categories);
