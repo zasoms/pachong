@@ -226,7 +226,12 @@ productDetail.prototype = {
           _this.getReport(res.text)
           var price = +($("#price").text() || $('.store-price').text());
           // MTZLNZJXYW
-          title = "台湾lativ 诚衣正品2016热销" + title.slice(0, title.indexOf("（"));
+          title = title.slice(0, title.indexOf("（"))
+          if( !(title || '').trim() ){
+            _this.callback(null ,{}, {}, [])
+            return 
+          }
+          title = "台湾lativ 诚衣正品2016热销" + title;
           if (+productId >= 30000000) {
             title = title.replace('2016', '2017新款');
           }
@@ -239,7 +244,7 @@ productDetail.prototype = {
           product.title = title;
           product.subtitle = '便宜、实惠、舒适是我们的宗旨';
           _this.disposeDescription(url, desc, function () {
-            detailConfig.Referer = 'http://www.lativ.com/Detail/' + productId;
+            detailConfig.Referer = 'https://www.lativ.com/Detail/' + productId;
             _this.getProduct();
           });
         }
@@ -250,37 +255,41 @@ productDetail.prototype = {
     var product = this.product,
       _this = this,
       productId = this.productId;
-    requests.get("http://www.lativ.com/Product/ProductInfo/?styleNo=" + productId.slice(0, 5))
+      
+    var url = "https://www.lativ.com/Product/ProductInfo/?styleNo=" + productId.slice(0, 5)
+    requests.get(url)
       .timeout(5000)
       .set(detailConfig)
       .end(function (err, res) {
-        if (err) return console.log(err, '获取商品数目-尺码-颜色-失败');
+        if(/^{/.test(res && res.text)){
+          var data = JSON.parse(JSON.parse(res.text).info);
+          var activity = JSON.parse(JSON.parse(res.text).activity);
 
-        var data = JSON.parse(JSON.parse(res.text).info);
-        var activity = JSON.parse(JSON.parse(res.text).activity);
+          // if( activity.Discount ){
+          //     if( /1件/.test(activity.ActivityName) ){
+          //         if( activity.Discount < 1 ){
+          //             product.price = Math.ceil(product.price * activity.Discount);
+          //         }else{
+          //             product.price = parseInt(activity.Discount);
+          //         }
+          //     }
+          // }
+          // product.price = Number(product.price);
 
-        // if( activity.Discount ){
-        //     if( /1件/.test(activity.ActivityName) ){
-        //         if( activity.Discount < 1 ){
-        //             product.price = Math.ceil(product.price * activity.Discount);
-        //         }else{
-        //             product.price = parseInt(activity.Discount);
-        //         }
-        //     }
-        // }
-        // product.price = Number(product.price);
+          _this.dataMatch();
 
-        _this.dataMatch();
+          //宝贝类目
+          _this.cid();
 
-        //宝贝类目
-        _this.cid();
+          _this.cateProps(data);
 
-        _this.cateProps(data);
+          _this.skuProps(data);
 
-        _this.skuProps(data);
-
-        _this.picture(data);
-        _this.callback(err, _this.product, _this.zhutuPhoto, _this.descPhoto);
+          _this.picture(data);
+          _this.callback(null, _this.product, _this.zhutuPhoto, _this.descPhoto);
+        }else{
+          _this.callback(err, {}, {}, []);
+        }
       });
   },
   // 数据处理
@@ -399,12 +408,19 @@ productDetail.prototype = {
           customCSS: "*{margin: 0; padding: 0;} table{ width: 750px;font-family: monaco, verdana,arial,sans-serif; font-size:12px; color:#333333; border-width: 1px; border-color: #666666; border-collapse: collapse; margin-bottom: 10px;} table th{border-width: 1px; padding: 8px; border-style: solid; border-color: #666666; background-color: #dedede;} table td{border-width: 1px; padding: 8px; border-style: solid; border-color: #666666; background-color: #ffffff; text-align: center;}",
           streamType: "jpg",
         };
-        webshot(this.reportStr, sizePath, options, function (err) {
-          desc = reminder + "<img src='FILE:\/\/\/E:/github/pachong/lativ/" + sizePath + "'>" + desc;
+        if(this.reportStr){
+          webshot(this.reportStr, sizePath, options, function (err) {
+            desc = reminder + "<img src='FILE:\/\/\/E:/github/pachong/lativ/" + sizePath + "'>" + desc;
+            product.description = desc;
+            _this.descPhoto = _this.descPhoto.concat(photos);
+            callback();
+          });
+        }else{
           product.description = desc;
           _this.descPhoto = _this.descPhoto.concat(photos);
           callback();
-        });
+        }
+        
       }
     });
 
@@ -932,56 +948,23 @@ downloadImg.prototype.requestsAndwrite = function (url, root, callback) {
   }
   fs.exists(root + fileName, function (isexists) {
     if (!isexists) {
-      try {
-        // requests.get(url)
-        // .timeout(5000)
-        // .end(function(err, res) {
-        //   if (err) {
-        //     console.log(url, "有一张图片请求失败啦...");
-        //     callback(null, "successful !");
-        //   } else {
-        //     fs.writeFile(root + fileName, res.body, function(err) {
-        //       if (err) {
-        //         console.log("有一张图片写入失败啦...");
-        //       } else {
-        //         callback(null, "successful !");
-        //         // callback貌似必须调用，第二个参数为下一个回调函数的result参数
-        //       }
-        //     });
-        //   }
-        // });
-        var req = http.get(url, function (res) {
-            // 等待响应60秒超时
-            var res_timer = setTimeout(function () {
-              res.destroy();
-              console.log(url, 'Response Timeout.');
-            }, 60000)
-
-            var imgData = ''
-            res.setEncoding('binary')
-
-            res.on('data', function (chunk) {
-              imgData += chunk;
-            })
-            res.on('end', function () {
-              clearTimeout(res_timer);
-              fs.writeFile(root + fileName, imgData, "binary", function (err) {
-                if (err) {
-                  console.log("有一张图片写入失败啦...");
-                } else {
-                  callback(null, "successful !");
-                  // callback貌似必须调用，第二个参数为下一个回调函数的result参数
-                }
-              });
-            })
-          })
-          .on('error', function (e) {
-            callback(null, "successful !");
-            console.log(url + " Got error: " + e.message);
-          })
-      } catch (e) {
-        callback(null, "successful !");
-      }
+      requests.get(url)
+      .timeout(5000)
+      .end(function(err, res) {
+        if (err) {
+          console.log(url, "有一张图片请求失败啦...");
+          callback(null, "successful !");
+        } else {
+          fs.writeFile(root + fileName, res.body, function(err) {
+            if (err) {
+              console.log("有一张图片写入失败啦...");
+            } else {
+              callback(null, "successful !");
+              // callback貌似必须调用，第二个参数为下一个回调函数的result参数
+            }
+          });
+        }
+      });
     } else {
       callback(null, "successful !");
     }
@@ -1104,6 +1087,7 @@ function getIds(ids) {
 }
 
 exports.getCategoryProduct = function (callback) {
+// function getCategoryProduct (callback) {
   var main = ["WOMEN", "MEN", "KIDS", "BABY", "SPORTS"],
     mainIndex = 0,
     urls = [],
@@ -1150,8 +1134,8 @@ exports.getCategoryProduct = function (callback) {
 
         $imgs.each(function (i, item) {
           var info = item.attribs["data-prodpic"].split("/"),
-            productId = info[4],
-            product = info[5];
+            productId = info[2],
+            product = info[3];
           if (!cache[productId]) {
             cache[productId] = 1;
             ids.push(product);
@@ -1180,3 +1164,4 @@ exports.getCategoryProduct = function (callback) {
       });
   }
 };
+// getCategoryProduct()

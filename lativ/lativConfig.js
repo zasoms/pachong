@@ -11,14 +11,8 @@ var categoryConfig = {
 
 var detailConfig = {
     "Accept": "application/json, text/javascript, */*; q=0.01",
-    "Accept-Encoding": "gzip, deflate, sdch",
-    "Accept-Language": "zh-CN,zh;q=0.8",
-    "Cache-Control": "max-age=0",
-    "Connection": "keep-alive",
-    "Host": "www.lativ.com",
-    // "If-Modified-Since": "Tue, 15 Mar 2016 11:53:29 GMT",
-    // "Referer": "http://www.lativ.com/Detail/28853011",
-    "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.116 Safari/537.36",
+    // Referer:https://www.lativ.com/Detail/30342012
+    "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.96 Safari/537.36",
     "X-Requested-With": "XMLHttpRequest"
 };
 
