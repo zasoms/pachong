@@ -408,8 +408,8 @@ productDetail.prototype = {
           customCSS: "*{margin: 0; padding: 0;} table{ width: 750px;font-family: monaco, verdana,arial,sans-serif; font-size:12px; color:#333333; border-width: 1px; border-color: #666666; border-collapse: collapse; margin-bottom: 10px;} table th{border-width: 1px; padding: 8px; border-style: solid; border-color: #666666; background-color: #dedede;} table td{border-width: 1px; padding: 8px; border-style: solid; border-color: #666666; background-color: #ffffff; text-align: center;}",
           streamType: "jpg",
         };
-        if(this.reportStr){
-          webshot(this.reportStr, sizePath, options, function (err) {
+        if(_this.reportStr){
+          webshot(_this.reportStr, sizePath, options, function (err) {
             desc = reminder + "<img src='FILE:\/\/\/E:/github/pachong/lativ/" + sizePath + "'>" + desc;
             product.description = desc;
             _this.descPhoto = _this.descPhoto.concat(photos);
@@ -844,8 +844,8 @@ productDetail.prototype = {
 
     datas.forEach(function (data, i) {
       colors.push(data.color);
-      var id = "http://s2.lativ.com" + data.colorImg.replace('_24', '_500');
-      photos[id] = hex(productId);
+      var relativePath = data.colorImg.replace('_24', '_500')
+      var id = "http://s2.lativ.com" + relativePath;
     });
     for (var pic in pics) {
       if (i < 2) {
@@ -899,7 +899,6 @@ productDetail.prototype = {
       str += model
     }
     this.reportStr = (str || "").replace(/\r|\n/gm, "").trim()
-
   }
 };
 
@@ -952,12 +951,13 @@ downloadImg.prototype.requestsAndwrite = function (url, root, callback) {
       .timeout(5000)
       .end(function(err, res) {
         if (err) {
+          console.log( callback ) 
           console.log(url, "有一张图片请求失败啦...");
           callback(null, "successful !");
         } else {
           fs.writeFile(root + fileName, res.body, function(err) {
             if (err) {
-              console.log("有一张图片写入失败啦...");
+              console.log("有一张图片写入失败啦...", err, url);
             } else {
               callback(null, "successful !");
               // callback貌似必须调用，第二个参数为下一个回调函数的result参数
