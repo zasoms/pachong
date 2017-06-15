@@ -59,9 +59,6 @@ var queue = [
             _.extend(zhutu, zhutuPhoto);
             desc = desc.concat(descPhoto);
           }
-          if( c === '25202021' ){
-            done()
-          }
           next(err);
         });
       }, done);
@@ -126,26 +123,27 @@ var queue = [
       }
     });
   },
-  function(done) {
-    console.log("水印添加");
-    var rootPath = "data/img/";
-    fs.readdir(rootPath, function(err, files) {
-      async.mapLimit(files, 5, function(file, next) {
-        var path = rootPath + file;
-        if (/gif|_size\.png$/.test(file)) {
-          next();
-        } else {
-          images(path)
-            .draw(images("logo.png"), 200, 200)
-            .saveAsync(path, {
-              quality: 80
-            }, null, function() {
-              next();
-            });
-        }
-      }, done);
-    });
-  },
+  // function(done) {
+  //   console.log("水印添加");
+  //   var rootPath = "data/img/";
+  //   fs.readdir(rootPath, function(err, files) {
+  //     async.mapLimit(files, 5, function(file, next) {
+  //       var path = rootPath + file;
+  //       if (/gif|_size\.png$/.test(file)) {
+  //         next();
+  //       } else {
+  //         console.log(rootPath, file, path)
+  //         images(path)
+  //           .draw(images("logo.png"), 200, 200)
+  //           .saveAsync(path, {
+  //             quality: 80
+  //           }, null, function() {
+  //             next();
+  //           });
+  //       }
+  //     }, done);
+  //   });
+  // },
   function() {
     fs.writeFile("./lastData.js", "");
     console.log("完成");

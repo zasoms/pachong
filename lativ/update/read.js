@@ -231,7 +231,8 @@ productDetail.prototype = {
             _this.callback(null ,{}, {}, [])
             return 
           }
-          title = "台湾lativ 诚衣正品2016热销" + title;
+
+          title = "台湾lativ 诚衣正品2016热销" + title.replace('(水洗产品)', '');
           if (+productId >= 30000000) {
             title = title.replace('2016', '2017新款');
           }
@@ -846,6 +847,8 @@ productDetail.prototype = {
       colors.push(data.color);
       var relativePath = data.colorImg.replace('_24', '_500')
       var id = "http://s2.lativ.com" + relativePath;
+      var hex = (productId.slice(0, 5) + relativePath.replace(/(\/|_|\.)/g, '')).slice(0, 32)
+      photos[id] = hex
     });
     for (var pic in pics) {
       if (i < 2) {
