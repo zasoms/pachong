@@ -11,14 +11,8 @@ var categoryConfig = {
 
 var detailConfig = {
     "Accept": "application/json, text/javascript, */*; q=0.01",
-    "Accept-Encoding": "gzip, deflate, sdch",
-    "Accept-Language": "zh-CN,zh;q=0.8",
-    "Cache-Control": "max-age=0",
-    "Connection": "keep-alive",
-    "Host": "www.lativ.com",
-    // "If-Modified-Since": "Tue, 15 Mar 2016 11:53:29 GMT",
-    // "Referer": "http://www.lativ.com/Detail/28853011",
-    "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.116 Safari/537.36",
+    // Referer:https://www.lativ.com/Detail/30342012
+    "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.96 Safari/537.36",
     "X-Requested-With": "XMLHttpRequest"
 };
 
@@ -112,19 +106,19 @@ var SIZE = {
 };
 
 var SELLER_CIDS = {
-    "T恤&POLO-KIDS": "1303427627",
-    "衬衫-KIDS": "1303427628",
-    "针织衫-KIDS": "1303427629",
-    "外套类-KIDS": "1303427630",
-    "裤装&裙装-KIDS": "1303427631",
-    "内衣&内裤&袜子-KIDS": "1303427632",
-    "起居服&配件-KIDS": "1303427633",
+    "上装类-KIDS": "1328512970",
+    "衬衫类-KIDS": "1328512971",
+    "针织衫-KIDS": "1328512972",
+    "外套类-KIDS": "1328512973",
+    "裤&裙装-KIDS": "1328512974",
+    "家居&内着-KIDS": "1328512975",
+    "起居服&配件-KIDS": "1328512976",
 
-    "上衣类-BABY": "1303427635",
-    "外套类-BABY": "1303427636",
-    "下装类-BABY": "1303427637",
-    "起居类-BABY": "1303427638",
-    "配件类-BABY": "1303427639"
+    "上装类-BABY": "1328512978",
+    "衬衫类-BABY": "1328512979",
+    "外套类-BABY": "1328512980",
+    "裤&裙装-BABY": "1328512981",
+    "家居&内着-BABY": "1328512982"
     
 };
 

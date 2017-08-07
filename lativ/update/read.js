@@ -775,11 +775,7 @@ productDetail.prototype = {
       datas.forEach(function (data) {
         product.cateProps += _this.input_custom_cpv("color", data.color);
 
-        var item = _.extend({}, data.ItemList[0]);
-        item.size = item['體型尺寸'] = "请看试穿记录";
-        item.invt = 0;
-        data.ItemList.push(item);
-        data.ItemList.forEach(function (item) {
+        data.ItemList.forEach(function(item) {
           str += _this.propAlias(item['體型尺寸'], item.size);
         });
       });
@@ -787,11 +783,7 @@ productDetail.prototype = {
       datas.forEach(function (data) {
         product.cateProps += _this.input_custom_cpv("color", data.color);
 
-        var item = _.extend({}, data.ItemList[0]);
-        item.size = item['體型尺寸'] = "请看试穿记录";
-        item.invt = 0;
-        data.ItemList.push(item);
-        data.ItemList.forEach(function (item) {
+        data.ItemList.forEach(function(item) {
           str += _this.input_custom_cpv("size", item['體型尺寸'], item.size);
         });
       });
@@ -1101,9 +1093,11 @@ exports.getCategoryProduct = function (callback) {
     cache = {};
 
   function getCategory(category) {
-    requests.get("http://www.lativ.com/" + category)
+    var url = "http://www.lativ.com/" + category
+    requests.get(url)
       .timeout(5000)
       .end(function (err, res) {
+    console.log(url, res)
         var $ = cheerio.load(res.text, {
           decodeEntities: false
         });
