@@ -224,7 +224,15 @@ productDetail.prototype = {
           _this.productId = productId;
           
           _this.getReport(res.text)
-          var price = +($("#price").text() || $('.store-price').text());
+
+          var priceArr = [];
+          [].slice.call($('.price-area').find('*')).map((item, index) => {
+            var match = $(item).text().match(/^\d+/)
+            if(match){ 
+              priceArr.push( match[0] )
+            }
+          })
+          var price = Math.max.apply(null, priceArr)
           // MTZLNZJXYW
           title = title.slice(0, title.indexOf("（"))
           if( !(title || '').trim() ){
@@ -232,10 +240,7 @@ productDetail.prototype = {
             return 
           }
 
-          title = "台湾lativ 诚衣正品2016热销" + title.replace('(水洗产品)', '');
-          if (+productId >= 30000000) {
-            title = title.replace('2016', '2017新款');
-          }
+          title = "lativ诚衣正品2017新款" + title.replace('(水洗产品)', '');
           if (/袜/.test(title)) {
             price += 5;
           } else {
@@ -837,7 +842,7 @@ productDetail.prototype = {
 
     datas.forEach(function (data, i) {
       colors.push(data.color);
-      var relativePath = data.colorImg.replace('_24', '_500')
+      var relativePath = data.colorImg.replace(/_\d+/, '_500')
       var id = "http://s2.lativ.com" + relativePath;
       var hex = (productId.slice(0, 5) + relativePath.replace(/(\/|_|\.)/g, '')).slice(0, 32)
       photos[id] = hex

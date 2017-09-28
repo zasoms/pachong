@@ -224,7 +224,15 @@ productDetail.prototype = {
           _this.productId = productId;
           
           _this.getReport(res.text)
-          var price = +($("#price").text() || $('.store-price').text());
+
+          var priceArr = [];
+          [].slice.call($('.price-area').find('*')).map((item, index) => {
+            var match = $(item).text().match(/^\d+/)
+            if(match){ 
+              priceArr.push( match[0] )
+            }
+          })
+          var price = Math.max.apply(null, priceArr)
           // MTZLNZJXYW
           title = title.slice(0, title.indexOf("（"))
           if( !(title || '').trim() ){
@@ -589,7 +597,7 @@ productDetail.prototype = {
 
     datas.forEach(function (data, i) {
       colors.push(data.color);
-      var relativePath = data.colorImg.replace('_24', '_500')
+      var relativePath = data.colorImg.replace(/_\d+/, '_500')
       var id = "http://s2.lativ.com" + relativePath;
       var hex = (productId.slice(0, 5) + relativePath.replace(/(\/|_|\.)/g, '')).slice(0, 32)
       photos[id] = hex

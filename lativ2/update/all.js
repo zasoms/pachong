@@ -125,24 +125,25 @@ var queue = [
     });
   },
   function (done) {
-    console.log("水印添加");
-    var rootPath = "data/img/";
-    fs.readdir(rootPath, function (err, files) {
-      async.mapLimit(files, 5, function (file, next) {
-        var path = rootPath + file;
-        if (/gif|_size\.png$/.test(file)) {
-          next();
-        } else {
-          images(path)
-            .draw(images("logo.png"), 200, 200)
-            .saveAsync(path, {
-              quality: 80
-            }, null, function () {
-              next();
-            });
-        }
-      }, done);
-    });
+    // console.log("水印添加");
+    // var rootPath = "data/img/";
+    // fs.readdir(rootPath, function (err, files) {
+    //   async.mapLimit(files, 5, function (file, next) {
+    //     var path = rootPath + file;
+    //     if (/gif|_size\.png$/.test(file)) {
+    //       next();
+    //     } else {
+    //       images(path)
+    //         .draw(images("logo.png"), 200, 200)
+    //         .saveAsync(path, {
+    //           quality: 80
+    //         }, null, function () {
+    //           next();
+    //         });
+    //     }
+    //   }, done);
+    // });
+    done()
   },
   function () {
     fs.writeFile("./lastData.js", "");
