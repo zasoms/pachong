@@ -408,11 +408,11 @@ productDetail.prototype = {
       }
       if (/雪纺/.test(title)) {
         cid = "162116";
-        product.cateProps += "122216347:828914351;";
+        product.cateProps += "122216347:828896582;";
       }
       if (/针织/.test(title)) {
         cid = "50000697";
-        product.cateProps += "20551:105255;13328588:492838732;122216347:828914351;";
+        product.cateProps += "20551:105255;13328588:492838732;122216347:828896582;";
       }
       if (/衬衫/.test(title)) {
         cid = "162104";
@@ -424,7 +424,7 @@ productDetail.prototype = {
       }
       if (/连衣裙/.test(title)) {
         cid = "50010850";
-        product.cateProps += "122216347:828914351;";
+        product.cateProps += "122216347:828896582;";
       }
 
       if (/运动(.*?)短裤|短裤|中裤|七分裤|宽腿裤/.test(title)) {
@@ -445,7 +445,7 @@ productDetail.prototype = {
       }
       if (/短裙|牛仔(.*?)裙|紧身裙|窄裙|迷你裙|中裙|裤裙|裙裤|喇叭裙|印花长裙/.test(title)) {
         cid = "1623";
-        product.cateProps += "122216347:828914351;";
+        product.cateProps += "122216347:828896582;";
       }
       if (/长裤|休闲裤|紧身裤|九分裤|紧身裤|踩脚裤|带裤紧身窄裙|百搭裤|松紧裤/.test(title)) {
         cid = "162201";
@@ -454,7 +454,7 @@ productDetail.prototype = {
       }
       if (/牛仔裤|牛仔(.*?)裤/.test(title)) {
         cid = "162205";
-        product.cateProps += "122216347:828914351;";
+        product.cateProps += "122216347:828896582;";
         //尺寸 20518
         this.sizePre = "20518";
       }

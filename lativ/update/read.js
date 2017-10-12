@@ -235,17 +235,18 @@ productDetail.prototype = {
           var price = Math.max.apply(null, priceArr)
           // MTZLNZJXYW
           title = title.slice(0, title.indexOf("（"))
-          if( !(title || '').trim() ){
+          if( !(title || '').trim() || /袜/.test(title) ){
             _this.callback(null ,{}, {}, [])
             return 
           }
 
-          title = "lativ诚衣正品2017新款" + title.replace('(水洗产品)', '');
+          title = "lativ诚衣正品2017新款" + title.replace(/\s+/, '').replace('(水洗产品)', '');
           if (/袜/.test(title)) {
             price += 5;
           } else {
             price += 10;
           }
+
           product.price = price;
           product.title = title;
           product.subtitle = '便宜、实惠、舒适是我们的宗旨';
@@ -271,16 +272,6 @@ productDetail.prototype = {
           var data = JSON.parse(JSON.parse(res.text).info);
           var activity = JSON.parse(JSON.parse(res.text).activity);
 
-          // if( activity.Discount ){
-          //     if( /1件/.test(activity.ActivityName) ){
-          //         if( activity.Discount < 1 ){
-          //             product.price = Math.ceil(product.price * activity.Discount);
-          //         }else{
-          //             product.price = parseInt(activity.Discount);
-          //         }
-          //     }
-          // }
-          // product.price = Number(product.price);
 
           _this.dataMatch();
 
@@ -390,7 +381,9 @@ productDetail.prototype = {
       });
 
     reminder = "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i1/465916119/TB20IRWaiBnpuFjSZFzXXaSrpXa_!!465916119.png'><\/P>" +
-      "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i1/465916119/TB2s0YZXbFkpuFjy1XcXXclapXa_!!465916119.png'><\/P>";
+      "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i2/465916119/TB2Vv7.lgoQMeJjy0FnXXb8gFXa_!!465916119.png'><\/P>" + 
+      "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i1/465916119/TB26GUQlbsTMeJjSszgXXacpFXa_!!465916119.gif'><\/P>" + 
+      "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i1/465916119/TB2WZrQhjuhSKJjSspaXXXFgFXa_!!465916119.gif'><\/P>";
 
     var sizePath = 'data/img/' + id + '_size.png';
     fs.exists(sizePath, function (isexists) {
@@ -465,7 +458,7 @@ productDetail.prototype = {
         cid = "50011123";
         product.cateProps += "20000:29534;20663:20213;42722636:20213;122216345:29938;122216348:29444;122216507:3226292;122216515:29535;122216586:29947;";
       }
-      if (/牛仔裤/.test(title)) {
+      if (/牛仔裤|牛仔(.*?)裤/.test(title)) {
         cid = "50010167";
         product.cateProps += "20000:29534;42722636:248572013;122216515:29535;122276111:20525;";
         //尺寸 20518
@@ -480,10 +473,11 @@ productDetail.prototype = {
       }
       if (/三角短裤|平角短裤|平脚短裤|棉质短裤|印花短裤/.test(title)) {
         cid = "50008882";
-        product.cateProps += "20000:29534;24477:20532;";
+        product.cateProps += "20000:29534;24477:20532;20021:105255;";
         product.inputPids = "166332348";
         product.inputValues = "1条";
         product.subtitle = "";
+        product.newprepay = 0
       }
       if (/长裤|松紧裤|休闲裤/.test(title)) {
         cid = "3035";
@@ -540,6 +534,13 @@ productDetail.prototype = {
         cid = "50011165";
         product.cateProps += "20000:29534;42722636:20213;122216515:29535;122216562:3226292;122216586:29947;";
       }
+
+      if( /鞋/.test(title) ){
+        cid = "50012044";
+        product.inputValues = "鞋";
+        product.inputPids = "13021751";
+        product.cateProps = "20000:3236884;122216608:20532;";
+      }
     }
 
     // 衬衫-女  162104
@@ -571,24 +572,25 @@ productDetail.prototype = {
         product.inputPids = "6103476,13021751";
         product.inputValues = product.price + ",POLO衫";
       }
-      if (/吊带|背心/.test(title)) {
+      if (/吊带|背心|bra/.test(title)) {
         cid = "50010394";
         product.cateProps += "20000:29534;20021:105255;24477:20533;";
       }
       if (/文胸/.test(title)) {
         cid = "50008881";
-        product.cateProps += "20000:29534;5260022:113084;122216483:103092;122216591:3269820;122216608:3269958;122442403:3269842;122508284:607964276;";
+        product.cateProps += "20000:29534;20019:20213;5260022:113084;122216483:103092;122216591:3269820;122216608:3269958;122442403:3269842;122508284:607964276;";
 
+        product.newprepay = 0
         // 尺寸 122508275
         this.sizePre = "122508275";
       }
       if (/雪纺/.test(title)) {
         cid = "162116";
-        product.cateProps += "122216347:828914351;";
+        product.cateProps += "122216347:828896582;";
       }
       if (/针织/.test(title)) {
         cid = "50000697";
-        product.cateProps += "20551:105255;13328588:492838732;122216347:828914351;";
+        product.cateProps += "20551:105255;13328588:492838732;122216347:828896582;";
       }
       if (/衬衫/.test(title)) {
         cid = "162104";
@@ -597,10 +599,6 @@ productDetail.prototype = {
       if (/西装/.test(title)) {
         cid = "50008897";
         product.cateProps += "122216347:728146012;";
-      }
-      if (/连衣裙/.test(title)) {
-        cid = "50010850";
-        product.cateProps += "122216347:828914351;";
       }
 
       if (/运动(.*?)短裤|短裤|中裤|七分裤|宽腿裤/.test(title)) {
@@ -614,25 +612,19 @@ productDetail.prototype = {
       }
       if (/内裤|三角短裤|平脚短裤|生理裤|安全裤|平口裤/.test(title)) {
         cid = "50008882";
-        product.cateProps += "20000:29534;24477:20533;122216608:3267959;";
+        product.cateProps += "20000:29534;24477:20533;122216608:3267959;20021:105255;";
         product.inputPids = "166332348";
         product.inputValues = "1条";
         product.subtitle = "";
+        product.newprepay = 0;
       }
-      if (/短裙|牛仔(.*?)裙|紧身裙|窄裙|迷你裙|中裙|裤裙|裙裤|喇叭裙|印花长裙/.test(title)) {
+      if (/短裙|牛仔(.*?)裙|紧身裙|窄裙|迷你裙|中裙|中长裙|裤裙|裙裤|喇叭裙|印花长裙/.test(title)) {
         cid = "1623";
-        product.cateProps += "122216347:828914351;";
+        product.cateProps += "122216347:828896582;";
       }
-      if (/长裤|休闲裤|紧身裤|九分裤|紧身裤|踩脚裤|带裤紧身窄裙|百搭裤|松紧裤/.test(title)) {
-        cid = "162201";
-        //尺寸 20518
-        this.sizePre = "20518";
-      }
-      if (/牛仔裤|牛仔(.*?)裤/.test(title)) {
-        cid = "162205";
-        product.cateProps += "122216347:828914351;";
-        //尺寸 20518
-        this.sizePre = "20518";
+      if (/连衣裙/.test(title)) {
+        cid = "50010850";
+        product.cateProps += "122216347:828896582;";
       }
       if (/运动(.*?|[^POLO])衫/i.test(title)) {
         cid = "50011717";
@@ -646,13 +638,23 @@ productDetail.prototype = {
         product.inputPids = "6103476,13021751";
         product.inputValues = product.price + ",T恤";
       }
+      if (/长裤|休闲裤|紧身裤|九分裤|紧身裤|踩脚裤|带裤紧身窄裙|百搭裤|松紧裤/.test(title)) {
+        cid = "162201";
+        //尺寸 20518
+        this.sizePre = "20518";
+      }
       if (/运动(.*?)长裤|运动(.*?)裤/.test(title)) {
         cid = "50023107";
         product.cateProps += "20000:29534;122216608:20533;";
         product.inputPids = "6103476,13021751";
         product.inputValues = product.price + ",长裤";
       }
-
+      if (/牛仔裤|牛仔(.*?)裤/.test(title)) {
+        cid = "162205";
+        product.cateProps += "122216347:828896582;";
+        //尺寸 20518
+        this.sizePre = "20518";
+      }
       if (/羽绒大衣|羽绒(.*?)外套/.test(title)) {
         cid = "50008899";
         product.cateProps += "20000:29534;122216347:740138901;";
@@ -673,13 +675,87 @@ productDetail.prototype = {
       }
       if (/羽绒/.test(title)) {
         cid = "50008899";
-        product.cateProps += "20000:29534;122216347:740138901;1627207:28332;20509:6215318;";
+        product.cateProps += "20000:29534;6861561:112400;13328588:492838731;122216347:740150614;148158672:7321979;";
       }
       if (/棉衣/.test(title)) {
         cid = "50008900";
         product.cateProps += "20000:29534;122216347:740138901;";
       }
+
+      if( /鞋/.test(title) ){
+        cid = "50012044";
+        product.inputValues = "鞋";
+        product.inputPids = "13021751";
+        product.cateProps = "20000:3236884;122216608:20533";
+      }
     }
+
+    if( /童|baby/i.test(title) ){
+      this.sizePre = '122216343'
+
+      if( /polo衫|T恤|半开襟衫|拼色衫|长袖|条纹衫/i.test(title) ){
+        cid = "50013189";
+        product.cateProps += "20000:29534;24477:29923;";
+      }
+      if( /背心|吊带衫/.test(title) ){
+        cid = "121364004";
+        product.cateProps += "122276315:20213";
+      }
+      if( /衬衫/.test(title) ){
+        cid = "50010527";
+        product.cateProps += "20000:29534;24477:29923;";
+      }
+      if( /针织(.*?)衫/.test(title) ){
+        cid = "50010539";
+        product.cateProps += "20000:29534;20551:20213;24477:29923;";
+      }
+      if( /连衣裙|长衫/.test(title) ){
+        cid = "121452038";
+        product.cateProps += "20000:29534;24477:20533;";
+        product.inputPids = "149422948";
+        product.inputValues = "棉100%";
+      }
+      if( /短裙|松紧裙/.test(title) ){
+        cid = "121484044";
+        product.cateProps += "20000:29534;24477:20533;";
+        product.inputPids = "149422948";
+        product.inputValues = "棉100%";
+      }
+      if( /裤/.test(title) ){
+        cid = "50013618";
+        product.cateProps += "20000:29534;24477:29923;";
+        product.inputPids = "20000";
+        product.inputValues = "other/其他;型号*;lativ";
+      }
+      
+      if( /三角短裤|平脚短裤|罗纹短裤|棉质短裤/.test(title) ){
+        cid = "121408006";
+        product.cateProps += "20000:29534;20017:493280158;20017:493280157;20017:61943393;20017:20143547;20017:234712261;20017:493280159;20017:493280160;20017:493280161;20551:105255;";
+        product.inputPids = "149422948";
+        product.inputValues = "棉100%";
+        product.newprepay = 0;
+      }
+      if( /外套|开衫|夹克|茄克|连帽衫|圆领衫|长版衫/.test(title) ){
+        cid = "50010548";
+        product.cateProps += "20000:29534;24477:29923;";
+      }
+      if( /(棉|羽绒)(.*?)(外套|背心|衣)/.test(title) ){
+        cid = "50010531";
+        product.cateProps += "20000:29534;24477:29923;1626890:10010;6861561:148658566;";
+      }
+    }
+
+    // if( /套装/.test(title) ){
+    //   cid = "50006846";
+    //   product.cateProps += "20000:29534;20021:105255;24477:20532";
+    // }
+    // if( /袜/.test(title) ){
+    //   cid = "50012778";
+    //   product.cateProps += "20000:29534;24477:20532";
+    //   product.inputPids = "166344375";
+    //   product.inputValues = "1双";
+    // }
+    
     if (!cid) {
       cid = "50000671";
       product.cateProps += "20021:105255;13328588:492838734;";
@@ -718,7 +794,7 @@ productDetail.prototype = {
     if (type == 'color') {
       if (!data[value]) {
         data[value] = "1627207:-" + this.cNum + ";";
-        product.input_custom_cpv += "1627207:-" + this.cNum + ":" + value + ";";
+        product.input_custom_cpv += "1627207:-" + this.cNum + ":" + value + "0;";
         this.cNum++;
       }
     }
