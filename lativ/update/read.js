@@ -155,7 +155,7 @@ var productDetail = function (url, callback) {
   this.product = {};
 
   this.COLOR = _.extend({}, COLOR);
-  this.SIZE = {};
+  this.SIZE = _.extend({}, SIZE);
 
   this.cNum = 1001;
   this.sNum = 1001;
@@ -739,7 +739,7 @@ productDetail.prototype = {
         cid = "50010548";
         product.cateProps += "20000:29534;24477:29923;";
       }
-      if( /(棉|羽绒)(.*?)(外套|背心|衣)/.test(title) ){
+      if( /(棉|羽绒)(.*?)(外套|背心|衣|连体)/.test(title) ){
         cid = "50010531";
         product.cateProps += "20000:29534;24477:29923;1626890:10010;6861561:148658566;";
       }
@@ -761,6 +761,8 @@ productDetail.prototype = {
       product.cateProps += "20021:105255;13328588:492838734;";
       product.inputPids = "20000";
       product.inputValues = "Lativ";
+      
+      this.sizePre = '20509'
     }
     product.cid = cid;
   },
@@ -792,25 +794,38 @@ productDetail.prototype = {
     var data = type === 'color' ? this.COLOR : this.SIZE;
 
     if (type == 'color') {
-      if (!data[value]) {
+      if( !data[value] ) {
         data[value] = "1627207:-" + this.cNum + ";";
         product.input_custom_cpv += "1627207:-" + this.cNum + ":" + value + "0;";
         this.cNum++;
       }
+      
+      return data[value]
     }
-    if (type == 'size') {
-      if (!value.trim()) {
-        value = size;
+    if( sizePre === '122216343' ){
+      if( /^[a-z]+$/i.test(size) ){
+        value = value.split('/')[0]
+      }else{
+        value = size
       }
-      if (!data[value]) {
+      if( !data[value] ){
         data[value] = sizePre + ":-" + this.sNum + ";";
-        product.input_custom_cpv += sizePre + ":-" + this.sNum + ":" + value + "(" + size + ");";
+        product.input_custom_cpv += sizePre + ":-" + this.sNum + ":" + value +';';
         this.sNum++;
-      } else {
-        if (!cache[value]) {
-          product.cpv_memo += data[value].slice(0, -1) + ":" + size + ";";
-          cache[value] = 1;
-        }
+      }
+      return data[value] 
+    }
+    if (!value.trim()) {
+      value = size;
+    }
+    if (!data[value]) {
+      data[value] = sizePre + ":-" + this.sNum + ";";
+      product.input_custom_cpv += sizePre + ":-" + this.sNum + ":" + value + "(" + size + ");";
+      this.sNum++;
+    } else {
+      if (!cache[value]) {
+        product.cpv_memo += data[value].slice(0, -1) + ":" + size + ";";
+        cache[value] = 1;
       }
     }
     return data[value];
@@ -882,20 +897,31 @@ productDetail.prototype = {
       product = this.product,
       price = product.price,
       COLOR = this.COLOR,
-      SIZE = this.SIZE;
+      SIZE = this.SIZE,
+      sizePre = this.sizePre;
 
     datas.forEach(function (data) {
       colors = COLOR[data.color];
 
       data.ItemList.forEach(function (item) {
+        var size = item.size, 
+            value = item['體型尺寸'],
+            filed = size
+
         num += item.invt;
         numPrice = price + ":" + item.invt + "::";
-        if (item['體型尺寸'].trim()) {
-          sizes = SIZE[item['體型尺寸']];
-        } else {
-          sizes = SIZE[item['size']];
+
+        if( sizePre === '122216343' ){
+          if( /^[a-z]+$/i.test(size) ){
+            filed = value.split('/')[0]
+          }
+        }else{
+          if (item['體型尺寸'].trim()) {
+            filed = value;
+          }
         }
-        str += numPrice + colors + sizes;
+        
+        str += numPrice + colors + SIZE[filed];
       });
     });
 
