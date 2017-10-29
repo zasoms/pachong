@@ -129,18 +129,23 @@ var queue = [
   //   fs.readdir(rootPath, function(err, files) {
   //     async.mapLimit(files, 5, function(file, next) {
   //       var path = rootPath + file;
-  //       if (/gif|_size\.png$/.test(file)) {
-  //         next();
-  //       } else {
-  //         console.log(rootPath, file, path)
-  //         images(path)
-  //           .draw(images("logo.png"), 200, 200)
-  //           .saveAsync(path, {
-  //             quality: 80
-  //           }, null, function() {
-  //             next();
-  //           });
+  //       try{
+  //         if (/gif|_size\.png$/.test(file)) {
+  //           next();
+  //         } else {
+  //           console.log(rootPath, file, path)
+  //           images(path)
+  //             .draw(images("logo.png"), 200, 200)
+  //             .saveAsync(path, {
+  //               quality: 80
+  //             }, null, function() {
+  //               next();
+  //             });
+  //         }
+  //       }catch(e){
+  //         next()
   //       }
+        
   //     }, done);
   //   });
   // },
@@ -186,52 +191,18 @@ if (style == 'normal') {
   }, function(done) {
     console.log("对比数据");
     var down = require("./data").data;
-    var dlen = down.length;
-    var plen = online.length;
 
-    var collection = [];
-
-    for (var i = 0; i < plen; i++) {
-      var item1 = online[i];
-      for (var j = 0; j < dlen; j++) {
-        var item2 = down[j];
-        if (item1.slice(0, 5) == item2.slice(0, 5)) {
-
-          collection.push(item1);
-          break;
-        }
-      }
-    }
-
-    function deleteProducts(callback) {
-      var difference = [],
-        onlineData = [];
-      for (var k = 0; k < plen; k++) {
-        var item3 = online[k];
-        if (!(~collection.indexOf(item3))) {
-          difference.push(item3);
-        } else {
-          onlineData.push(item3);
-        }
-      }
-      fs.writeFile("./update/deleteProducts.js", "exports.data=" + JSON.stringify(difference), function() {
-        fs.writeFile("./update/online.js", "exports.data=" + JSON.stringify(onlineData), callback);
-      });
-    }
-
-    function addProduct(callback) {
-      var difference = [];
-      for (var k = 0; k < dlen; k++) {
-        var item3 = down[k];
-        if (!(~collection.indexOf(item3))) {
-          difference.push(item3);
-        }
-      }
-      fs.writeFile("./update/addProduct.js", "exports.data=" + JSON.stringify(difference), callback);
-    }
-    deleteProducts(function() {
-      addProduct(function() {
-        done();
+    var slice = item => item.slice(0, 5)
+    var downArr = down.map(slice)
+    var onlineArr = online.map(slice)
+    
+    var onlineData = down.filter(item => onlineArr.indexOf( slice( item ) ) > -1)
+    var deleteData = online.filter(item => downArr.indexOf( slice( item ) ) === -1)
+    var addData = down.filter(item => onlineArr.indexOf( slice( item ) ) === -1)
+    
+    fs.writeFile("./update/online.js", "exports.data=" + JSON.stringify(onlineData), function(){
+      fs.writeFile("./update/deleteProducts.js", "exports.data=" + JSON.stringify(deleteData), function() {
+        fs.writeFile("./update/addProduct.js", "exports.data=" + JSON.stringify(addData), done);
       });
     });
   });

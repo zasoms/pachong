@@ -209,16 +209,18 @@ productDetail.prototype = {
           $("[src='http://s1.lativ.com/i/CommonPicture/213/71.jpg']").remove();
           // $("[href^='http://www.lativ.com/Search']").rrfeffemove();
 
-          $(".product-img img").each(function (i, item) {
-            var $item = $(item);
-            $item.attr("src", $item.attr("data-original")).attr("style", "WIDTH: 750px;").prepend("<p>");
-          });
+          // 屏蔽详情页图片
+          // $(".product-img img").each(function (i, item) {
+          //   var $item = $(item);
+          //   $item.attr("src", $item.attr("data-original")).attr("style", "WIDTH: 750px;").prepend("<p>");
+          // });
 
-          $("[data-original]").attr("data-original", "");
-          $("a").attr("href", "javascript:;");
+          // $("[data-original]").attr("data-original", "");
+          // $("a").attr("href", "javascript:;");
 
           title = $(".name-area").text().trim().replace('-', ' ');
-          desc = $(".product-img").html();
+          // desc = $(".product-img").html();
+          desc = '';
 
           var productId = url.split("Detail/")[1];
           _this.productId = productId;
@@ -250,19 +252,19 @@ productDetail.prototype = {
           product.price = price;
           product.title = title;
           product.subtitle = '便宜、实惠、舒适是我们的宗旨';
-          _this.disposeDescription(url, desc, function () {
-            detailConfig.Referer = 'https://www.lativ.com/Detail/' + productId;
-            _this.getProduct();
-          });
+          // _this.disposeDescription(desc, function () {
+            
+            _this.getProduct(productId);
+          // });
         }
       });
   },
   // 获得该商品的数目、尺寸和颜色
-  getProduct: function () {
+  getProduct: function (productId) {
     var product = this.product,
-      _this = this,
-      productId = this.productId;
-      
+      _this = this;
+    detailConfig.Referer = 'https://www.lativ.com/Detail/' + productId;
+    
     var url = "https://www.lativ.com/Product/ProductInfo/?styleNo=" + productId.slice(0, 5)
     requests.get(url)
       .timeout(5000)
@@ -283,12 +285,17 @@ productDetail.prototype = {
           _this.skuProps(data);
 
           _this.picture(data);
-          _this.callback(null, _this.product, _this.zhutuPhoto, _this.descPhoto);
+
+          _this.disposeDescription(data, function(){
+            _this.callback(null, _this.product, _this.zhutuPhoto, _this.descPhoto);
+          })
         }else{
           _this.callback(err, {}, {}, []);
         }
       });
   },
+
+
   // 数据处理
   dataMatch: function () {
     var product = this.product,
@@ -362,28 +369,40 @@ productDetail.prototype = {
     this.seller_cids();
   },
   // 宝贝描述处理
-  disposeDescription: function (url, desc, callback) {
+  disposeDescription: function (datas, callback) {
     var product = this.product,
       _this = this;
     var photos = [],
       style = "",
       reminder = "",
-      id = url.split("/")[4];
-    desc = (desc || '').trim();
-    desc = desc.replace(/\r|\n/gm, "")
-      .replace(/\"/gm, "'")
-      .replace(/,/gm, "，")
-      .replace(/data-original=\'\'/gm, "")
-      .replace(/http(s?):\/\/s[0-9].lativ.com\/(.*?).(jpg|png|gif)/gm, function (match, escape, interpolate, evaluate, offset) {
-        photos.push(match);
-        var arr = interpolate.split("/");
-        return "FILE:\/\/\/E:/github/pachong/lativ/data/img/" + arr[arr.length - 1] + "." + evaluate;
-      });
+      desc = '',
+      id = this.productId.slice(0, 5);
 
-    reminder = "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i1/465916119/TB20IRWaiBnpuFjSZFzXXaSrpXa_!!465916119.png'><\/P>" +
-      "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i2/465916119/TB2Vv7.lgoQMeJjy0FnXXb8gFXa_!!465916119.png'><\/P>" + 
-      "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i1/465916119/TB26GUQlbsTMeJjSszgXXacpFXa_!!465916119.gif'><\/P>" + 
-      "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i1/465916119/TB2WZrQhjuhSKJjSspaXXXFgFXa_!!465916119.gif'><\/P>";
+    // desc = (desc || '').trim();
+    // desc = desc.replace(/\r|\n/gm, "")
+    //   .replace(/\"/gm, "'")
+    //   .replace(/,/gm, "，")
+    //   .replace(/data-original=\'\'/gm, "")
+    //   .replace(/http(s?):\/\/s[0-9].lativ.com\/(.*?).(jpg|png|gif)/gm, function (match, escape, interpolate, evaluate, offset) {
+    //     photos.push(match);
+    //     var arr = interpolate.split("/");
+    //     var url = "FILE:\/\/\/E:/github/pachong/lativ/data/img/" + arr[arr.length - 1] + "." + evaluate;
+    //     console.log( match, url )
+    //     return "FILE:\/\/\/E:/github/pachong/lativ/data/img/" + arr[arr.length - 1] + "." + evaluate;
+    //   });
+
+    desc = datas.map(function(item){
+      var path = item.colorImg.replace(/_\d+/, '_900')
+      var src = 'http://s2.lativ.com' + path
+      var arr = path.split("/");
+      var url = "FILE:\/\/\/E:/github/pachong/lativ/data/img/" + arr[arr.length - 1];
+      photos.push( src )
+      return '<IMG src="' + url + '"></IMG>'
+    }).join('')
+
+    reminder = "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i1/465916119/TB2OVR7pbsTMeJjSszhXXcGCFXa_!!465916119.png'><\/P>" +
+      "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i3/465916119/TB22FhAkvJNTKJjSspoXXc6mpXa_!!465916119.png'><\/P>" + 
+      "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i2/465916119/TB2VTHOk6uhSKJjSspdXXc11XXa_!!465916119.png'><\/P>";
 
     var sizePath = 'data/img/' + id + '_size.png';
     fs.exists(sizePath, function (isexists) {
@@ -699,7 +718,7 @@ productDetail.prototype = {
       }
       if( /背心|吊带衫/.test(title) ){
         cid = "121364004";
-        product.cateProps += "122276315:20213";
+        product.cateProps += "122276315:3273241;";
       }
       if( /衬衫/.test(title) ){
         cid = "50010527";
@@ -741,7 +760,7 @@ productDetail.prototype = {
       }
       if( /(棉|羽绒)(.*?)(外套|背心|衣|连体)/.test(title) ){
         cid = "50010531";
-        product.cateProps += "20000:29534;24477:29923;1626890:10010;6861561:148658566;";
+        product.cateProps += "122276315:20213;20000:29534;24477:29923;1626890:10010;6861561:148658566;";
       }
     }
 
@@ -984,7 +1003,7 @@ productDetail.prototype = {
     var caizhi = $('.product-desc').html()
     var size = $("#size-report-area").html()
     var try1 = $("#try-report-area").html()
-    var model = $("#model-info-area").html()
+    // var model = $("#model-info-area").html()
 
     var str = '';
     str += "<h2>面料组成：</h2>" + caizhi;
@@ -996,10 +1015,11 @@ productDetail.prototype = {
       str += "<h2 style='text-align: center;'>试穿纪录</h2>"
       str += try1
     }
-    if (model && model.trim()) {
-      str += "<h2 style='text-align: center;'>模特儿信息</h2>"
-      str += model
-    }
+    // if (model && model.trim()) {
+    //   str += "<h2 style='text-align: center;'>模特儿信息</h2>"
+    //   str += model
+    // }
+
     this.reportStr = (str || "").replace(/\r|\n/gm, "").trim()
   }
 };
@@ -1050,23 +1070,22 @@ downloadImg.prototype.requestsAndwrite = function (url, root, callback) {
   fs.exists(root + fileName, function (isexists) {
     if (!isexists) {
       requests.get(url)
-      .timeout(5000)
-      .end(function(err, res) {
-        if (err) {
-          console.log( callback ) 
-          console.log(url, "有一张图片请求失败啦...");
-          callback(null, "successful !");
-        } else {
-          fs.writeFile(root + fileName, res.body, function(err) {
-            if (err) {
-              console.log("有一张图片写入失败啦...", err, url);
-            } else {
-              callback(null, "successful !");
-              // callback貌似必须调用，第二个参数为下一个回调函数的result参数
-            }
-          });
-        }
-      });
+        .timeout(5000)
+        .end(function(err, res) {
+          if (err) {
+            console.log(url, "有一张图片请求失败啦...");
+            // callback(null, "successful !");
+          } else {
+            fs.writeFile(root + fileName, res.body, function(err) {
+              if (err) {
+                console.log("有一张图片写入失败啦...", err, url);
+              } else {
+                callback(null, "successful !");
+                // callback貌似必须调用，第二个参数为下一个回调函数的result参数
+              }
+            });
+          }
+        });
     } else {
       callback(null, "successful !");
     }
@@ -1204,7 +1223,6 @@ exports.getCategoryProduct = function (callback) {
     requests.get(url)
       .timeout(5000)
       .end(function (err, res) {
-    console.log(url, res)
         var $ = cheerio.load(res.text, {
           decodeEntities: false
         });
