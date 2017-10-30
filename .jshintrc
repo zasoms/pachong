@@ -1,0 +1,64 @@
+{
+    "globals": {
+      "wx": true,
+      "Page": true,
+      "require": true,
+      "module": true,
+      "getApp": true,
+      "setTimeout": true,
+      "setInterval": true,
+      "clearTimeout": true,
+      "clearInterval": true,
+      "getCurrentPages": true,
+      "console": false
+    //     "jasmine": false,
+    //     "spyOn": false,
+    //     "it": false,
+    //     "describe": false,
+    //     "expect": false,
+    //     "beforeEach": false,
+    //     "waits": false,
+    //     "waitsFor": false,
+    //     "runs": false
+    },
+
+    "asi": true,
+    "esnext" : true,
+    "indent": 2,
+    "bitwise": true,
+    "latedef": "nofunc",
+    // "node" : true,
+    // "es5" : true,
+    // "browser" : true,
+
+    // "boss" : false,
+    // "curly": false,
+    // "debug": false,
+    // "devel": false,
+    // "eqeqeq": true,
+    // "evil": true,
+    // "forin": false,
+    // "immed": true,
+    // "laxbreak": false,
+    "newcap": true,
+    "noarg": true,
+    // "noempty": false,
+    // "nonew": false,
+    // "nomen": false,
+    // "onevar": true,
+    // "plusplus": false,
+    // "regexp": false,
+    "undef": true,
+    // "sub": true,
+    // "strict": false,
+    // "white": true,
+    "unused": true,
+    // 最大参数个数
+    "maxparams": 4,
+    // 最大嵌套深度
+    "maxdepth": 2,
+    // 复杂度检测
+    "maxcomplexity": true,
+    // 最大行数
+    "maxlen": 600
+}

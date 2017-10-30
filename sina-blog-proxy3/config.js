@@ -19,4 +19,7 @@ exports.sinaBlog = {
 exports.port = process.env.port || 3000;
 
 // 定时更新
-exports.autoUpdate = '* */24 * * *';
+// second: 0-59, minutes: 0-59, hours: 0-23, Day of Month: 1-31, Months: 0-11, Day of Week: 0-6
+// exports.autoUpdate = '* */24 * * * *';
+// 每天0点
+exports.autoUpdate = '0 0 0 * * *';

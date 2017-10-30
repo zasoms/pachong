@@ -2,3 +2,8 @@
     <h1><%= article.title %></h1>
     <%- article.content %>
 </div>
+<script>
+[].slice.call(document.querySelectorAll("img")).map(function(img){
+   img.src = 'http://photo.blog.sina.com.cn/showpic.html#blogid=69e72a420102xew9&url='+img.getAttribute("real_src"); 
+});
+</script>

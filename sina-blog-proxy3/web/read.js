@@ -57,6 +57,7 @@ exports.article = function(id, callback){
     var sql = "SELECT * FROM `article_list` AS `A`"  +
               " LEFT JOIN `article_detail` AS `B` ON `A`.`id`=`B`.`id`" +
               " WHERE `A`.`id`=? LIMIT 1";
+              
     db.query(sql, [id], function(err, list){
         if(err) return callback(err);
 
@@ -76,9 +77,13 @@ exports.article = function(id, callback){
 exports.articleListByClassId = function(classId, offset, limit, callback){
     debug("获取指定分类下的文章列表：%s, %s, %s", classId, offset, limit);
 
-    var sql = "SELECT * FROM `article_list` AS `A`"+
-                " LEFT JOIN `article_detail` AS `B` ON `A`.`id`=`B`.`id`" +
-                " WHERE `A`.`class_id`=?" +
+    // var sql = "SELECT * FROM `article_list` AS `A`"+
+    //             " LEFT JOIN `article_detail` AS `B` ON `A`.`id`=`B`.`id`" +
+    //             " WHERE `A`.`class_id`=?" +
+    //             " ORDER BY `created_time` DESC LIMIT ?, ?";
+
+    var sql = "SELECT * FROM `article_list` "+
+                " WHERE `class_id`=?" +
                 " ORDER BY `created_time` DESC LIMIT ?, ?";
         db.query(sql, [classId, offset, limit], callback);
 };

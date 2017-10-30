@@ -2,13 +2,22 @@ var originRequest = require("request");
 var cheerio = require("cheerio");
 var debug = require("debug")("blog:update:read");
 
+var headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36'
+};
 /**
  * 请求制定URL
  * @param {String}   url
  * @param {Function} callback
  */
 function request(url, callback) {
-    originRequest(url, callback);
+    var options = {
+        url: url,
+        encoding: null,
+        // proxy: '',
+        headers: headers
+    };
+    originRequest(options, callback);
 }
 
 /**

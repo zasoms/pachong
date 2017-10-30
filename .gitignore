@@ -53,5 +53,15 @@ pachong.sublime-workspace
 *.xlsx
 *.tbi
 lativ/data
+lativ2/data
 lativ/public/libs
 lativ/update/data
+lativ2/update/data
+lativ/update/config.js
+lativ2/update/online.js
+lativ2/update/data.js
+vancl/data/
+lativ/update/all.js
+lativ/update/category.js
+lativ/update/online.js
+lativ2/update/online.js

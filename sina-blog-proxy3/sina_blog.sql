@@ -1,22 +1,22 @@
 /*
 Navicat MySQL Data Transfer
 
-Source Server         : localhost_3306
+Source Server         : local
 Source Server Version : 50540
-Source Host           : localhost:3306
+Source Host           : 127.0.0.1:3306
 Source Database       : sina_blog
 
 Target Server Type    : MYSQL
 Target Server Version : 50540
 File Encoding         : 65001
 
-Date: 2016-03-14 23:19:03
+Date: 2017-02-07 11:33:12
 */
 
 SET FOREIGN_KEY_CHECKS=0;
 
 -- ----------------------------
--- Table structure for `article_detail`
+-- Table structure for article_detail
 -- ----------------------------
 DROP TABLE IF EXISTS `article_detail`;
 CREATE TABLE `article_detail` (
@@ -27,20 +27,20 @@ CREATE TABLE `article_detail` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- ----------------------------
--- Table structure for `article_list`
+-- Table structure for article_list
 -- ----------------------------
 DROP TABLE IF EXISTS `article_list`;
 CREATE TABLE `article_list` (
-  `id` varchar(20) NOT NULL,
-  `title` varchar(255) NOT NULL,
-  `url` varchar(255) NOT NULL,
   `class_id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `id` varchar(20) NOT NULL,
+  `url` varchar(255) NOT NULL,
   `created_time` int(11) NOT NULL,
-  PRIMARY KEY (`id`,`class_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+  PRIMARY KEY (`class_id`, `id`)
+) ENGINE=MyISAM AUTO_INCREMENT=250 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
--- Table structure for `article_tag`
+-- Table structure for article_tag
 -- ----------------------------
 DROP TABLE IF EXISTS `article_tag`;
 CREATE TABLE `article_tag` (
@@ -50,7 +50,7 @@ CREATE TABLE `article_tag` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- ----------------------------
--- Table structure for `class_list`
+-- Table structure for class_list
 -- ----------------------------
 DROP TABLE IF EXISTS `class_list`;
 CREATE TABLE `class_list` (

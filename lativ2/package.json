@@ -18,7 +18,7 @@
     "debug": "*",
     "ejs": "^2.5.1",
     "express": "^4.14.0",
-    "fast-csv": "^2.1.0",
+    "fast-csv": "^2.3.0",
     "graceful-fs": "~3.0.4",
     "request": "*",
     "tmp": "~0.0.25"

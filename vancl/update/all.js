@@ -6,8 +6,8 @@ var async = require("async"),
   iconv = require("iconv-lite"),
   fs = require("fs"),
   images = require("images"),
-  util = require('../utils/util'),
-  _ = require("underscore");
+  _ = require("underscore"),
+  debug = require("debug")("lativ:update:all");
 
 var args = argv.option({
   name: 'style',
@@ -19,9 +19,11 @@ var args = argv.option({
 
 var style = args.options.style || 'normal';
 
-var lastData = require('../lastData').data
 
-var productList = [],
+var lastData = require("../lastData").data;
+
+var classList,
+  productList = [],
   productDetail = [],
   zhutu = {},
   desc = [],
@@ -31,26 +33,26 @@ var queue = [
   function(done) {
     // 自定义产品
     read = require("./read");
-    if (style == 'add') {
-      productList = require("./addProduct").data;
-    } else {
-      productList = require("./online").data;
-    }
+    // if( style == 'add' ){
+    //     productList = require("./addProduct").data;
+    // }else{
+    //     productList = require("./online").data;
+    // }
+    productList = ['6194599', '6139862', '6375449', '6375278', '6375135', '6375135', '6374256', '6375473', '6375192', '6374460', '6375355', '6375683', '6375337'];
     console.log(productList.length);
     done();
   },
   // 获取产品详情
   function(done) {
     console.log("获取产品详情");
-    if (lastData.productDetail) {
+    if (lastData && lastData.productDetail) {
       productDetail = lastData.productDetail;
       zhutu = lastData.zhutu;
       desc = lastData.desc;
       done();
     } else {
-      async.mapLimit(productList, 5, function(c, next) {
-        var url = "http://m.lativ.com/Detail/" + c;
-        read.productDetail(url, function(err, data, zhutuPhoto, descPhoto) {
+      async.mapLimit(productList, 5, function(id, next) {
+        read.productDetail(id, function(err, data, zhutuPhoto, descPhoto) {
           if (data.title) {
             productDetail.push(data);
             _.extend(zhutu, zhutuPhoto);
@@ -64,19 +66,23 @@ var queue = [
   // 主图片下载
   function(done) {
     console.log("主图片下载");
-    if (!(lastData && lastData.productDetail)) {
-      util.saveFile('./lastData.js', "exports.data={" +
+    if (!lastData) {
+      fs.writeFile("./lastData.js", "exports.data={" +
         "productDetail:" + JSON.stringify(productDetail) + "," +
         "zhutu:" + JSON.stringify(zhutu) + "," +
         "desc:" + JSON.stringify(desc) +
-      "}")
+        "}");
     }
-    read.downloadImg(zhutu, 5, "./data/", done);
+    read.downloadImg(zhutu, 5, "./data/", function() {
+      done();
+    });
   },
   // 描述图片下载
   function(done) {
     console.log("描述图片下载");
-    read.downloadImg(desc, 5, "./data/img/", done);
+    read.downloadImg(desc, 5, "./data/img/", function() {
+      done();
+    });
   },
   function(done) {
     console.log("导出csv");
@@ -108,38 +114,34 @@ var queue = [
         console.log(err);
       } else {
         var newCsv = iconv.encode(csv, 'GBK');
-        util.saveFile('data.csv', newCsv)
-          .then(() => console.log('file saved'))
-          .then(done)
+        fs.writeFile("data.csv", newCsv, function(err) {
+          if (err) throw err;
+          console.log("file saved");
+          done();
+        });
       }
     });
   },
-  // function(done) {
-  //   console.log("水印添加");
-  //   var rootPath = "data/img/";
-  //   fs.readdir(rootPath, function(err, files) {
-  //     async.mapLimit(files, 5, function(file, next) {
-  //       var path = rootPath + file;
-  //       try{
-  //         if (/gif|_size\.png$/.test(file)) {
-  //           next();
-  //         } else {
-  //           console.log(rootPath, file, path)
-  //           images(path)
-  //             .draw(images("logo.png"), 200, 200)
-  //             .saveAsync(path, {
-  //               quality: 80
-  //             }, null, function() {
-  //               next();
-  //             });
-  //         }
-  //       }catch(e){
-  //         next()
-  //       }
-        
-  //     }, done);
-  //   });
-  // },
+  function(done) {
+    console.log("水印添加");
+    var rootPath = "data/img/";
+    fs.readdir(rootPath, function(err, files) {
+      async.mapLimit(files, 5, function(file, next) {
+        var path = rootPath + file;
+        if (/gif|_size\.png$/.test(file)) {
+          next();
+        } else {
+          images(path)
+            .draw(images("logo.png"), 200, 200)
+            .saveAsync(path, {
+              quality: 80
+            }, null, function() {
+              next();
+            });
+        }
+      }, done);
+    });
+  },
   function() {
     fs.writeFile("./lastData.js", "");
     console.log("完成");
@@ -149,9 +151,10 @@ var queue = [
 
 if (style == 'normal') {
   queue.unshift(function(done) {
-    console.log("拿取lativ.csv中的数据");
+    console.log("拿取vancl.csv中的数据");
     var config = {};
-    var stream = fs.createReadStream('./lativ.csv');
+
+    var stream = fs.createReadStream('./vancl.csv');
 
     csv.fromStream(stream, { delimiter: '\t' })
       .on("data", function(arr) {
@@ -163,36 +166,75 @@ if (style == 'normal') {
         }
       })
       .on("end", function() {
-        util.saveFormatFile("./update/config.js", config)
-          .then(done)
+        fs.writeFile("./update/config.js", "exports.data=" + JSON.stringify(config), function() {
+          done();
+        });
       });
+    
   }, function(done) {
-    console.log("获取lativ中的产品");
+    console.log("获取vancl中的产品");
     read = require("./read");
     read.getCategoryProduct(function(err, ids, products) {
       if (ids) {
-        util.saveFormatFile("./update/data.js", ids)
-          .then(() => util.saveFormatFile("./update/category.js", products))
-          .then(done)
+        fs.writeFile("./update/data.js", "exports.data=" + JSON.stringify(ids), function() {
+          fs.writeFile("./update/category.js", "exports.data=" + JSON.stringify(products), function() {
+            // done();
+          });
+        });
       }
     });
   }, function(done) {
     console.log("对比数据");
     var down = require("./data").data;
+    var dlen = down.length;
+    var plen = online.length;
 
-    var slice = item => item.slice(0, 5)
-    var downArr = down.map(slice)
-    var onlineArr = online.map(slice)
-    
-    var onlineData = down.filter(item => onlineArr.indexOf( slice( item ) ) > -1)
-    var deleteData = online.filter(item => downArr.indexOf( slice( item ) ) === -1)
-    var addData = down.filter(item => onlineArr.indexOf( slice( item ) ) === -1)
-    
-    util.saveFormatFile("./update/online.js", onlineData)
-      .then(() => util.saveFormatFile("./update/deleteProducts.js", deleteData))
-      .then(() => util.saveFormatFile("./update/addProduct.js", addData))
-      .then(done)
+    var collection = [];
+
+    for (var i = 0; i < plen; i++) {
+      var item1 = online[i];
+      for (var j = 0; j < dlen; j++) {
+        var item2 = down[j];
+        if (item1 == item2) {
+          collection.push(item1);
+          break;
+        }
+      }
+    }
+
+    function deleteProducts(callback) {
+      var difference = [],
+        onlineData = [];
+      for (var k = 0; k < plen; k++) {
+        var item3 = online[k];
+        if (!(~collection.indexOf(item3))) {
+          difference.push(item3);
+        } else {
+          onlineData.push(item3);
+        }
+      }
+      fs.writeFile("./update/deleteProducts.js", "exports.data=" + JSON.stringify(difference), function() {
+        fs.writeFile("./update/online.js", "exports.data=" + JSON.stringify(onlineData), callback);
+      });
+    }
+
+    function addProduct(callback) {
+      var difference = [];
+      for (var k = 0; k < dlen; k++) {
+        var item3 = down[k];
+        if (!(~collection.indexOf(item3))) {
+          difference.push(item3);
+        }
+      }
+      fs.writeFile("./update/addProduct.js", "exports.data=" + JSON.stringify(difference), callback);
+    }
+    deleteProducts(function() {
+      addProduct(function() {
+        done();
+      });
+    });
   });
 }
+
 
 async.series(queue);
