@@ -6,6 +6,7 @@ var requests = require("superagent"),
   fs = require("fs"),
   path = require("path"),
   _ = require("underscore"),
+  util = require("../utils/util"),
   debug = require("debug")("blog:update:read");
 
 var webshot = require('../lib/webshot');
@@ -30,43 +31,6 @@ http.ClientRequest.prototype.setTimeout = function (timeout, callback) {
     self.emit('timeout');
   });
 };
-
-
-// 创建目录
-function mkdirsSync(dirpath, mode) {
-  if (!fs.existsSync(dirpath)) {
-    var pathtmp;
-    dirpath.split("/").forEach(function (dirname) {
-      if (pathtmp) {
-        pathtmp = path.join(pathtmp, dirname);
-      } else {
-        pathtmp = dirname;
-      }
-      if (!fs.existsSync(pathtmp)) {
-        if (!fs.mkdirSync(pathtmp, mode)) {
-          return false;
-        }
-      }
-    });
-  }
-  return true;
-}
-// 随机创建32位16进制字符
-function hex(productId) {
-  var arr = '0,1,2,3,4,5,6,7,8,9,a,b,c,d,e,f'.split(","),
-    str = productId + "",
-    value = "";
-  for (var i = 0; i < 24; i++) {
-    str += arr[Math.floor(Math.random() * 16)];
-  }
-  if (hex.cache[str]) {
-    arguments.callee();
-  } else {
-    hex.cache[str] = 1;
-  }
-  return str;
-}
-hex.cache = {};
 
 
 /**
@@ -154,8 +118,8 @@ exports.categorytList = function (url, category, callback) {
 var productDetail = function (url, callback) {
   this.product = {};
 
-  this.COLOR = _.extend({}, COLOR);
-  this.SIZE = _.extend({}, SIZE);
+  this.COLOR = Object.assign({}, COLOR);
+  this.SIZE = Object.assign({}, SIZE);
 
   this.cNum = 1001;
   this.sNum = 1001;
@@ -199,28 +163,9 @@ productDetail.prototype = {
           var $ = cheerio.load(res.text, {
               decodeEntities: false
             }),
-            text = res.text.toString(),
-            index = text.indexOf("$.product.Generate"),
-            html = "",
-            id = "",
-            title = "",
-            desc = "";
-
-          $("[src='http://s1.lativ.com/i/CommonPicture/213/71.jpg']").remove();
-          // $("[href^='http://www.lativ.com/Search']").rrfeffemove();
-
-          // 屏蔽详情页图片
-          // $(".product-img img").each(function (i, item) {
-          //   var $item = $(item);
-          //   $item.attr("src", $item.attr("data-original")).attr("style", "WIDTH: 750px;").prepend("<p>");
-          // });
-
-          // $("[data-original]").attr("data-original", "");
-          // $("a").attr("href", "javascript:;");
+            title = "";
 
           title = $(".name-area").text().trim().replace('-', ' ');
-          // desc = $(".product-img").html();
-          desc = '';
 
           var productId = url.split("Detail/")[1];
           _this.productId = productId;
@@ -228,9 +173,9 @@ productDetail.prototype = {
           _this.getReport(res.text)
 
           var priceArr = [];
-          [].slice.call($('.price-area').find('*')).map((item, index) => {
+          [].slice.call($('.price-area').find('*')).map(item => {
             var match = $(item).text().match(/^\d+/)
-            if(match){ 
+            if(match){
               priceArr.push( match[0] )
             }
           })
@@ -252,17 +197,14 @@ productDetail.prototype = {
           product.price = price;
           product.title = title;
           product.subtitle = '便宜、实惠、舒适是我们的宗旨';
-          // _this.disposeDescription(desc, function () {
             
-            _this.getProduct(productId);
-          // });
+          _this.getProduct(productId);
         }
       });
   },
   // 获得该商品的数目、尺寸和颜色
   getProduct: function (productId) {
-    var product = this.product,
-      _this = this;
+    var _this = this;
     detailConfig.Referer = 'https://www.lativ.com/Detail/' + productId;
     
     var url = "https://www.lativ.com/Product/ProductInfo/?styleNo=" + productId.slice(0, 5)
@@ -272,11 +214,8 @@ productDetail.prototype = {
       .end(function (err, res) {
         if(/^{/.test(res && res.text)){
           var data = JSON.parse(JSON.parse(res.text).info);
-          var activity = JSON.parse(JSON.parse(res.text).activity);
-
 
           _this.dataMatch();
-
           //宝贝类目
           _this.cid();
 
@@ -373,23 +312,9 @@ productDetail.prototype = {
     var product = this.product,
       _this = this;
     var photos = [],
-      style = "",
       reminder = "",
       desc = '',
       id = this.productId.slice(0, 5);
-
-    // desc = (desc || '').trim();
-    // desc = desc.replace(/\r|\n/gm, "")
-    //   .replace(/\"/gm, "'")
-    //   .replace(/,/gm, "，")
-    //   .replace(/data-original=\'\'/gm, "")
-    //   .replace(/http(s?):\/\/s[0-9].lativ.com\/(.*?).(jpg|png|gif)/gm, function (match, escape, interpolate, evaluate, offset) {
-    //     photos.push(match);
-    //     var arr = interpolate.split("/");
-    //     var url = "FILE:\/\/\/E:/github/pachong/lativ/data/img/" + arr[arr.length - 1] + "." + evaluate;
-    //     console.log( match, url )
-    //     return "FILE:\/\/\/E:/github/pachong/lativ/data/img/" + arr[arr.length - 1] + "." + evaluate;
-    //   });
 
     desc = datas.map(function(item){
       var path = item.colorImg.replace(/_\d+/, '_900')
@@ -850,8 +775,7 @@ productDetail.prototype = {
     return data[value];
   },
   propAlias: function (value, size) {
-    var cache = this.cache,
-      product = this.product,
+    var product = this.product,
       sizePre = this.sizePre;
 
     var SIZE = this.SIZE,
@@ -877,43 +801,34 @@ productDetail.prototype = {
   },
   // 宝贝属性
   cateProps: function (datas) {
-    var _this = this,
-      product = this.product;
+    var product = this.product;
+
     product.cateProps += "";
     // product.cateProps += "20021:105255;13328588:492838733;";
-    var str = "",
-      i = 0;
+    var str = "";
 
     // 在颜色部分添加 根据试穿记录选择尺码
     if (/50022889|50013228|162104|50011739|50011717|50023108|50023107/.test(product.cid)) {
       this.propPrex = 28313;
-      datas.forEach(function (data) {
-        product.cateProps += _this.input_custom_cpv("color", data.color);
-
-        data.ItemList.forEach(function(item) {
-          str += _this.propAlias(item['體型尺寸'], item.size);
-        });
-      });
+      fn = item =>　str += this.propAlias(item['體型尺寸'], item.size)
     } else {
-      datas.forEach(function (data) {
-        product.cateProps += _this.input_custom_cpv("color", data.color);
-
-        data.ItemList.forEach(function(item) {
-          str += _this.input_custom_cpv("size", item['體型尺寸'], item.size);
-        });
-      });
+      fn = item => str += this.input_custom_cpv("size", item['體型尺寸'], item.size)
     }
+    
+    datas.forEach(data => {
+      product.cateProps += this.input_custom_cpv("color", data.color);
+
+      data.ItemList.forEach(fn);
+    });
     product.cateProps += str;
   },
   // 销售属性组合
   skuProps: function (datas) {
     var str = "",
       numPrice = "",
-      sizes = "",
       colors = "",
       num = 0;
-    var _this = this,
-      product = this.product,
+    var product = this.product,
       price = product.price,
       COLOR = this.COLOR,
       SIZE = this.SIZE,
@@ -961,8 +876,9 @@ productDetail.prototype = {
       COLOR = this.COLOR,
       productId = this.productId;
 
+    colors = datas.map(item => data.color)
+    
     datas.forEach(function (data, i) {
-      colors.push(data.color);
       var relativePath = data.colorImg.replace(/_\d+/, '_500')
       var id = "http://s2.lativ.com" + relativePath;
       var hex = (productId.slice(0, 5) + relativePath.replace(/(\/|_|\.)/g, '')).slice(0, 32)
@@ -985,7 +901,7 @@ productDetail.prototype = {
       k++;
     }
     product.picture = zhutu + colorImg;
-    _.extend(this.zhutuPhoto, photos, pics);
+    Object.assign(this.zhutuPhoto, photos, pics);
   },
   //获取商品的尺寸表/试穿表
   /**
@@ -1003,7 +919,6 @@ productDetail.prototype = {
     var caizhi = $('.product-desc').html()
     var size = $("#size-report-area").html()
     var try1 = $("#try-report-area").html()
-    // var model = $("#model-info-area").html()
 
     var str = '';
     str += "<h2>面料组成：</h2>" + caizhi;
@@ -1015,10 +930,6 @@ productDetail.prototype = {
       str += "<h2 style='text-align: center;'>试穿纪录</h2>"
       str += try1
     }
-    // if (model && model.trim()) {
-    //   str += "<h2 style='text-align: center;'>模特儿信息</h2>"
-    //   str += model
-    // }
 
     this.reportStr = (str || "").replace(/\r|\n/gm, "").trim()
   }
@@ -1036,7 +947,7 @@ var downloadImg = function (photos, num, root, callback) {
   }
   var _this = this;
   this._arr = [];
-  if (mkdirsSync(root)) {
+  if (util.mkdirsSync(root)) {
     var imgs = [];
     if (Object.prototype.toString.call(photos) === "[object Object]") {
       _this._arr = photos;

@@ -6,8 +6,8 @@ var async = require("async"),
   iconv = require("iconv-lite"),
   fs = require("fs"),
   images = require("images"),
-  _ = require("underscore"),
-  debug = require("debug")("lativ:update:all");
+  util = require('../utils/util'),
+  _ = require("underscore");
 
 var args = argv.option({
   name: 'style',
@@ -19,11 +19,9 @@ var args = argv.option({
 
 var style = args.options.style || 'normal';
 
+var lastData = require('../lastData').data
 
-var lastData = require("../lastData").data;
-
-var classList,
-  productList = [],
+var productList = [],
   productDetail = [],
   zhutu = {},
   desc = [],
@@ -44,7 +42,7 @@ var queue = [
   // 获取产品详情
   function(done) {
     console.log("获取产品详情");
-    if (lastData && lastData.productDetail) {
+    if (lastData.productDetail) {
       productDetail = lastData.productDetail;
       zhutu = lastData.zhutu;
       desc = lastData.desc;
@@ -53,7 +51,6 @@ var queue = [
       async.mapLimit(productList, 5, function(c, next) {
         var url = "http://m.lativ.com/Detail/" + c;
         read.productDetail(url, function(err, data, zhutuPhoto, descPhoto) {
-          console.log(c)
           if (data.title) {
             productDetail.push(data);
             _.extend(zhutu, zhutuPhoto);
@@ -67,23 +64,19 @@ var queue = [
   // 主图片下载
   function(done) {
     console.log("主图片下载");
-    if (!lastData) {
-      fs.writeFile("./lastData.js", "exports.data={" +
+    if (!(lastData && lastData.productDetail)) {
+      util.saveFile('./lastData.js', "exports.data={" +
         "productDetail:" + JSON.stringify(productDetail) + "," +
         "zhutu:" + JSON.stringify(zhutu) + "," +
         "desc:" + JSON.stringify(desc) +
-        "}");
+      "}")
     }
-    read.downloadImg(zhutu, 5, "./data/", function() {
-      done();
-    });
+    read.downloadImg(zhutu, 5, "./data/", done);
   },
   // 描述图片下载
   function(done) {
     console.log("描述图片下载");
-    read.downloadImg(desc, 5, "./data/img/", function() {
-      done();
-    });
+    read.downloadImg(desc, 5, "./data/img/", done);
   },
   function(done) {
     console.log("导出csv");
@@ -115,11 +108,9 @@ var queue = [
         console.log(err);
       } else {
         var newCsv = iconv.encode(csv, 'GBK');
-        fs.writeFile("data.csv", newCsv, function(err) {
-          if (err) throw err;
-          console.log("file saved");
-          done();
-        });
+        util.saveFile('data.csv', newCsv)
+          .then(() => console.log('file saved'))
+          .then(done)
       }
     });
   },
@@ -172,20 +163,17 @@ if (style == 'normal') {
         }
       })
       .on("end", function() {
-        fs.writeFile("./update/config.js", "exports.data=" + JSON.stringify(config), function() {
-          done();
-        });
+        util.saveFormatFile("./update/config.js", config)
+          .then(done)
       });
   }, function(done) {
     console.log("获取lativ中的产品");
     read = require("./read");
     read.getCategoryProduct(function(err, ids, products) {
       if (ids) {
-        fs.writeFile("./update/data.js", "exports.data=" + JSON.stringify(ids), function() {
-          fs.writeFile("./update/category.js", "exports.data=" + JSON.stringify(products), function() {
-            done();
-          });
-        });
+        util.saveFormatFile("./update/data.js", ids)
+          .then(() => util.saveFormatFile("./update/category.js", products))
+          .then(done)
       }
     });
   }, function(done) {
@@ -200,11 +188,10 @@ if (style == 'normal') {
     var deleteData = online.filter(item => downArr.indexOf( slice( item ) ) === -1)
     var addData = down.filter(item => onlineArr.indexOf( slice( item ) ) === -1)
     
-    fs.writeFile("./update/online.js", "exports.data=" + JSON.stringify(onlineData), function(){
-      fs.writeFile("./update/deleteProducts.js", "exports.data=" + JSON.stringify(deleteData), function() {
-        fs.writeFile("./update/addProduct.js", "exports.data=" + JSON.stringify(addData), done);
-      });
-    });
+    util.saveFormatFile("./update/online.js", onlineData)
+      .then(() => util.saveFormatFile("./update/deleteProducts.js", deleteData))
+      .then(() => util.saveFormatFile("./update/addProduct.js", addData))
+      .then(done)
   });
 }
 
