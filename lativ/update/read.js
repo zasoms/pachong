@@ -876,7 +876,7 @@ productDetail.prototype = {
       COLOR = this.COLOR,
       productId = this.productId;
 
-    colors = datas.map(item => data.color)
+    colors = datas.map(item => item.color)
     
     datas.forEach(function (data, i) {
       var relativePath = data.colorImg.replace(/_\d+/, '_500')
@@ -978,19 +978,33 @@ downloadImg.prototype.requestsAndwrite = function (url, root, callback) {
   } else {
     fileName = path.basename(url);
   }
-  fs.exists(root + fileName, function (isexists) {
+  this.retryNum = 0
+  this.down( root+fileName, url, callback )
+};
+downloadImg.prototype.retryRequest = function(){
+  if( this.retryNum < 5 ){
+    this.retryNum++
+    this.down(Array.prototype.slice.apply(arguments))
+  }
+}
+downloadImg.prototype.down = function(fileName, url, callback){
+  fs.exists(fileName,  isexists => {
     if (!isexists) {
       requests.get(url)
         .timeout(5000)
-        .end(function(err, res) {
+        .end((err, res) => {
           if (err) {
-            console.log(url, "有一张图片请求失败啦...");
+            console.log(url, "有一张图片请求失败啦...", `第${this.retryNum}次重新下载`);
+            this.retryRequest(fileName, url, callback)
             // callback(null, "successful !");
           } else {
-            fs.writeFile(root + fileName, res.body, function(err) {
+            fs.writeFile(fileName, res.body, err => {
               if (err) {
-                console.log("有一张图片写入失败啦...", err, url);
+                console.log("有一张图片写入失败啦...", url, `第${this.retryNum}次重新下载`);
+                this.retryRequest(fileName, url, callback)
               } else {
+                console.log(fileName, url)
+                this.retryNum = 0
                 callback(null, "successful !");
                 // callback貌似必须调用，第二个参数为下一个回调函数的result参数
               }
@@ -1001,8 +1015,8 @@ downloadImg.prototype.requestsAndwrite = function (url, root, callback) {
       callback(null, "successful !");
     }
   });
+}
 
-};
 exports.downloadImg = function (photos, num, root, callback) {
   downloadImg(photos, num, root, callback);
 };

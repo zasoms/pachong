@@ -42,7 +42,7 @@ var queue = [
   // 获取产品详情
   function(done) {
     console.log("获取产品详情");
-    if (lastData.productDetail) {
+    if (lastData && lastData.productDetail) {
       productDetail = lastData.productDetail;
       zhutu = lastData.zhutu;
       desc = lastData.desc;
@@ -50,6 +50,7 @@ var queue = [
     } else {
       async.mapLimit(productList, 5, function(c, next) {
         var url = "http://m.lativ.com/Detail/" + c;
+        console.log( url )
         read.productDetail(url, function(err, data, zhutuPhoto, descPhoto) {
           if (data.title) {
             productDetail.push(data);
@@ -71,12 +72,12 @@ var queue = [
         "desc:" + JSON.stringify(desc) +
       "}")
     }
-    read.downloadImg(zhutu, 5, "./data/", done);
+    read.downloadImg(zhutu, 2, "./data/", done);
   },
   // 描述图片下载
   function(done) {
     console.log("描述图片下载");
-    read.downloadImg(desc, 5, "./data/img/", done);
+    read.downloadImg(desc, 2, "./data/img/", done);
   },
   function(done) {
     console.log("导出csv");
@@ -182,11 +183,12 @@ if (style == 'normal') {
 
     var slice = item => item.slice(0, 5)
     var downArr = down.map(slice)
-    var onlineArr = online.map(slice)
+    var onlineArr = [...new Set(online.map(slice))]
     
-    var onlineData = down.filter(item => onlineArr.indexOf( slice( item ) ) > -1)
-    var deleteData = online.filter(item => downArr.indexOf( slice( item ) ) === -1)
-    var addData = down.filter(item => onlineArr.indexOf( slice( item ) ) === -1)
+    
+    var onlineData = down.filter(item => onlineArr.indexOf( slice( item ) ) > -1).sort()
+    var deleteData = online.filter(item => downArr.indexOf( slice( item ) ) === -1).sort()
+    var addData = down.filter(item => onlineArr.indexOf( slice( item ) ) === -1).sort()
     
     util.saveFormatFile("./update/online.js", onlineData)
       .then(() => util.saveFormatFile("./update/deleteProducts.js", deleteData))
