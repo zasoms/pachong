@@ -182,11 +182,11 @@ if (style == 'normal') {
     var down = require("./data").data;
 
     var slice = item => item.slice(0, 5)
-    var downArr = down.map(slice)
+    var downArr = [...new Set(down.map(slice))]
     var onlineArr = [...new Set(online.map(slice))]
     
     
-    var onlineData = down.filter(item => onlineArr.indexOf( slice( item ) ) > -1).sort()
+    var onlineData = online.filter(item => downArr.indexOf( slice( item ) ) > -1).sort()
     var deleteData = online.filter(item => downArr.indexOf( slice( item ) ) === -1).sort()
     var addData = down.filter(item => onlineArr.indexOf( slice( item ) ) === -1).sort()
     
