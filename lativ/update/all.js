@@ -5,7 +5,6 @@ var async = require("async"),
   json2csv = require("json2csv"),
   iconv = require("iconv-lite"),
   fs = require("fs"),
-  images = require("images"),
   util = require('../utils/util'),
   _ = require("underscore");
 
