@@ -17,7 +17,10 @@
   },
   "homepage": "https://github.com/zasoms/pachong#readme",
   "dependencies": {
+    "axios": "^0.17.0",
     "cheerio": "^1.0.0-rc.2",
+    "iconv-lite": "^0.4.19",
+    "opn": "^5.1.0",
     "phantomjs": "^2.1.7+deprecated",
     "puppeteer": "^0.12.0",
     "request": "^2.83.0"
