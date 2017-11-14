@@ -1,0 +1,1 @@
+ren ./data/img/*.jpg ./data/img/*.png

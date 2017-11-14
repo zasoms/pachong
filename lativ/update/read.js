@@ -314,7 +314,7 @@ productDetail.prototype = {
     var photos = [],
       reminder = "",
       desc = '',
-      id = this.productId.slice(0, 5);
+      productId = this.productId;
 
     desc = datas.map(function(item){
       var path = item.colorImg.replace(/_\d+/, '_900')
@@ -325,13 +325,15 @@ productDetail.prototype = {
       return '<IMG src="' + url + '"></IMG>'
     }).join('')
 
-    reminder = "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i1/465916119/TB2OVR7pbsTMeJjSszhXXcGCFXa_!!465916119.png'><\/P>" +
+    reminder = "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i4/465916119/TB2VJyuXZic_eJjSZFnXXXVwVXa_!!465916119.jpg'><\/P>" +
+      "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i1/465916119/TB2OVR7pbsTMeJjSszhXXcGCFXa_!!465916119.png'><\/P>" +
       "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i3/465916119/TB22FhAkvJNTKJjSspoXXc6mpXa_!!465916119.png'><\/P>" + 
       "<P align='center'><IMG src='https:\/\/img.alicdn.com/imgextra/i2/465916119/TB2VTHOk6uhSKJjSspdXXc11XXa_!!465916119.png'><\/P>";
 
-    var sizePath = 'data/img/' + id + '_size.png';
+    var sizePath = 'data/img/' + productId + '_size.png';
     fs.exists(sizePath, function (isexists) {
       if (isexists) {
+        console.log(productId + '尺码表已经存在呢')
         desc = reminder + "<img src='FILE:\/\/\/E:/github/pachong/lativ/" + sizePath + "'>" + desc;
         product.description = desc;
         _this.descPhoto = _this.descPhoto.concat(photos);
@@ -353,6 +355,10 @@ productDetail.prototype = {
         };
         if(_this.reportStr){
           webshot(_this.reportStr, sizePath, options, function (err) {
+            if( err ){
+              console.log(productId + '尺码表下载错误啊')
+            }
+            console.log(productId + '尺码表下载成功啊')
             desc = reminder + "<img src='FILE:\/\/\/E:/github/pachong/lativ/" + sizePath + "'>" + desc;
             product.description = desc;
             _this.descPhoto = _this.descPhoto.concat(photos);
@@ -360,7 +366,7 @@ productDetail.prototype = {
           });
         }else{
           product.description = desc;
-          _this.descPhoto = _this.descPhoto.concat(photos);
+          _this.descPhoto = _this.descPhotonvm .concat(photos);
           callback();
         }
         
@@ -982,12 +988,13 @@ downloadImg.prototype.requestsAndwrite = function (url, root, callback) {
   this.down( root+fileName, url, callback )
 };
 downloadImg.prototype.retryRequest = function(){
-  if( this.retryNum < 5 ){
+  if( this.retryNum < 10 ){
     this.retryNum++
-    this.down(Array.prototype.slice.apply(arguments))
+    this.down(...arguments)
   }
 }
 downloadImg.prototype.down = function(fileName, url, callback){
+  console.log(fileName)
   fs.exists(fileName,  isexists => {
     if (!isexists) {
       requests.get(url)
