@@ -124,9 +124,11 @@ var queue = [
         util.addMark({
           path,
           width: 312,
-          base: 'base2.jpg'
+          base: 'base2.jpg',
+          dis: '+14+64'
         }, 312)
           .then(next, err => {
+            next()
             console.log( `主图水印添加${err}` )
           })
       }, done)

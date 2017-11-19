@@ -60,7 +60,7 @@ function saveFormatFile(url, data){
   return saveFile(url, "exports.data=" + JSON.stringify(data))
 }
 
-function addMark({path, width=500, base='base.jpg'}){
+function addMark({path, width=500, base='base.jpg', dis='+25+114'}){
   return new Promise((resolve, reject) => {
     let oldPath = path
     path = path.replace(/tbi$/, 'jpg')
@@ -78,7 +78,7 @@ function addMark({path, width=500, base='base.jpg'}){
                   gm()
                   .in('-page', '+0+0')
                   .in(base)
-                  .in('-page', '+25+114')
+                  .in('-page', dis)
                   .in(path)
                   .mosaic()
                   .write(path, function(){
