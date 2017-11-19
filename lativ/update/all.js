@@ -1,6 +1,7 @@
 var async = require("async"),
   csv = require("fast-csv"),
   argv = require('argv'),
+  gm = require('gm'),
   read,
   json2csv = require("json2csv"),
   iconv = require("iconv-lite"),
@@ -114,32 +115,46 @@ var queue = [
       }
     });
   },
-  // function(done) {
-  //   console.log("水印添加");
-  //   var rootPath = "data/img/";
-  //   fs.readdir(rootPath, function(err, files) {
-  //     async.mapLimit(files, 5, function(file, next) {
-  //       var path = rootPath + file;
-  //       try{
-  //         if (/gif|_size\.png$/.test(file)) {
-  //           next();
-  //         } else {
-  //           console.log(rootPath, file, path)
-  //           images(path)
-  //             .draw(images("logo.png"), 200, 200)
-  //             .saveAsync(path, {
-  //               quality: 80
-  //             }, null, function() {
-  //               next();
-  //             });
-  //         }
-  //       }catch(e){
-  //         next()
-  //       }
-        
-  //     }, done);
-  //   });
-  // },
+  function(done){
+    console.log("主图水印添加");
+    var rootPath = "data/";
+    fs.readdir(rootPath, function(err, files){
+      async.mapLimit(files, 5, function(file, next){
+        var path = rootPath + file
+        util.addMark({
+          path,
+          width: 312,
+          base: 'base2.jpg'
+        }, 312)
+          .then(next, err => {
+            console.log( `主图水印添加${err}` )
+          })
+      }, done)
+    })
+  },
+  function(done) {
+    console.log("水印添加");
+    var rootPath = "data/img/";
+    
+    fs.readdir(rootPath, function(err, files){
+      async.mapLimit(files, 5, function(file, next){
+        var path = rootPath + file
+        try{
+          if (/gif|_size\.png$/.test(file)) {
+            next();
+          } else {
+            util.addMark({path})
+              .then(next, err => {
+                console.log( `水印添加${err}` )
+                next()
+              })
+          }
+        }catch(e){
+          next()
+        }
+      }, done)
+    })
+  },
   function() {
     fs.writeFile("./lastData.js", "");
     console.log("完成");

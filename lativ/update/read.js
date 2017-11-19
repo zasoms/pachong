@@ -320,7 +320,7 @@ productDetail.prototype = {
       var path = item.colorImg.replace(/_\d+/, '_900')
       var src = 'http://s2.lativ.com' + path
       var arr = path.split("/");
-      var url = "FILE:\/\/\/E:/github/pachong/lativ/data/img/" + arr[arr.length - 1];
+      var url = "FILE:\/\/\/E:\\github\\pachong\\lativ\\data\\img\\" + arr[arr.length - 1];
       photos.push( src )
       return '<IMG src="' + url + '"></IMG>'
     }).join('')
