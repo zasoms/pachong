@@ -57,7 +57,8 @@ var queue = [
             _.extend(zhutu, zhutuPhoto);
             desc = desc.concat(descPhoto);
           }
-          next(err);
+          setTimeout(() => next(err), 400)
+          // next(err);
         });
       }, done);
     }
@@ -115,48 +116,48 @@ var queue = [
       }
     });
   },
-  function(done){
-    console.log("主图水印添加");
-    var rootPath = "data/";
-    fs.readdir(rootPath, function(err, files){
-      async.mapLimit(files, 5, function(file, next){
-        var path = rootPath + file
-        util.addMark({
-          path,
-          width: 312,
-          base: 'base2.jpg',
-          dis: '+14+64'
-        }, 312)
-          .then(next, err => {
-            next()
-            console.log( `主图水印添加${err}` )
-          })
-      }, done)
-    })
-  },
-  function(done) {
-    console.log("水印添加");
-    var rootPath = "data/img/";
+  // function(done){
+  //   console.log("主图水印添加");
+  //   var rootPath = "data/";
+  //   fs.readdir(rootPath, function(err, files){
+  //     async.mapLimit(files, 5, function(file, next){
+  //       var path = rootPath + file
+  //       util.addMark({
+  //         path,
+  //         width: 312,
+  //         base: 'base2.jpg',
+  //         dis: '+14+64'
+  //       }, 312)
+  //         .then(next, err => {
+  //           next()
+  //           console.log( `主图水印添加${err}` )
+  //         })
+  //     }, done)
+  //   })
+  // },
+  // function(done) {
+  //   console.log("水印添加");
+  //   var rootPath = "data/img/";
     
-    fs.readdir(rootPath, function(err, files){
-      async.mapLimit(files, 5, function(file, next){
-        var path = rootPath + file
-        try{
-          if (/gif|_size\.png$/.test(file)) {
-            next();
-          } else {
-            util.addMark({path})
-              .then(next, err => {
-                console.log( `水印添加${err}` )
-                next()
-              })
-          }
-        }catch(e){
-          next()
-        }
-      }, done)
-    })
-  },
+  //   fs.readdir(rootPath, function(err, files){
+  //     async.mapLimit(files, 5, function(file, next){
+  //       var path = rootPath + file
+  //       try{
+  //         if (/gif|_size\.png$/.test(file)) {
+  //           next();
+  //         } else {
+  //           util.addMark({path})
+  //             .then(next, err => {
+  //               console.log( `水印添加${err}` )
+  //               next()
+  //             })
+  //         }
+  //       }catch(e){
+  //         next()
+  //       }
+  //     }, done)
+  //   })
+  // },
   function() {
     fs.writeFile("./lastData.js", "");
     console.log("完成");

@@ -7,25 +7,25 @@ const request = require('request')
 // 去除图片空白区
 
 
-gm('111.tbi')
+gm(request('https://s1.lativ.com/i/32890/32890031/3289003_1500.jpg'))
   .trim()
-  .write('333format.tbi', function(err){
+  .write('333format.jpg', function(err){
     if( !err ){
-      gm('333format.tbi')
+      gm('333format.jpg')
         .size({bufferStream: true}, function(err, size) {
           if( !err ){
             let width = 560
             let height = parseInt((width / size.width) * size.height)
             this.resize(width, height, '!')
-            this.write('333format.tbi', function (err) {
+            this.write('333format.jpg', function (err) {
               if( !err ){
                 gm()
                 .in('-page', '+0+0')
                 .in('base.jpg')
                 .in('-page', '+25+114')
-                .in('333format.tbi')
+                .in('333format.jpg')
                 .mosaic()
-                .write('333format.tbi', function(){})
+                .write('333format.jpg', function(){})
               }
 
             })

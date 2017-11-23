@@ -147,7 +147,7 @@ productDetail.prototype = {
     var product = this.product,
       _this = this;
     requests.get(url)
-      .timeout(5000)
+      .timeout(10000)
       .set({
         "Upgrade-Insecure-Requestss": 1,
         "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1"
@@ -209,7 +209,7 @@ productDetail.prototype = {
     
     var url = "https://www.lativ.com/Product/ProductInfo/?styleNo=" + productId.slice(0, 5)
     requests.get(url)
-      .timeout(5000)
+      .timeout(10000)
       .set(detailConfig)
       .end(function (err, res) {
         if(/^{/.test(res && res.text)){
@@ -1150,11 +1150,22 @@ exports.getCategoryProduct = function (callback) {
     index = 0,
     cache = {};
 
+    console.log(111)
   function getCategory(category) {
     var url = "http://www.lativ.com/" + category
     requests.get(url)
-      .timeout(5000)
+      .set({
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Accept-Language': 'zh-CN,zh;q=0.9',
+        'Cache-Control': 'max-age=0',
+        Host: 'www.lativ.com',
+        'Upgrade-Insecure-Requests': 1,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.62 Safari/537.36'
+      })
+      .timeout(10000)
       .end(function (err, res) {
+        console.log(url)
         var $ = cheerio.load(res.text, {
           decodeEntities: false
         });
@@ -1167,7 +1178,9 @@ exports.getCategoryProduct = function (callback) {
           datas.push(item.attribs.href);
         });
         if (mainIndex < main.length - 1) {
-          getCategory(main[++mainIndex]);
+          setTimeout(() => {
+            getCategory(main[++mainIndex]);
+          }, 500)
         } else {
           getPageProducts(urls[index]);
         }
@@ -1177,9 +1190,20 @@ exports.getCategoryProduct = function (callback) {
 
   function getPageProducts(params) {
     var lists = [];
-    requests.get("http://www.lativ.com" + params.href)
-      .timeout(5000)
+    var url = "http://www.lativ.com" + params.href
+    requests.get(url)
+      .set({
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Accept-Language': 'zh-CN,zh;q=0.9',
+        'Cache-Control': 'max-age=0',
+        Host: 'www.lativ.com',
+        'Upgrade-Insecure-Requests': 1,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.62 Safari/537.36'
+      })
+      .timeout(10000)
       .end(function (err, res) {
+        console.log(err, url)
         if (err) {
           return callback && callback(err);
         }
@@ -1207,7 +1231,9 @@ exports.getCategoryProduct = function (callback) {
           });
         }
         if (index < urls.length - 1) {
-          getPageProducts(urls[++index]);
+          setTimeout(() => {
+            getPageProducts(urls[++index]);
+          }, 500)
         } else {
           findTogether(function (tids, cats) {
             ids = getIds(ids.concat(tids));
