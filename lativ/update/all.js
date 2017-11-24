@@ -57,8 +57,9 @@ var queue = [
             _.extend(zhutu, zhutuPhoto);
             desc = desc.concat(descPhoto);
           }
-          setTimeout(() => next(err), 400)
-          // next(err);
+          
+          util.sleep(Math.ceil(Math.random * 10) * 1000)
+            .then(next)
         });
       }, done);
     }
