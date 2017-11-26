@@ -1188,7 +1188,7 @@ exports.getCategoryProduct = function (callback) {
         });
         if (mainIndex < main.length - 1) {
           
-          util.sleep( util.size(5) )
+          util.sleep( util.size(5, 2) )
             .then(() => {
               getCategory(main[++mainIndex]);
             })
@@ -1243,7 +1243,7 @@ exports.getCategoryProduct = function (callback) {
           });
         }
         if (index < urls.length - 1) {
-            util.sleep( util.size(5) )
+            util.sleep( util.size(5, 2) )
               .then(() => {
                 getPageProducts(urls[++index]);
               })
