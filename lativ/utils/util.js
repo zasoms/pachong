@@ -100,11 +100,22 @@ function addMark({path, width=500, base='base.jpg', dis='+25+114'}){
   })
 }
 
+function sleep(time){
+  return new Promise(resolve => {
+    setTimeout(resolve, time * 1000)
+  })
+}
+
+function size(max=5, min=0){
+  return min + Math.floor( Math.random() * max )
+}
 
 module.exports = {
   mkdirsSync,
   makeHex,
   saveFile,
   saveFormatFile,
-  addMark
+  addMark,
+  sleep,
+  size
 }

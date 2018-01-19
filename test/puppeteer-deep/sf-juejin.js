@@ -21,7 +21,7 @@ puppeteer.launch({ headless: false }).then(async browser => {
 
     console.log('SfFeArticleList:', SfFeArticleList);
 
-    await page.screenshot({ path: './test/data/sf.png', type: 'png' });
+    await page.screenshot({ path: './data/sf.png', type: 'png' });
   } catch (e) {
     console.log('sf err:', e);
   }
@@ -52,11 +52,7 @@ puppeteer.launch({ headless: false }).then(async browser => {
     var seed = Math.floor(Math.random() * 30)
     var theArtile = SfFeArticleList[seed]
 
-    var add = await page.$('.main-nav .ion-android-add')
-    await add.click()
-    await sleep(500)
-
-    var add = await page.$('.main-nav .nav-menu a')
+    var add = await page.$('.main-container .user-action-nav .left [href]')
     await add.click()
     await sleep(2500)
 
@@ -79,10 +75,10 @@ puppeteer.launch({ headless: false }).then(async browser => {
     await sleep(1000)
 
   } catch (e) {
-    await page.screenshot({ path: './test/data/err.png', type: 'png' });
+    await page.screenshot({ path: './data/err.png', type: 'png' });
   }
 
-  await page.screenshot({ path: './test/data/done.png', type: 'png' });
+  await page.screenshot({ path: './data/done.png', type: 'png' });
   await page.close()
   browser.close()
 })
