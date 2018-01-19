@@ -17,14 +17,16 @@
   },
   "homepage": "https://github.com/zasoms/pachong#readme",
   "dependencies": {
-    "axios": "^0.17.0",
+    "axios": "^0.17.1",
     "cheerio": "^1.0.0-rc.2",
     "gm": "^1.23.0",
     "iconv-lite": "^0.4.19",
+    "mysql": "^2.15.0",
     "opn": "^5.1.0",
     "phantomjs": "^2.1.7+deprecated",
     "puppeteer": "^0.12.0",
     "request": "^2.83.0",
+    "request-promise": "^4.2.2",
     "superagent": "^3.8.1"
   }
 }
